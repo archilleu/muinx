@@ -26,6 +26,7 @@ private:
     bool Test_String();
     bool Test_BinString();
     bool Test_BinChar();
+    bool Test_Base64();
     bool Test_Path();
     bool Test_Document();
     bool Test_File();

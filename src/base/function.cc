@@ -137,6 +137,167 @@ MemoryBlock CharsToBin(const char* buffer)
     return mb;//RVO
 }
 //---------------------------------------------------------------------------
+std::string Base64_encode(const char* dat, size_t len)
+{
+    static const char b64_table[] =
+    {
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+        'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+        'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+        'w', 'x', 'y', 'z', '0', '1', '2', '3',
+        '4', '5', '6', '7', '8', '9', '+', '/'
+    };
+
+    std::string ret = std::string();
+    if((0==dat) || (0==len))
+        return ret;
+
+    char tmp[3] = {0, 0, 0};
+    unsigned char buf[4] = {0, 0, 0, 0};
+    size_t block = len / 3;
+    size_t remain = len % 3;
+
+    ret.reserve(block*4 + remain*4);
+
+    for(size_t i=0; i<(block)*3; i+=3)
+    {
+        tmp[0] = *(dat+i);
+        tmp[1] = *(dat+i+1);
+        tmp[2] = *(dat+i+2);
+
+        buf[0] = static_cast<unsigned char>(static_cast<unsigned>(tmp[0] >> 2));                                //tmp[0]前6位
+        buf[1] = static_cast<unsigned char>(static_cast<unsigned>(((tmp[0]&0x03)<<4) + ((tmp[1]&0xf0)>>4)));    //tmp[0]后2位 + tmp[1]前4位
+        buf[2] = static_cast<unsigned char>(static_cast<unsigned>(((tmp[1]&0x0f)<<2) + ((tmp[2]&0xc0)>>6)));    //tmp[1]后4位 + tmp[2]前2位
+        buf[3] = static_cast<unsigned char>(static_cast<unsigned>(tmp[2] & 0x3f));                              //tmp[2]后6位
+
+        ret.push_back(b64_table[buf[0]]);
+        ret.push_back(b64_table[buf[1]]);
+        ret.push_back(b64_table[buf[2]]);
+        ret.push_back(b64_table[buf[3]]);
+    }
+
+    if(remain == 2)
+    {
+        tmp[0] = *(dat+len-2);
+        tmp[1] = *(dat+len-1);
+
+        buf[0] = static_cast<unsigned char>(static_cast<unsigned>(tmp[0] >> 2));                                //tmp[0]前6位
+        buf[1] = static_cast<unsigned char>(static_cast<unsigned>(((tmp[0]&0x03)<<4) + ((tmp[1]&0xf0)>>4)));    //tmp[0]后2位 + tmp[1]前4位
+        buf[2] = static_cast<unsigned char>(static_cast<unsigned>(((tmp[1]&0x0f)<<2)));                         //tmp[1]后4位 + 补位00
+        ret.push_back(b64_table[buf[0]]);
+        ret.push_back(b64_table[buf[1]]);
+        ret.push_back(b64_table[buf[2]]);
+        ret.push_back('=');
+    }
+
+    if(remain == 1) {
+        tmp[0] = *(dat+len-1);
+
+        buf[0] = static_cast<unsigned char>(static_cast<unsigned>(tmp[0] >> 2));            //tmp[0]前6位
+        buf[1] = static_cast<unsigned char>(static_cast<unsigned>(((tmp[0]&0x03)<<4)));     //tmp[0]后2位 + 补位0000
+        ret.push_back(b64_table[buf[0]]);
+        ret.push_back(b64_table[buf[1]]);
+        ret.push_back('=');
+        ret.push_back('=');
+    }
+
+    return ret;
+}
+//---------------------------------------------------------------------------
+std::string Base64_encode(const void* dat, size_t len)
+{
+    return Base64_encode(static_cast<const char*>(dat), len);
+}
+//---------------------------------------------------------------------------
+std::string Base64_encode(const std::string& dat)
+{
+    return Base64_encode(dat.c_str(), dat.length());
+}
+//---------------------------------------------------------------------------
+std::string Base64_encode(const MemoryBlock& dat) {
+    return Base64_encode(dat.dat(), dat.len());
+}
+//---------------------------------------------------------------------------
+MemoryBlock Base64_decode(const std::string& dat)
+{
+    return Base64_decode(dat.c_str());
+}
+//---------------------------------------------------------------------------
+MemoryBlock Base64_decode(const char* dat)
+{
+    static const unsigned char bt64_table[] =
+    {
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 253, 255,
+        255, 253, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 253, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255,  62, 255, 255, 255,  63,
+         52,  53,  54,  55,  56,  57,  58,  59,  60,  61, 255, 255,
+        255, 254, 255, 255, 255,   0,   1,   2,   3,   4,   5,   6,
+          7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,
+         19,  20,  21,  22,  23,  24,  25, 255, 255, 255, 255, 255,
+        255,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,
+         37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
+         49,  50,  51, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255
+    };
+
+    MemoryBlock mb;
+    if(0 == dat)
+        return mb;
+
+    size_t len = strlen(dat);
+    if(4 > len)
+        return mb;
+
+    size_t block = (len-4) / 4;
+    if('=' == *(dat+len-2))
+        mb.Resize(block*3 + 1);
+    else if('=' == *(dat+len-1))
+        mb.Resize(block*3 + 2);
+    else
+        mb.Resize(block*3 + 3);
+
+    size_t idx = 0;
+    unsigned char tmp[4] = {0, 0, 0, 0};
+    for(size_t i=0; i<block*4; i+=4)
+    {
+        tmp[0] = *(dat+i);
+        tmp[1] = *(dat+i+1);
+        tmp[2] = *(dat+i+2);
+        tmp[3] = *(dat+i+3);
+
+        mb[idx++] = static_cast<char>((bt64_table[tmp[0]]<<2) + ((bt64_table[tmp[1]]&0x30)>>4));           //tmp[0]前6位 + tmp[1]前2位
+        mb[idx++] = static_cast<char>(((bt64_table[tmp[1]]&0x0f)<<4) + ((bt64_table[tmp[2]]&0x3c)>>2));    //tmp[1]后4位 + tmp[2]前4位
+        mb[idx++] = static_cast<char>(((bt64_table[tmp[2]]&0x03)<<6) + bt64_table[tmp[3]]);                //tmp[2]后2位+tmp[3]前6位
+    }
+
+    //the last block
+    tmp[0] = *(dat+len-4);
+    tmp[1] = *(dat+len-3);
+    tmp[2] = *(dat+len-2);
+    tmp[3] = *(dat+len-1);
+    mb[idx++] = static_cast<char>((bt64_table[tmp[0]]<<2) + ((bt64_table[tmp[1]]&0x30)>>4));            //tmp[0]前6位 + tmp[1]前2位
+    if('=' != tmp[2])
+        mb[idx++] = static_cast<char>(((bt64_table[tmp[1]]&0x0f)<<4) + ((bt64_table[tmp[2]]&0x3c)>>2)); //tmp[1]后4位 + tmp[2]前4位
+    if('=' != tmp[3])
+        mb[idx++] = static_cast<char>(((bt64_table[tmp[2]]&0x03)<<6) + bt64_table[tmp[3]]);             //tmp[2]后2位+tmp[3]前6位
+
+    return mb;
+}
+//---------------------------------------------------------------------------
 //获取程序运行的路径
 std::string RunPathFolder()
 {

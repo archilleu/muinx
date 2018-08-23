@@ -23,6 +23,13 @@ std::string BinToChars(const unsigned char* buffer, size_t len);
 MemoryBlock CharsToBin(const std::string& buffer);
 MemoryBlock CharsToBin(const char* buffer);
 //---------------------------------------------------------------------------
+std::string Base64_encode(const std::string& dat);
+std::string Base64_encode(const char* dat, size_t len);
+std::string Base64_encode(const void* dat, size_t len);
+std::string Base64_encode(const MemoryBlock& dat);
+MemoryBlock Base64_decode(const std::string& dat);
+MemoryBlock Base64_decode(const char* dat);
+//---------------------------------------------------------------------------
 //获取程序运行的路径
 std::string RunPathFolder   ();
 std::string RunPathFileName (const std::string& name);

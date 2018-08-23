@@ -11,6 +11,7 @@ bool TestFunction::DoTest()
     if(false == Test_String())      return false;
     if(false == Test_BinString())   return false;
     if(false == Test_BinChar())     return false;
+    if(false == Test_Base64())     return false;
     if(false == Test_Path())        return false;
     if(false == Test_Document())    return false;
     if(false == Test_File())        return false;
@@ -65,6 +66,38 @@ bool TestFunction::Test_BinChar()
     MemoryBlock     mb      = CharsToBin(str_char);
     MY_ASSERT(0 == memcmp(dat, mb.dat(), sizeof(dat)));
     MY_ASSERT(sizeof(dat) == mb.len());
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool TestFunction::Test_Base64() {
+    std::string dat1 = "Create an account or log into Facebook. Connect with friends, family and other people you know. Share photos and videos, send messages and get updates.";
+    std::string dat2 = "Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds the short vehemence of any carnal pleasure.";
+    std::string result1 = Base64_encode(dat1.c_str(), dat1.size());
+    std::string result2 = Base64_encode(dat2.c_str(), dat2.size());
+    std::cout << "base64:" << result1 << std::endl;
+    std::cout << "base64:" << result2 << std::endl;
+    std::string std_result1 = "Q3JlYXRlIGFuIGFjY291bnQgb3IgbG9nIGludG8gRmFjZWJvb2suIENvbm5lY3Qgd2l0aCBmcmllbmRzLCBmYW1pbHkgYW5kIG90aGVyIHBlb3BsZSB5b3Uga25vdy4gU2hhcmUgcGhvdG9zIGFuZCB2aWRlb3MsIHNlbmQgbWVzc2FnZXMgYW5kIGdldCB1cGRhdGVzLg==";
+    std::string std_result2 = "TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlzIHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBpcyBhIGx1c3Qgb2YgdGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVsaWdodCBpbiB0aGUgY29udGludWVkIGFuZCBpbmRlZmF0aWdhYmxlIGdlbmVyYXRpb24gb2Yga25vd2xlZGdlLCBleGNlZWRzIHRoZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNhcm5hbCBwbGVhc3VyZS4=";
+
+    MY_ASSERT(std_result1 == result1);
+    MY_ASSERT(std_result2 == result2);
+
+    MY_ASSERT("TWFu" == Base64_encode("Man", 3));
+    MY_ASSERT("TWE=" == Base64_encode("Ma", 2));
+    MY_ASSERT("TQ==" == Base64_encode("M", 1));
+
+    MY_ASSERT(MemoryBlock("Man", 3) == Base64_decode("TWFu"));
+    MY_ASSERT(MemoryBlock("Ma", 2) == Base64_decode("TWE="));
+    MY_ASSERT(MemoryBlock("M", 1)  == Base64_decode("TQ=="));
+
+    MemoryBlock mb_result1 = Base64_decode(result1);
+    MemoryBlock mb_result2 = Base64_decode(result2);
+    std::cout << mb_result1.dat() << std::endl;
+    std::cout << mb_result2.dat() << std::endl;
+
+    MY_ASSERT(mb_result1 == MemoryBlock(dat1.c_str(), dat1.length()));
+    MY_ASSERT(mb_result2 == MemoryBlock(dat2.c_str(), dat2.length()));
 
     return true;
 }
