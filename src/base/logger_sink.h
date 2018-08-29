@@ -150,7 +150,7 @@ private:
                 struct tm now;
                 gmtime_r(&time_, &now);;
                 char buffer[4096];
-                snprintf(buffer, sizeof(buffer), "%s/%s(%4d-%02d-%02d).%s", path_.c_str(), name_.c_str(), now.tm_year+1990, now.tm_mon+1, now.tm_mday, ext_.c_str());
+                snprintf(buffer, sizeof(buffer), "%s/%s_%4d-%02d-%02d.%s", path_.c_str(), name_.c_str(), now.tm_year+1990, now.tm_mon+1, now.tm_mday, ext_.c_str());
                 file_path_ = buffer;
             }
         }
