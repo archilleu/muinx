@@ -8,22 +8,14 @@ aux_source_directory(. DIR_SRCS)
 #---------------------------------------------------------------------------
 #generate static library
 #add_library(libname ${<dir>})
-set(LIBBASE base)
-add_library(${LIBBASE} ${DIR_SRCS})
+set(LIBTOOLS tools)
+add_library(${LIBTOOLS} ${DIR_SRCS})
 #---------------------------------------------------------------------------
 #install target 
-install(TARGETS ${LIBBASE} DESTINATION ${LIBRARY_OUTPUT_PATH_LIB})
+install(TARGETS ${LIBTOOLS} DESTINATION ${LIBRARY_OUTPUT_PATH_LIB})
 
 set(HEADERS
-    computer_info.h
-    file_helper.h
-    function.h
-    logger.h
-    md5.h
-    memory_block.h
-    thread.h
-    thread_local.h
-    timestamp.h
+    muinx_logger.h
     )
 install(FILES ${HEADERS} DESTINATION ${LIBRARY_OUTPUT_PATH_INC})
 #---------------------------------------------------------------------------

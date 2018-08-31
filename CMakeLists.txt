@@ -56,3 +56,10 @@ message(STATUS "INSTALL PATH = " ${EXECUTABLE_OUTPUT_PATH} " and " ${LIBRARY_OUT
 add_subdirectory(src)
 add_subdirectory(test)
 #---------------------------------------------------------------------------
+#add test
+#set(TESTBASE test_base)
+#add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTBASE})
+
+set(TESTTOOLS test_tools)
+add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTTOOLS})
+#---------------------------------------------------------------------------

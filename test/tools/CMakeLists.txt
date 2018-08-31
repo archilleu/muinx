@@ -6,8 +6,8 @@ cmake_minimum_required (VERSION 2.8)
 aux_source_directory(. DIR_TESTS)
 #---------------------------------------------------------------------------
 #generate test
-set(TESTBAE test_base)
-add_executable(${TESTBAE} ${DIR_TESTS})
+set(TESTTOOLS test_tools)
+add_executable(${TESTTOOLS} ${DIR_TESTS} ../../src/core/conf_file.cc)
 #---------------------------------------------------------------------------
 #add include path
 #include_directories(${LIBRARY_OUTPUT_PATH_INC})
@@ -17,7 +17,8 @@ add_executable(${TESTBAE} ${DIR_TESTS})
 #---------------------------------------------------------------------------
 #add link lib
 set(LIBBASE base)
-target_link_libraries(${TESTBAE} ${LIBBASE} pthread rt)
+set(LIBTOOLS tools)
+target_link_libraries(${TESTTOOLS} ${LIBTOOLS} ${LIBBASE} pthread rt)
 #---------------------------------------------------------------------------
 #install target 
 #install(TARGETS json_test DESTINATION ${EXECUTABLE_OUTPUT_PATH})
