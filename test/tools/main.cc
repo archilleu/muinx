@@ -18,7 +18,7 @@ int main(int , char** )
     }
 
     {
-    std::string path = "/home/archilleu/workspace/muinx/test/files/nginx.conf";
+    std::string path = "/root/workspace/muinx/test/files/nginx.conf";
     std::shared_ptr<core::ConfFile> conf_file = std::make_shared<core::ConfFile>(path);
     if(false == conf_file->Parse())
     {

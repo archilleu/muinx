@@ -249,6 +249,7 @@ bool ConfFile::CaseStatusBlockBegin()
     {
         if(kCONF_MAIN != stack_.top())
             return false;
+        stack_.push(static_cast<int>(kCONF_EVENT));
     }
     if(kRESERVED_HTTP == cur_line_params_[0])
     {
@@ -264,12 +265,11 @@ bool ConfFile::CaseStatusBlockBegin()
     }
     if(kRESERVED_LOCATION == cur_line_params_[0])
     {
-        if((kCONF_SERVICE!=stack_.top()) || (kCONF_LOCATION!=stack_.top()))
+        if((kCONF_SERVICE!=stack_.top()) && (kCONF_LOCATION!=stack_.top()))
             return false;
+
         stack_.push(static_cast<int>(kCONF_LOCATION));
     }
-
-    stack_.push(static_cast<int>(kCONF_EVENT));
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END | kEXP_STATUS_BLOCK_END;
 
@@ -285,17 +285,14 @@ bool ConfFile::CaseStatusBlockEnd()
     if(!HasStatus(kEXP_STATUS_BLOCK_END))
         return false;
 
-    switch(stack_.top())
-    {
-        case kCONF_EVENT:
-            stack_.pop();
-            cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
-                        | kEXP_STATUS_END;
-            break;
+    if(kCONF_MAIN == stack_.top())
+        return false;
 
-        default:
-            break;
-    }
+    stack_.pop();
+    cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
+                | kEXP_STATUS_END;
+    if(kCONF_MAIN != stack_.top())
+        cur_status_ |= kEXP_STATUS_BLOCK_END;
 
     return true;
 }
