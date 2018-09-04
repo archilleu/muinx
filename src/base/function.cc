@@ -31,7 +31,7 @@ std::string CombineString(const char* format, ...)
         free(buffer);
         return "";
     }
-    
+
     std::string result = buffer;
     free(buffer);
 

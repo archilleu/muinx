@@ -95,7 +95,7 @@ void TokenReader::SkipComments()
         char c = reader_->Peek();
         if(!IsComments(c))
             break;
-        
+
         SkipCommentLine();
     }
 }

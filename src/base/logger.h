@@ -21,7 +21,7 @@ namespace base
 {
 
 //---------------------------------------------------------------------------
-class Logger 
+class Logger
 {
 public:
     enum Level

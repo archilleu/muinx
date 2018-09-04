@@ -86,7 +86,7 @@ ComputerInfo::MemoryInfo ComputerInfo::GetMemoryInfo()
     mem_info.mem_free   = sys_info.freeram * sys_info.mem_unit / 1024;
     mem_info.swap_total = sys_info.totalswap * sys_info.mem_unit / 1024;
     mem_info.swap_free  = sys_info.freeswap * sys_info.mem_unit / 1024;
- 
+
     return mem_info;
 }
 //---------------------------------------------------------------------------
@@ -157,7 +157,7 @@ ComputerInfo::CPUInfo ComputerInfo::GetCPUInfo()
             {
                 int value;
                 sscanf(buffer, "%*[^:]%*s%d", &value);
-                info.core_per_socket = value;    
+                info.core_per_socket = value;
                 continue;
             }
         }
@@ -169,12 +169,12 @@ ComputerInfo::CPUInfo ComputerInfo::GetCPUInfo()
             {
                 int value;
                 sscanf(buffer, "%*[^:]%*s%d", &value);
-                info.thread_per_core = value;    
+                info.thread_per_core = value;
                 continue;
             }
         }
     }
-    
+
     fclose(fp);
     info.sockets        = static_cast<int>((sockets.size() > 0) ? sockets.size() : 1);
     info.thread_per_core= info.thread_per_core / info.core_per_socket;
@@ -209,7 +209,7 @@ float ComputerInfo::GetCPUUsage()
     last_[1] = current[1];
     last_[2] = current[2];
     last_[3] = current[3];
-     
+
     return percent;
 }
 //---------------------------------------------------------------------------
@@ -220,7 +220,7 @@ void ComputerInfo::GetCPUValue(unsigned long long value[4])
     FILE* fp = fopen("/proc/stat", "r");
     if(0 == fp)
         return;
-    
+
     int count = fscanf(fp, "cpu %llu %llu %llu %llu", &value[0], &value[1], &value[2], &value[3]);
     (void)count;
 

@@ -29,7 +29,7 @@ public:
     bool try_lock(){return true;}
 };
 //---------------------------------------------------------------------------
-class Sink 
+class Sink
 {
 public:
     Sink(){}
@@ -154,7 +154,7 @@ private:
                 file_path_ = buffer;
             }
         }
-        
+
         return file_path_;
     }
 

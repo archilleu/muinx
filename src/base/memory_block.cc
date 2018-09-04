@@ -98,7 +98,7 @@ MemoryBlock::~MemoryBlock()
 void MemoryBlock::Resize(size_t size)
 {
     dat_ = static_cast<char*>(realloc(dat_, size));
-    len_ = size;    
+    len_ = size;
 
     return;
 }

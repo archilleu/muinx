@@ -12,7 +12,7 @@
 namespace base
 {
 
-class FileHelper 
+class FileHelper
 {
 public:
     FileHelper()

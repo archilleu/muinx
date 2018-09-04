@@ -8,7 +8,7 @@
 namespace base
 {
 
-class ComputerInfo 
+class ComputerInfo
 {
 public:
     ComputerInfo();

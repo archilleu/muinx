@@ -1,18 +1,18 @@
 //---------------------------------------------------------------------------
-#ifndef CORE_MODULE_H_
-#define CORE_MODULE_H_
+#ifndef NET_EVENT_LOOP_H_
+#define NET_EVENT_LOOP_H_
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-namespace core
+namespace net 
 {
 
-class Templage
+class EventLoop
 {
 public:
 
 };
 
 
-}//namespace core
+}//namespace net 
 //---------------------------------------------------------------------------
-#endif //CORE_MODULE_H_
+#endif //NET_EVENT_LOOP_H_

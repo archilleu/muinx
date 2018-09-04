@@ -1,18 +1,23 @@
 //---------------------------------------------------------------------------
-#ifndef CORE_MODULE_H_
-#define CORE_MODULE_H_
+#ifndef BASE_NONCOPYABLE_H_
+#define BASE_NONCOPYABLE_H_
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-namespace core
+namespace base
 {
 
-class Templage
+class Noncopyable
 {
-public:
+protected:
+    Noncopyable() {}
+    ~Noncopyable() {}
 
+private:
+    Noncopyable(const Noncopyable&);
+    const Noncopyable& operator=(const Noncopyable&);
 };
 
 
-}//namespace core
+}//namespace net
 //---------------------------------------------------------------------------
-#endif //CORE_MODULE_H_
+#endif //NET_EVENT_LOOP_H_

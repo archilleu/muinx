@@ -24,6 +24,7 @@ set(HEADERS
     thread.h
     thread_local.h
     timestamp.h
+    noncopyable.h
     )
 install(FILES ${HEADERS} DESTINATION ${LIBRARY_OUTPUT_PATH_INC})
 #---------------------------------------------------------------------------
