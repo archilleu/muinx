@@ -19,7 +19,7 @@ EventLoop::EventLoop()
 
     if(t_loop_in_current_thread)
     {
-        NetLogger_off("Another EventLoop %s exists in this thread", t_loop_in_current_thread);
+        NetLogger_off("Another EventLoop %p exists in this thread", t_loop_in_current_thread);
         assert(0);
     }
     else
