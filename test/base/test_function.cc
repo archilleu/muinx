@@ -11,7 +11,7 @@ bool TestFunction::DoTest()
     if(false == Test_String())      return false;
     if(false == Test_BinString())   return false;
     if(false == Test_BinChar())     return false;
-    if(false == Test_Base64())     return false;
+    if(false == Test_Base64())      return false;
     if(false == Test_Path())        return false;
     if(false == Test_Document())    return false;
     if(false == Test_File())        return false;
@@ -122,6 +122,7 @@ bool TestFunction::Test_Path()
     MY_ASSERT(FolderDelete("/tmp/myfolder/1"));
     MY_ASSERT(FolderDelete(path));
 
+    std::cout << "exe name: " << RunExeName() << std::endl;
     return true;
 }
 //---------------------------------------------------------------------------

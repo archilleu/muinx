@@ -298,7 +298,6 @@ MemoryBlock Base64_decode(const char* dat)
     return mb;
 }
 //---------------------------------------------------------------------------
-//获取程序运行的路径
 std::string RunPathFolder()
 {
     char path[PATH_MAX] = {0};
@@ -325,6 +324,20 @@ std::string RunPathFolder()
     }
 
     return path;
+}
+//---------------------------------------------------------------------------
+std::string RunExeName()
+{
+    char path[PATH_MAX] = {0};
+    ssize_t rlen = readlink("/proc/self/exe", path, PATH_MAX);
+    if(-1 == rlen)
+        return "";
+
+    char* name = strrchr(path, '/');
+    if(0 == name)
+        return "";
+
+    return ++name;
 }
 //---------------------------------------------------------------------------
 std::string RunPathFileName(const std::string& name)
