@@ -11,7 +11,7 @@ aux_source_directory(. DIR_SRCS)
 set(LIBNAME net)
 add_library(${LIBNAME} ${DIR_SRCS})
 #---------------------------------------------------------------------------
-#install target 
+#install target
 install(TARGETS ${LIBNAME} DESTINATION ${LIBRARY_OUTPUT_PATH_LIB})
 
 set(HEADERS

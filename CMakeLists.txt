@@ -60,6 +60,9 @@ add_subdirectory(test)
 #set(TESTBASE test_base)
 #add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTBASE})
 
-set(TESTTOOLS test_tools)
+#set(TESTTOOLS test_tools)
+#add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTTOOLS})
+
+set(TESTNET test_net)
 add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTTOOLS})
 #---------------------------------------------------------------------------

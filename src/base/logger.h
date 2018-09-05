@@ -36,15 +36,14 @@ public:
     };
 
     using SinkPtr = std::shared_ptr<class Sink>;
-    Logger(const std::string& logger_name, std::vector<SinkPtr> slots)
-    :   name_(logger_name),
-        level_(TRACE),
+    Logger(std::vector<SinkPtr> slots)
+    :   level_(TRACE),
         flush_level_(ERROR),
         slots_(slots)
     {
     }
-    Logger(const std::string& logger_name, SinkPtr slot)
-    :   Logger(logger_name, std::vector<SinkPtr>(1, slot))
+    Logger(SinkPtr slot)
+    :   Logger(std::vector<SinkPtr>(1, slot))
     {
     }
     virtual ~Logger(){}
@@ -57,10 +56,7 @@ public:
     void set_flush_level(Level lv) { flush_level_ = lv; }
     Level flush_level() const { return flush_level_; }
 
-    const std::string& name() const { return name_; }
-
     void Flush();
-
 
     //log
     inline void log        (Level lv, const char* format, ...);
@@ -75,16 +71,16 @@ public:
 public:
     //Create logger
     //console
-    static std::shared_ptr<Logger> stdout_logger_mt(const std::string& logger_name);
-    static std::shared_ptr<Logger> stdout_logger_st(const std::string& logger_name);
+    static std::shared_ptr<Logger> stdout_logger_mt();
+    static std::shared_ptr<Logger> stdout_logger_st();
 
     //file
-    static std::shared_ptr<Logger> file_logger_mt(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily=true);
-    static std::shared_ptr<Logger> file_logger_st(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily=true);
+    static std::shared_ptr<Logger> file_logger_mt(const std::string& path, bool daily=true);
+    static std::shared_ptr<Logger> file_logger_st(const std::string& path, bool daily=true);
 
     //file & console
-    static std::shared_ptr<Logger> file_stdout_logger_mt(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily=true);
-    static std::shared_ptr<Logger> file_stdout_logger_st(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily=true);
+    static std::shared_ptr<Logger> file_stdout_logger_mt(const std::string& path, bool daily=true);
+    static std::shared_ptr<Logger> file_stdout_logger_st(const std::string& path, bool daily=true);
 
 private:
     bool ShouldLog(Level lv) const { return level_ <= lv; }
@@ -93,7 +89,6 @@ private:
     void WriteToSinks(const char* msg, Level lv);
 
 private:
-    std::string name_;
     Level level_;
     Level flush_level_;
     std::vector<SinkPtr> slots_;

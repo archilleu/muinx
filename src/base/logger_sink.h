@@ -3,6 +3,7 @@
 #define BASE_SINK_H_
 //---------------------------------------------------------------------------
 #include <cstring>
+#include <sys/types.h>
 #include <unistd.h>
 #include <mutex>
 #include <ctime>
@@ -10,6 +11,7 @@
 #include "logger.h"
 #include "file_helper.h"
 #include "function.h"
+#include "computer_info.h"
 //---------------------------------------------------------------------------
 namespace base
 {
@@ -83,15 +85,10 @@ template<class Mutex>
 class FileSink : public BaseSink<Mutex>
 {
 public:
-    FileSink(const std::string& path, const std::string& name, const std::string& ext, bool daily)
+    FileSink(const std::string& path, bool daily)
     :   path_(path),
-        name_(name),
-        ext_(ext),
         daily_(daily)
     {
-        if(name_.empty()) name_ = "default";
-        if(ext_.empty()) ext_= "log";
-
         time_t t = time(0);
         t -= kSecPerDate;
         struct tm now;
@@ -101,7 +98,10 @@ public:
         now.tm_sec  = 0;
         time_ = timegm(&now);
         char buffer[4096];
-        snprintf(buffer, sizeof(buffer), "%s/%s(%4d-%02d-%02d).%s", path_.c_str(), name_.c_str(), now.tm_year+1990, now.tm_mon+1, now.tm_mday, ext_.c_str());
+        //文件名格式:进程名.日期.主机名字.进程id.log
+        snprintf(buffer, sizeof(buffer), "%s/%s.%4d%02d%02d.%s.%d.log", path_.c_str(),
+                kExename.c_str(), now.tm_year+1990, now.tm_mon+1, now.tm_mday,
+                kHostname.c_str(), kPid);
         file_path_ = buffer;
 
         FolderCreate(path, true);
@@ -150,7 +150,10 @@ private:
                 struct tm now;
                 gmtime_r(&time_, &now);;
                 char buffer[4096];
-                snprintf(buffer, sizeof(buffer), "%s/%s_%4d-%02d-%02d.%s", path_.c_str(), name_.c_str(), now.tm_year+1990, now.tm_mon+1, now.tm_mday, ext_.c_str());
+                //文件名:进程名字.创建时间.机器名字.进程id.后缀
+                snprintf(buffer, sizeof(buffer), "%s/%s.%4d%02d%02d.%s.%d.log", path_.c_str(),
+                        kExename.c_str(), now.tm_year+1990, now.tm_mon+1, now.tm_mday,
+                        kHostname.c_str(), kPid);
                 file_path_ = buffer;
             }
         }
@@ -160,16 +163,26 @@ private:
 
 private:
     std::string path_;
-    std::string name_;
-    std::string ext_;
     bool daily_;
     time_t time_;
     std::string file_path_;
     std::shared_ptr<FileHelper> file_;
 
+    static const std::string kHostname;
+    static const std::string kExename;
+    static const int kPid;
+
 private:
     static const int kSecPerDate = 60 * 60 *24;
 };
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+template<class Mutex>
+const std::string FileSink<Mutex>::kHostname = ComputerInfo::GetComputerName().netname;
+template<class Mutex>
+const std::string FileSink<Mutex>::kExename = RunExeName();
+template<class Mutex>
+const int FileSink<Mutex>::kPid = getpid();
 //---------------------------------------------------------------------------
 using FileSinkMT = FileSink<std::mutex>;
 using FileSinkST = FileSink<null_mutex>;

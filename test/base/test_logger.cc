@@ -27,13 +27,8 @@ bool TestLogger::Test_Illegal()
 {
     //初始化失败
     {
-    const char* logger_name = "logger name";
     const char* path = "/tmp/logger";
-    //const char* name = "text";
-    //const char* ext = "log";
-    auto logger = Logger::file_logger_st(logger_name, "", "", "", false);
-    std::cout << "name:" << logger->name() << std::endl;
-    MY_ASSERT(logger->name() == logger_name);
+    auto logger = Logger::file_logger_st("", false);
 
     logger->set_level(Logger::TRACE);
     std::cout << "level:" << logger->level() << std::endl;
@@ -52,7 +47,7 @@ bool TestLogger::Test_Illegal()
         std::cout << e.what() << std::endl;
     }
 
-    logger = Logger::file_logger_st(logger_name, path, "", "", false);
+    logger = Logger::file_logger_st(path, false);
     try
     {
         logger->trace("haha");
@@ -68,10 +63,7 @@ bool TestLogger::Test_Illegal()
 //---------------------------------------------------------------------------
 bool TestLogger::Test_Console()
 {
-    const char* logger_name = "haha";
-    auto logger = Logger::stdout_logger_mt(logger_name);
-    std::cout << "name:" << logger->name() << std::endl;
-    MY_ASSERT(logger->name() == logger_name);
+    auto logger = Logger::stdout_logger_mt();
 
     logger->set_level(Logger::TRACE);
     std::cout << "level:" << logger->level() << std::endl;
@@ -103,12 +95,9 @@ bool TestLogger::Test_Console()
 //---------------------------------------------------------------------------
 bool TestLogger::Test_File()
 {
-    const char* logger_name = "logger name";
     const char* path = "/tmp/logger";
-    const char* name = "text";
-    const char* ext = "log";
     FolderDelete(path);
-    auto logger = Logger::file_logger_st(logger_name, path, name, ext, false);
+    auto logger = Logger::file_logger_st(path, false);
 
     const char* msg = "you are sb";
     //int size = 1024*1024;
@@ -141,12 +130,9 @@ bool TestLogger::Test_File()
 //---------------------------------------------------------------------------
 bool TestLogger::Test_FileAndConsole()
 {
-    const char* logger_name = "logger name";
     const char* path = "/tmp/logger";
-    const char* name = "text";
-    const char* ext = "log";
     FolderDelete(path);
-    auto logger = Logger::file_stdout_logger_st(logger_name, path, name, ext, true);
+    auto logger = Logger::file_stdout_logger_st(path, true);
 
     const char* msg = "you are sb";
     //int size = 1024*1024;

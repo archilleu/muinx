@@ -2,7 +2,7 @@
 #include "muinx_logger.h"
 #include <cstring>
 //---------------------------------------------------------------------------
-std::shared_ptr<base::Logger> logger = base::Logger::file_stdout_logger_mt("testlog", ".", "mytestlog", "log");
+std::shared_ptr<base::Logger> logger = base::Logger::file_stdout_logger_mt(".");
 //---------------------------------------------------------------------------
 namespace tools
 {
@@ -17,5 +17,3 @@ const char* OSError(int e)
 
 }//namespace tools 
 //---------------------------------------------------------------------------
-
-

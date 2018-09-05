@@ -7,43 +7,43 @@ namespace base
 {
 
 //---------------------------------------------------------------------------
-std::shared_ptr<Logger> Logger::stdout_logger_mt(const std::string& logger_name)
+std::shared_ptr<Logger> Logger::stdout_logger_mt()
 {
     SinkPtr ptr = std::make_shared<ConsoleSinkMT>();
-    return std::make_shared<Logger>(logger_name, ptr);
+    return std::make_shared<Logger>(ptr);
 }
 //---------------------------------------------------------------------------
-std::shared_ptr<Logger> Logger::stdout_logger_st(const std::string& logger_name)
+std::shared_ptr<Logger> Logger::stdout_logger_st()
 {
     SinkPtr ptr = std::make_shared<ConsoleSinkST>();
-    return std::make_shared<Logger>(logger_name, ptr);
+    return std::make_shared<Logger>(ptr);
 }
-std::shared_ptr<Logger> Logger::file_logger_mt(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily)
+std::shared_ptr<Logger> Logger::file_logger_mt(const std::string& path, bool daily)
 {
-    SinkPtr ptr = std::make_shared<FileSinkMT>(path, file_name, ext, daily);
-    return std::make_shared<Logger>(logger_name, ptr);
+    SinkPtr ptr = std::make_shared<FileSinkMT>(path, daily);
+    return std::make_shared<Logger>(ptr);
 }
 //---------------------------------------------------------------------------
-std::shared_ptr<Logger> Logger::file_logger_st(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily)
+std::shared_ptr<Logger> Logger::file_logger_st(const std::string& path, bool daily)
 {
-    SinkPtr ptr = std::make_shared<FileSinkST>(path, file_name, ext, daily);
-    return std::make_shared<Logger>(logger_name, ptr);
+    SinkPtr ptr = std::make_shared<FileSinkST>(path, daily);
+    return std::make_shared<Logger>(ptr);
 }
 //---------------------------------------------------------------------------
-std::shared_ptr<Logger> Logger::file_stdout_logger_mt(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily)
+std::shared_ptr<Logger> Logger::file_stdout_logger_mt(const std::string& path, bool daily)
 {
     std::vector<SinkPtr> vec_ptr;
     vec_ptr.push_back(std::make_shared<ConsoleSinkMT>());
-    vec_ptr.push_back(std::make_shared<FileSinkMT>(path, file_name, ext, daily));
-    return std::make_shared<Logger>(logger_name, vec_ptr);
+    vec_ptr.push_back(std::make_shared<FileSinkMT>(path, daily));
+    return std::make_shared<Logger>(vec_ptr);
 }
 //---------------------------------------------------------------------------
-std::shared_ptr<Logger> Logger::file_stdout_logger_st(const std::string& logger_name, const std::string& path, const std::string& file_name, const std::string& ext, bool daily)
+std::shared_ptr<Logger> Logger::file_stdout_logger_st(const std::string& path, bool daily)
 {
     std::vector<SinkPtr> vec_ptr;
     vec_ptr.push_back(std::make_shared<ConsoleSinkST>());
-    vec_ptr.push_back(std::make_shared<FileSinkST>(path, file_name, ext, daily));
-    return std::make_shared<Logger>(logger_name, vec_ptr);
+    vec_ptr.push_back(std::make_shared<FileSinkST>(path, daily));
+    return std::make_shared<Logger>(vec_ptr);
 }
 //---------------------------------------------------------------------------
 void Logger::Flush()
