@@ -8,40 +8,84 @@
 #include "../../src/base/thread.h"
 #include <sys/timerfd.h>
 //---------------------------------------------------------------------------
-//void ThreadFunc()
-//{
-//    std::cout << "ThreadFunc():pid = " << getpid() << "tid = "
-//        << base::CurrentThread::tid() << std::endl;
-//
-//    net::EventLoop loop;
-//    loop.Loop();
-//
-//    return;
-//}
+void ThreadFunc()
+{
+    std::cout << "ThreadFunc():pid = " << getpid() << "tid = "
+        << base::CurrentThread::tid() << std::endl;
+
+    net::EventLoop loop;
+    loop.Loop();
+
+    return;
+}
+void TestLoop()
+{
+    std::cout << "main():pid = " << getpid() << " tid = "
+        << base::CurrentThread::tid() << std::endl;
+
+    base::Thread thread(ThreadFunc);
+    thread.Start();
+    thread.Join();
+
+    net::EventLoop loop;
+    loop.Loop();
+}
 //---------------------------------------------------------------------------
 net::EventLoop* g_loop = 0;
 //---------------------------------------------------------------------------
 void Timeout(uint64_t)
 {
+    //run in loop
+    g_loop->RunInLoop([]()
+            {
+                std::cout << "run in loop5:" << g_loop << std::endl;
+            });
+    //queue in loop
+    g_loop->QueueInLoop([]()
+            {
+                std::cout << "queue in loop6:" << g_loop << std::endl;
+            });
     std::cout << "timeout" << std::endl;
     g_loop->Quit();
 
 }
 //---------------------------------------------------------------------------
-int main(int , char** )
+void ThreadFunc1()
 {
-//    std::cout << "main():pid = " << getpid() << " tid = "
-//        << base::CurrentThread::tid() << std::endl;
-//
-//    base::Thread thread(ThreadFunc);
-//    thread.Start();
-//    thread.Join();
-//
-//    net::EventLoop loop;
-//    loop.Loop();
+    std::cout << "ThreadFunc():pid = " << getpid() << "tid = "
+        << base::CurrentThread::tid() << std::endl;
 
+    //run in loop
+    g_loop->RunInLoop([]()
+            {
+                std::cout << "tid = " << base::CurrentThread::tid() << 
+                " run in loop3:" << g_loop << std::endl;
+            });
+    //queue in loop
+    g_loop->QueueInLoop([]()
+            {
+                std::cout << "tid = " << base::CurrentThread::tid() << 
+                " queue in loop4:" << g_loop << std::endl;
+            });
+
+    return;
+}
+//---------------------------------------------------------------------------
+void TestChannel()
+{
     net::EventLoop loop;
     g_loop = &loop;
+
+    //run in loop
+    loop.RunInLoop([]()
+            {
+                std::cout << "run in loop1:" << g_loop << std::endl;
+            });
+    //queue in loop
+    loop.QueueInLoop([]()
+            {
+                std::cout << "queue in loop2:" << g_loop << std::endl;
+            });
 
     int timerfd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC);
     net::Channel channel(&loop, timerfd);
@@ -52,7 +96,21 @@ int main(int , char** )
     bzero(&howlong, sizeof(itimerspec));
     howlong.it_value.tv_sec = 5;
     ::timerfd_settime(timerfd, 0, &howlong, NULL);
+
+    base::Thread thread(ThreadFunc1);
+    thread.Start();
     loop.Loop();
+    thread.Join();
+    channel.Remove();
+
+    return;
+}
+//---------------------------------------------------------------------------
+int main(int , char** )
+{
+    //TestLoop();
+    TestChannel();
+
     return 0;
 }
 //---------------------------------------------------------------------------
