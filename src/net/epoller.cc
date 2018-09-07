@@ -24,6 +24,8 @@ namespace net
 Epoller::Epoller(EventLoop* event_loop)
 :   Poller(event_loop)
 {
+    NetLogger_trace("Epoller ctor %p", this);
+
     efd_ = ::epoll_create1(EPOLL_CLOEXEC);
     if(0 > efd_)
     {
@@ -40,6 +42,7 @@ Epoller::Epoller(EventLoop* event_loop)
 //---------------------------------------------------------------------------
 Epoller::~Epoller()
 {
+    NetLogger_trace("Epoller dtor %p", this);
     assert(((void)"0 != channel_nums_", 0==channel_nums_));
 
     close(efd_);
@@ -123,6 +126,8 @@ void Epoller::UpdateChannel(Channel* channel)
             {
                 channel->set_status(kDel);
             }
+
+            AddChannelListItem(channel);
             break;
 
         case kAdded:
@@ -147,9 +152,9 @@ void Epoller::UpdateChannel(Channel* channel)
                 if(false == Update(EPOLL_CTL_DEL, channel))
                 {
                     NetLogger_error("Update EPOLL_CTL_DEL error, fd:%d", fd);
-                    channel->set_status(kDel);
                     return;
                 }
+                channel->set_status(kDel);
             }
             break;
 
@@ -186,7 +191,7 @@ void Epoller::RemoveChannel(Channel* channel)
 
     int fd = channel->fd();
     int status = channel->stauts();
-    NetLogger_trace("fd:%d events:%d index:%d", fd, channel->events(), status);
+    NetLogger_trace("fd:%d events:%d status:%d", fd, channel->events(), status);
 
     if(kNew != status)
     {
@@ -296,14 +301,15 @@ void Epoller::DelChannelListItem(Channel* channel)
 
     if(this->cur_max_fd_ == fd)
     {
-        for(int i=fd-1; i>=0; i--)
+        int i = fd - 1;
+        for(; i>0; i--)
         {
-            if(nullptr == channels_[fd])
+            if(nullptr == channels_[i])
                 continue;
 
-            this->cur_max_fd_ = i;
             break;
         }
+        this->cur_max_fd_ = i;
     }
 
 #ifdef _DEBUG
