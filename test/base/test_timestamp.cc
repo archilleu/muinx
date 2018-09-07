@@ -7,7 +7,7 @@ using namespace base::test;
 //---------------------------------------------------------------------------
 bool TestTimestamp::DoTest()
 {
-    std::cout << Timestamp::Zero().Datetime(true)<< std::endl;
+    std::cout << Timestamp::Invalid().Datetime(true)<< std::endl;
     Timestamp   now     = Timestamp::Now();
     uint64_t    seconds = now.Microseconds();
 

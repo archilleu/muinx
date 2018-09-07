@@ -36,7 +36,7 @@ public:
 
 
     static Timestamp    Now();
-    static Timestamp&   Zero();
+    static Timestamp&   Invalid();
 
 public:
     static const int kMicrosecondsPerSecond = 1000 * 1000;
@@ -47,7 +47,7 @@ public:
 private:
     uint64_t micro_seconds_;
 
-    static Timestamp kZero;
+    static Timestamp kInvalid;
 };
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

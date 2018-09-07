@@ -7,7 +7,7 @@
 namespace base
 {
 //---------------------------------------------------------------------------
-Timestamp Timestamp::kZero = Timestamp();
+Timestamp Timestamp::kInvalid = Timestamp();
 //---------------------------------------------------------------------------
 Timestamp::Timestamp(const std::string& datetime)
 {
@@ -99,9 +99,9 @@ Timestamp Timestamp::Now()
    return Timestamp(static_cast<uint64_t>(tv.tv_sec)*kMicrosecondsPerSecond + tv.tv_usec);//RVO
 }
 //---------------------------------------------------------------------------
-Timestamp& Timestamp::Zero()
+Timestamp& Timestamp::Invalid()
 {
-    return Timestamp::kZero;
+    return Timestamp::kInvalid;
 }
 //---------------------------------------------------------------------------
 }//namespace base
