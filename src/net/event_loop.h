@@ -7,12 +7,16 @@
 #include <mutex>
 #include "../base/noncopyable.h"
 #include "../base/thread.h"
+#include "../base/timestamp.h"
+#include "../net/callback.h"
 //---------------------------------------------------------------------------
 namespace net
 {
 
 class Channel;
 class Poller;
+class TimerId;
+class TimerQueue;
 
 class EventLoop : public base::Noncopyable
 {
@@ -38,6 +42,12 @@ public:
     //线程安全方法,如果调用着的线程是本EventLoop线程,则RunInLoop会立刻执行,否则排队到QueueInLoop
     void RunInLoop(Task&& task);
     void QueueInLoop(Task&& task);
+
+    //定时任务
+    TimerId TimerAt(base::Timestamp when, TimerCallback&& cb);
+    TimerId TimerAfter(int delayS, TimerCallback&& cb);
+    TimerId TimerInterval(int intervalS, TimerCallback&& cb);
+    void TimerCancel(TimerId timer_id);
 
 public:
     static EventLoop* GetEventLoopOfCurrentThread();
@@ -79,6 +89,7 @@ private:
     std::atomic<bool> need_wakup_;
 
     std::shared_ptr<Poller> poller_;
+    std::shared_ptr<TimerQueue> timer_queue_;
 };
 
 

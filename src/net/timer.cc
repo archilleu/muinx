@@ -7,11 +7,11 @@ namespace net
 //---------------------------------------------------------------------------
 std::atomic_uint64_t Timer::s_numCreated_(0);
 //---------------------------------------------------------------------------
-void Timer::Restart()
+void Timer::Restart(base::Timestamp now)
 {
     if(repeat_)
     {
-        expiration_ = expiration_.AddTime(interval_);
+        expiration_ = now.AddTime(interval_);
     }
     else
     {

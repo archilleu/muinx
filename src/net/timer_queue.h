@@ -13,7 +13,7 @@ namespace net
 
 class Timer;
 class EventLoop;
-
+class TimerId;
 
 class TimerQueue
 {
@@ -21,14 +21,23 @@ public:
     TimerQueue(EventLoop* event_loop);
     ~TimerQueue();
 
-private:
-    void HandleRead();
+public:
+    TimerId AddTimer(TimerCallback&& cb, base::Timestamp when, int intervalS);
 
 private:
     using Entry = std::pair<base::Timestamp, Timer*>;
     using TimerList = std::set<Entry>;
     using ActiveTimer = std::pair<Timer*, uint64_t>;
     using ActiveTimerSet = std::set<ActiveTimer>;
+
+private:
+    void AddTimerInLoop(Timer* timer);
+
+    void HandleRead();
+
+    std::vector<Entry> getExpired(base::Timestamp now);
+    void Reset(const std::vector<Entry>& expired, base::Timestamp now);
+    bool Insert(Timer* timer);
 
 private:
 

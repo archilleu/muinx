@@ -26,7 +26,7 @@ public:
     {
         callback_();
     }
-    void Restart();
+    void Restart(base::Timestamp now);
 
     base::Timestamp expiration() const  { return expiration_; }
     bool repeat() const { return repeat_; }

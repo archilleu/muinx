@@ -9,6 +9,8 @@
 #include "net_logger.h"
 #include "poller.h"
 #include "channel.h"
+#include "timer_id.h"
+#include "timer_queue.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -41,7 +43,8 @@ EventLoop::EventLoop()
     iteration_(0),
     wakeupfd_(CreateWakeupFd()),
     wakeup_channel_(new Channel(this, wakeupfd_)),
-    poller_(Poller::NewDefaultPoller(this))
+    poller_(Poller::NewDefaultPoller(this)),
+    timer_queue_(new TimerQueue(this))
 {
     NetLogger_trace("EventLoop create %p, in thread: %d, name:%s", this, tid_, tname_);
 
@@ -159,8 +162,29 @@ void EventLoop::QueueInLoop(Task&& task)
 
     return;
 }
-//---------------------------------------------------------------------------
-EventLoop* EventLoop::GetEventLoopOfCurrentThread()
+//-------EventLoop::--------------------------------------------------------------------
+TimerId EventLoop::TimerAt(base::Timestamp when, TimerCallback&& cb)
+{
+    return timer_queue_->AddTimer(std::move(cb), when, 0);
+}
+//-------EventLoop::--------------------------------------------------------------------
+TimerId EventLoop::TimerAfter(int delayS, TimerCallback&& cb)
+{
+    base::Timestamp when = base::Timestamp::Now().AddTime(delayS);
+    return timer_queue_->AddTimer(std::move(cb), when, 0);
+}
+//-------EventLoop::--------------------------------------------------------------------
+TimerId EventLoop::TimerInterval(int intervalS, TimerCallback&& cb)
+{
+    return timer_queue_->AddTimer(std::move(cb), base::Timestamp::Now(), intervalS);
+}
+//-------EventLoop::--------------------------------------------------------------------
+void EventLoop::TimerCancel(TimerId timer_id)
+{
+    (void)timer_id;
+}
+//-------EventLoop::--------------------------------------------------------------------
+ EventLoop* EventLoop::GetEventLoopOfCurrentThread()
 {
     return t_loop_in_current_thread;
 }
