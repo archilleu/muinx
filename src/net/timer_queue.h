@@ -4,6 +4,8 @@
 //---------------------------------------------------------------------------
 #include <set>
 #include <vector>
+#include <memory>
+#include <atomic>
 #include "channel.h"
 #include "../base/timestamp.h"
 #include "callback.h"
@@ -23,15 +25,20 @@ public:
 
 public:
     TimerId AddTimer(TimerCallback&& cb, base::Timestamp when, int intervalS);
+    void Cancel(const TimerId& timer_id);
 
 private:
     using Entry = std::pair<base::Timestamp, Timer*>;
     using TimerList = std::set<Entry>;
+
+    //外部保存的是TimerId，所以需要下面的结构记录追踪TimerId用来取消Timer
+    //Entry没办法作为区分TimerId的，因为Timestamp是变动的（interval timer）
     using ActiveTimer = std::pair<Timer*, uint64_t>;
     using ActiveTimerSet = std::set<ActiveTimer>;
 
 private:
     void AddTimerInLoop(Timer* timer);
+    void CancelInLoop(const TimerId& timer_id);
 
     void HandleRead();
 
@@ -46,7 +53,11 @@ private:
     Channel timerfd_channel_;
 
     TimerList timers_;
-    ActiveTimerSet active_timer_;
+
+    //for Ccancle
+    ActiveTimerSet active_timers_;
+    std::atomic<bool> calling_expired_timers_;
+    ActiveTimerSet canceling_timers_;
 };
 
 }//namespace net

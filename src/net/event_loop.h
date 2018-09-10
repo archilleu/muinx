@@ -47,7 +47,7 @@ public:
     TimerId TimerAt(base::Timestamp when, TimerCallback&& cb);
     TimerId TimerAfter(int delayS, TimerCallback&& cb);
     TimerId TimerInterval(int intervalS, TimerCallback&& cb);
-    void TimerCancel(TimerId timer_id);
+    void TimerCancel(const TimerId& timer_id);
 
 public:
     static EventLoop* GetEventLoopOfCurrentThread();

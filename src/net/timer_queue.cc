@@ -76,7 +76,8 @@ using namespace net::detail;
 TimerQueue::TimerQueue(EventLoop* event_loop)
 :   event_loop_(event_loop),
     timerfd_(CreateTimerfd()),
-    timerfd_channel_(event_loop, timerfd_)
+    timerfd_channel_(event_loop, timerfd_),
+    calling_expired_timers_(false)
 {
     NetLogger_trace("timer queue ctor");
 
@@ -111,6 +112,11 @@ TimerId TimerQueue::AddTimer(TimerCallback&& cb, base::Timestamp when, int inter
     return TimerId(timer, timer->sequence());
 }
 //---------------------------------------------------------------------------
+void TimerQueue::Cancel(const TimerId& timer_id)
+{
+    event_loop_->RunInLoop(std::bind(&TimerQueue::CancelInLoop, this, timer_id));
+}
+//---------------------------------------------------------------------------
 void TimerQueue::AddTimerInLoop(Timer* timer)
 {
     event_loop_->AssertInLoopThread();
@@ -124,6 +130,28 @@ void TimerQueue::AddTimerInLoop(Timer* timer)
     return;
 }
 //---------------------------------------------------------------------------
+void TimerQueue::CancelInLoop(const TimerId& timer_id)
+{
+    event_loop_->AssertInLoopThread();
+
+    assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
+    ActiveTimer active_timer(timer_id.timer(), timer_id.sequence());
+    auto iter = active_timers_.find(active_timer);
+    if(active_timers_.end() != iter)
+    {
+        size_t n = timers_.erase(Entry(iter->first->expiration(), iter->first));
+        assert(n == 1);(void)n;
+        delete iter->first;
+        active_timers_.erase(iter);
+    }
+    else if(calling_expired_timers_)
+    {
+        canceling_timers_.insert(active_timer);
+    }
+    assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
+    return;
+}
+//---------------------------------------------------------------------------
 void TimerQueue::HandleRead()
 {
     event_loop_->AssertInLoopThread();
@@ -131,23 +159,43 @@ void TimerQueue::HandleRead()
     ReadTimer(timerfd_);
 
     std::vector<Entry> expired = getExpired(now);
+
+    //如果在HandleRead里面调用Cancle方法，则必须记录这个取消的TimerId，因为在HandleRead
+    //里面调用Cancle是在同一个线程，所以Cancle里RunInLoop会立刻执行而不排队，这个时候
+    //timers_和active_timers_里面是找不到这个TimerId的, 该TimerId是interval的话,在以下
+    //的for循环后会被重启
+    calling_expired_timers_ = true;
+    canceling_timers_.clear();
     for(auto& entry : expired)
     {
         entry.second->Run();
     }
+    calling_expired_timers_ = false;
 
     Reset(expired, now);
 }
 //---------------------------------------------------------------------------
 std::vector<TimerQueue::Entry> TimerQueue::getExpired(base::Timestamp now)
 {
+    assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
+
     std::vector<Entry> expired;
     Entry sentry(now, reinterpret_cast<Timer*>(UINTPTR_MAX));
     auto end = timers_.lower_bound(sentry);
-    assert(end == timers_.end() || now < end->first);
+    assert(end==timers_.end() || now<end->first);
     std::copy(timers_.begin(), end, back_inserter(expired));
     timers_.erase(timers_.begin(), end);
 
+    for(auto& entry : expired)
+    {
+        ActiveTimer timer(entry.second, entry.second->sequence());
+        if(1 == active_timers_.erase(timer))
+        {
+            NetLogger_error("erase timer failed: timer:%p id:%ld", timer.first, timer.second);
+        }
+    }
+
+    assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
     return expired;
 }
 //---------------------------------------------------------------------------
@@ -155,7 +203,10 @@ void TimerQueue::Reset(const std::vector<Entry>& expired, base::Timestamp now)
 {
     for(auto& entry : expired)
     {
-        if(entry.second->repeat())
+        //该timer没有被在HandleRead里面取消,canceling_timers_里面肯定没有该timer
+        ActiveTimer timer(entry.second, entry.second->sequence());
+        if(entry.second->repeat() && 
+                canceling_timers_.find(timer)==canceling_timers_.end())
         {
             entry.second->Restart(now);
             Insert(entry.second);
@@ -177,18 +228,28 @@ void TimerQueue::Reset(const std::vector<Entry>& expired, base::Timestamp now)
 //---------------------------------------------------------------------------
 bool TimerQueue::Insert(Timer* timer)
 {
+    
+    assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
+
     bool earliest = false;
     base::Timestamp when = timer->expiration();
     auto first_timer = timers_.begin();
-    if(first_timer == timers_.end() || (when<first_timer->first))
+    if(first_timer==timers_.end() || (when<first_timer->first))
     {
         earliest = true;
     }
 
     if(false == timers_.insert(Entry(when, timer)).second)
     {
-        NetLogger_error("insert timer task failed: %s", when.Datetime(true).c_str());
+        NetLogger_error("insert timer failed: timer:%p id:%ld", timer, timer->sequence());
     }
+
+    if(false == active_timers_.insert(ActiveTimer(timer, timer->sequence())).second)
+    {
+        NetLogger_error("insert timer failed: timer:%p id:%ld", timer, timer->sequence());
+    }
+
+    assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
 
     return earliest;
 }

@@ -111,7 +111,7 @@ void EventLoop::Loop()
     //处理剩下的工作
     DoPendingTasks();
 
-    NetLogger_info("EventLoop %p stop looping");
+    NetLogger_info("EventLoop %p stop looping", this);
     looping_ = false;
 
     return;
@@ -179,9 +179,9 @@ TimerId EventLoop::TimerInterval(int intervalS, TimerCallback&& cb)
     return timer_queue_->AddTimer(std::move(cb), base::Timestamp::Now(), intervalS);
 }
 //-------EventLoop::--------------------------------------------------------------------
-void EventLoop::TimerCancel(TimerId timer_id)
+void EventLoop::TimerCancel(const TimerId& timer_id)
 {
-    (void)timer_id;
+    timer_queue_->Cancel(timer_id);
 }
 //-------EventLoop::--------------------------------------------------------------------
  EventLoop* EventLoop::GetEventLoopOfCurrentThread()

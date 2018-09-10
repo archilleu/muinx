@@ -23,6 +23,9 @@ public:
     {
     }
 
+    Timer* timer() const  { return timer_; }
+    uint64_t sequence() const   { return sequence_; }
+    
 private:
     Timer* timer_;
     uint64_t sequence_;
