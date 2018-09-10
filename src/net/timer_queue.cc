@@ -228,7 +228,6 @@ void TimerQueue::Reset(const std::vector<Entry>& expired, base::Timestamp now)
 //---------------------------------------------------------------------------
 bool TimerQueue::Insert(Timer* timer)
 {
-    
     assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
 
     bool earliest = false;
@@ -250,7 +249,6 @@ bool TimerQueue::Insert(Timer* timer)
     }
 
     assert(((void)"active_timer_ != timers_", active_timers_.size()==timers_.size()));
-
     return earliest;
 }
 //---------------------------------------------------------------------------
