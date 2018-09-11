@@ -6,13 +6,14 @@
 #include <condition_variable>
 #include <atomic>
 #include "../base/thread.h"
+#include "../base/noncopyable.h"
 //---------------------------------------------------------------------------
 namespace net
 {
 
 class EventLoop;
 
-class EventLoopThread
+class EventLoopThread : public base::Noncopyable
 {
 public:
     EventLoopThread();
