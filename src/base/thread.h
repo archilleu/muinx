@@ -66,6 +66,8 @@ public:
     ~Thread();
 
     bool Start();
+
+    //警告:Join不能再本线程调用，线程会异常退出
     void Join();
 
     int                 tid() const     { return tid_; }
