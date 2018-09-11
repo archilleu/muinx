@@ -3,10 +3,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <strings.h>
+#include <sys/timerfd.h>
 #include "../../src/net/channel.h"
 #include "../../src/net/event_loop.h"
+#include "../../src/net/event_loop_thread.h"
 #include "../../src/base/thread.h"
-#include <sys/timerfd.h>
+#include "../../src/net/timer_id.h"
 //---------------------------------------------------------------------------
 void ThreadFunc()
 {
@@ -106,10 +108,30 @@ void TestChannel()
     return;
 }
 //---------------------------------------------------------------------------
+void TestEventLoopThread()
+{
+    {
+        net::EventLoopThread loop_thread;
+        net::EventLoop* event_loop = loop_thread.StartLoop();
+        if(0 == event_loop)
+        {
+            std::cout << "event loop thread start failed" << std::endl;
+        }
+
+        event_loop->TimerAfter(5, [](){
+                std::cout << "timer after run" << std::endl;
+                });
+
+        ::sleep(5);
+        loop_thread.StopLoop();
+    }
+}
+//---------------------------------------------------------------------------
 int main(int , char** )
 {
     //TestLoop();
-    TestChannel();
+    //TestChannel();
+    TestEventLoopThread();
 
     return 0;
 }
