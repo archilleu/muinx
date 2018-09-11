@@ -76,7 +76,7 @@ using namespace net::detail;
 TimerQueue::TimerQueue(EventLoop* event_loop)
 :   event_loop_(event_loop),
     timerfd_(CreateTimerfd()),
-    timerfd_channel_(event_loop, timerfd_),
+    timerfd_channel_(event_loop, timerfd_, "queue"),
     calling_expired_timers_(false)
 {
     NetLogger_trace("timer queue ctor");
@@ -189,7 +189,7 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(base::Timestamp now)
     for(auto& entry : expired)
     {
         ActiveTimer timer(entry.second, entry.second->sequence());
-        if(1 == active_timers_.erase(timer))
+        if(1 != active_timers_.erase(timer))
         {
             NetLogger_error("erase timer failed: timer:%p id:%ld", timer.first, timer.second);
         }

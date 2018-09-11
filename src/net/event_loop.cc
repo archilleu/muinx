@@ -42,7 +42,7 @@ EventLoop::EventLoop()
     tname_(base::CurrentThread::tname()),
     iteration_(0),
     wakeupfd_(CreateWakeupFd()),
-    wakeup_channel_(new Channel(this, wakeupfd_)),
+    wakeup_channel_(new Channel(this, wakeupfd_, "wakeup")),
     poller_(Poller::NewDefaultPoller(this)),
     timer_queue_(new TimerQueue(this))
 {

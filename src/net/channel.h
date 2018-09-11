@@ -18,7 +18,7 @@ public:
     using ReadEventCallback = std::function<void (uint64_t)>;
 
 public:
-    Channel(EventLoop* event_loop, int fd);
+    Channel(EventLoop* event_loop, int fd, const char* name="");
     ~Channel();
 
 public:
@@ -46,6 +46,7 @@ public:
     bool IsWriting() const      { return events_ & kWriteEvent; }
     bool IsNoneEvent() const    { return events_ == kNoneEvent; }
 
+    const char* name() const    { return name_; }
     int fd() const  { return fd_; }
     int events() const  { return events_; }
     void set_revents(int revents)   { revents_ = revents; }
@@ -68,6 +69,7 @@ private:
 
 private:
     EventLoop* event_loop_;
+    const char* name_;
     const int fd_;
     int events_;
     int revents_;

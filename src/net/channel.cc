@@ -15,8 +15,9 @@ const int Channel::kNoneEvent = 0;
 const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
 const int Channel::kWriteEvent = EPOLLOUT;
 //---------------------------------------------------------------------------
-Channel::Channel(EventLoop* event_loop, int fd)
+Channel::Channel(EventLoop* event_loop, int fd, const char* name)
 :   event_loop_(event_loop),
+    name_(name),
     fd_(fd),
     events_(kNoneEvent),
     revents_(kNoneEvent),
@@ -73,7 +74,7 @@ void Channel::HandleEvent(uint64_t rcv_time)
 //---------------------------------------------------------------------------
 void Channel::HandleEvent_(uint64_t rcv_time)
 {
-    NetLogger_trace("Handling event:fd:%d, events:%s", fd_, REventsToString_().c_str());
+    NetLogger_trace("Channel(%s) handling event: fd:%d, events:%s", name_, fd_, REventsToString_().c_str());
 
     //标记正在处理事件
     handling_ = true;
