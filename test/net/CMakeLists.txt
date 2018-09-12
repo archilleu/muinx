@@ -16,6 +16,8 @@ set(TESTINETADDR test_inet_addr)
 add_executable(${TESTINETADDR} test_inet_address.cc)
 set(TESTSOCKET test_socket)
 add_executable(${TESTSOCKET} test_socket.cc)
+set(TESTACCEPTOR test_acceptor)
+add_executable(${TESTACCEPTOR} test_acceptor.cc)
 #---------------------------------------------------------------------------
 #add include path
 #include_directories(${LIBRARY_OUTPUT_PATH_INC})
@@ -31,6 +33,7 @@ target_link_libraries(${TESTNETERROR} ${LIBNET} ${LIBBASE} pthread rt)
 target_link_libraries(${TESTTIMERQUEUE} ${LIBNET} ${LIBBASE} pthread rt)
 target_link_libraries(${TESTINETADDR} ${LIBNET} ${LIBBASE} pthread rt)
 target_link_libraries(${TESTSOCKET} ${LIBNET} ${LIBBASE} pthread rt)
+target_link_libraries(${TESTACCEPTOR} ${LIBNET} ${LIBBASE} pthread rt)
 #---------------------------------------------------------------------------
 #install target
 #install(TARGETS json_test DESTINATION ${EXECUTABLE_OUTPUT_PATH})
