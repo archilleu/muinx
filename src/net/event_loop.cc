@@ -24,7 +24,7 @@ int CreateWakeupFd()
     if(0 > fd)
     {
         NetLogger_error("eventfd create failed, errno:%d, msg:%s", errno, OSError(errno));
-        abort();
+        exit(errno);
     }
 
     return fd;

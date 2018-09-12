@@ -32,7 +32,7 @@ EventLoop* EventLoopThread::StartLoop()
     if(false == thread_.Start())
     {
         NetLogger_off("event loop thread start failed");
-        abort();
+        exit(errno);
     }
 
     {
