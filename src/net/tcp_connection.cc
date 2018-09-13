@@ -18,7 +18,7 @@ TCPConnection::TCPConnection(EventLoop* ownerloop, std::string&& tcpname, Socket
     peer_addr_(peeraddr),
     state_(CONNECTING),
     socket_(std::move(socket)),
-    channel_(owner_loop_, socket.fd()),
+    channel_(owner_loop_, socket_.fd()),
     overstock_size_(0)
 {
     NetLogger_trace("ctor-->name:%s, fd:%d, localaddr:%s, peeraddr:%s",

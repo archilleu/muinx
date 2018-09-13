@@ -21,8 +21,10 @@ class Socket : public base::Noncopyable
 public:
     Socket(int sockfd);
     Socket(Socket&& other)
-    :   fd_(std::move(other.fd()))
-    {}
+    :   fd_(std::move(other.fd_))
+    {
+        other.fd_ = -1;
+    }
     ~Socket();
 
     int fd() const { return fd_; };
