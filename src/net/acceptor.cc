@@ -33,6 +33,7 @@ Acceptor::Acceptor(EventLoop* event_loop, const InetAddress& addr_listen)
     {
         listen_socket_ = std::make_shared<Socket>(::socket(AF_INET6,
                     SOCK_STREAM|SOCK_NONBLOCK|SOCK_CLOEXEC, 0));
+        listen_socket_->SetIPV6Only();
     }
 
     if(0 > listen_socket_->fd())
@@ -67,7 +68,7 @@ void Acceptor::Listen()
 
     if(0 > ::listen(listen_socket_->fd(), SOMAXCONN))
     {
-        NetLogger_off("listen failed, errno:%d, msg:%s", errno, OSError);
+        NetLogger_off("listen failed, errno:%d, msg:%s", errno, OSError(errno));
         abort();
     }
 
