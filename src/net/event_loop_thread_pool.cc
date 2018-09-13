@@ -47,7 +47,7 @@ void EventLoopThreadPool::Stop()
 {
     loop_main_->AssertInLoopThread();
     assert(true == running_);
-    NetLogger_info("EventLoopTreadPool(%p) start");
+    NetLogger_info("EventLoopTreadPool(%p) stop");
 
     for(auto iter : loop_threads_)
         iter->StopLoop();
