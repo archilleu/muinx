@@ -97,10 +97,13 @@ void Epoller::UpdateChannel(Channel* channel)
     NetLogger_trace("fd:%d, events:%d, status:%d", fd, channel->events(), status);
 
     //当前fd下标大于channels_可容纳的大小
+    //考虑是否和TCPServer一样的扩容机制，目前不需要扩容
+    /*
     if(fd >= static_cast<int>(channels_.size()))
     {
         channels_.resize(channels_.size()*2);
     }
+    */
 
     switch(status)
     {
