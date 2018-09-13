@@ -90,7 +90,7 @@ void EventLoop::Loop()
 
     while(!quit_)
     {
-        uint64_t rcv_time = poller_->Poll(5000);
+        uint64_t rcv_time = poller_->Poll(5);
         const std::vector<Channel*>& active_channels = poller_->active_channels();
         iteration_++;
 
