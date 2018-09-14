@@ -3,6 +3,7 @@
 #define NET_TCP_SERVER_H_
 //---------------------------------------------------------------------------
 #include <vector>
+#include <atomic>
 #include "../base/noncopyable.h"
 #include "callback.h"
 #include "event_loop_thread_pool.h"
@@ -64,7 +65,9 @@ private:
     //vector的下标是TCPConnectionPtr的fd,方便快速定位
     std::vector<TCPConnectionPtr> tcp_conn_list_;
     size_t tcp_conn_count_;
-    int cur_max_fd_; //当前连接最大fd
+    //注释理由：cur_max_fd//只是用来在退出监听通知所有的tcp_connection的哨兵指，
+    //避免遍历整个tcp_conn_list_,该方案可以替代，所以取消
+    //std::atomic<int> cur_max_fd_; //当前连接最大fd
 
     EventLoopThreadPool loop_thread_pool_;
 };

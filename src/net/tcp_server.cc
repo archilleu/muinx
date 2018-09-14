@@ -94,26 +94,21 @@ void TCPServer::Stop()
     loop_thread_pool_.Stop();
 
     //断开所有连接
+    size_t count = 0;
     for(auto& conn : tcp_conn_list_)
     {
         if(!conn)
-            continue;
+        {
+            //连续32(数值大概）个连接为空则认为后面都是无效连接，因为fd系统是按最小可用分配的。
+            if(32 == count++)
+                break;
 
+            continue;
+        }
+
+        count = 0;
         //客户端的连接需要在自己的线程中回调销毁
         conn->owner_loop()->RunInLoop(std::bind(&TCPConnection::ConnectionDestroy, conn));
-
-        //最大fd后面的都是无效的链接,退出循环
-        if(conn->socket().fd() == cur_max_fd_)
-        {
-#ifdef _DEBUG
-            std::for_each(tcp_conn_list_.begin()+cur_max_fd_, tcp_conn_list_.end(),
-                    [](const TCPConnectionPtr& null_conn){
-                        assert(!null_conn);
-                        (void)null_conn;
-                    });
-#endif
-            break;
-        }
     }
 
     return;
@@ -124,18 +119,15 @@ void TCPServer::DumpConnections()
     owner_loop_->AssertInLoopThread();
 
     size_t count = 0;
-    TCPConnectionPtr max_;
     for(size_t i=0; i<tcp_conn_list_.size(); i++)
     {
         if(!tcp_conn_list_[i])
             continue;
 
-        max_ = tcp_conn_list_[i];
-        assert(((void)"conn_ptr fd != idx", max_->socket().fd() == static_cast<int>(i)));
+        assert(((void)"conn_ptr fd != idx", tcp_conn_list_[i]->socket().fd() == static_cast<int>(i)));
         count++;
     }
 
-    assert(((void)"cur_max_fd_!= max", cur_max_fd_ == max_->socket().fd()));
     assert(((void)"conns no eq count", count == tcp_conn_count_));
     NetLogger_trace("has tcp connections:%zu", tcp_conn_count_);
 
@@ -214,35 +206,39 @@ bool TCPServer::AddConnListItem(const TCPConnectionPtr& conn_ptr)
     //if(tcp_conn_list_.size() <= static_cast<size_t>(conn_ptr->socket().fd()))
         //tcp_conn_list_.resize(tcp_conn_list_.size()*2);
 
-    if(tcp_conn_list_.size() < static_cast<size_t>(conn_ptr->socket().fd()))
+    int fd = conn_ptr->socket().fd();
+    if(tcp_conn_list_.size() < static_cast<size_t>(fd))
     {
         NetLogger_warn("connection already max");
         return false;
     }
 
-    if(tcp_conn_list_[conn_ptr->socket().fd()])
+    if(tcp_conn_list_[fd])
     {
         NetLogger_error("connection:%s already exist!!!", conn_ptr->name().c_str());
         assert(0);
     }
 
-    tcp_conn_list_[conn_ptr->socket().fd()] = conn_ptr;
+    tcp_conn_list_[fd] = conn_ptr;
     tcp_conn_count_++;
     return true;
 }
 //---------------------------------------------------------------------------
 void TCPServer::DelConnListItem(const TCPConnectionPtr& conn_ptr)
 {
+    int fd = conn_ptr->socket().fd();
+
     //并不需要锁，因为fd是系统唯一的
-    if(!tcp_conn_list_[conn_ptr->socket().fd()])
+    if(!tcp_conn_list_[fd])
     {
         NetLogger_error("connection:%s not exist!!!", conn_ptr->name().c_str());
         assert(0);
     }
 
-    tcp_conn_list_[conn_ptr->socket().fd()].reset();
-    tcp_conn_list_[conn_ptr->socket().fd()] = nullptr;
+    tcp_conn_list_[fd].reset();
+    tcp_conn_list_[fd] = nullptr;
     tcp_conn_count_--;
+
     return;
 }
 //---------------------------------------------------------------------------
