@@ -88,13 +88,32 @@ uint64_t Epoller::Poll(int timeoutS)
     return now;
 }
 //---------------------------------------------------------------------------
+static const char* StatusToString(int status)
+{
+    switch(status)
+    {
+        case kNew:
+            return "NEW";
+
+        case kAdded:
+            return "ADDED";
+
+        case kDel:
+            return "DEL";
+
+        default:
+            return "INVALID";
+    }
+}
+//---------------------------------------------------------------------------
 void Epoller::UpdateChannel(Channel* channel)
 {
     this->AssertInLoopThread();
 
     int fd = channel->fd();
     int status = channel->stauts();
-    NetLogger_trace("fd:%d, events:%d, status:%d", fd, channel->events(), status);
+    NetLogger_trace("fd:%d, events:%s, status:%s", fd, channel->EventsToString_().c_str(),
+            StatusToString(status));
 
     //当前fd下标大于channels_可容纳的大小
     //考虑是否和TCPServer一样的扩容机制，目前不需要扩容
@@ -194,7 +213,8 @@ void Epoller::RemoveChannel(Channel* channel)
 
     int fd = channel->fd();
     int status = channel->stauts();
-    NetLogger_trace("fd:%d events:%d status:%d", fd, channel->events(), status);
+    NetLogger_trace("fd:%d, events:%s, status:%s", fd, channel->EventsToString_().c_str(),
+            StatusToString(status));
 
     if(kNew != status)
     {
