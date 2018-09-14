@@ -18,6 +18,39 @@ namespace net
 namespace
 {
 //---------------------------------------------------------------------------
+void InitSignal()
+{
+    //信号屏蔽需要在其他线程创建之前初始化,这样其他线程可以继承该屏蔽字,
+
+    //block signal
+    sigset_t signal_mask;
+    sigemptyset(&signal_mask);
+    sigaddset(&signal_mask, SIGPIPE);
+    sigaddset(&signal_mask, SIGINT);
+    sigaddset(&signal_mask, SIGQUIT);
+    sigaddset(&signal_mask, SIGUSR1);
+    sigaddset(&signal_mask, SIGUSR2);
+
+    if(-1 == pthread_sigmask(SIG_BLOCK, &signal_mask, NULL))
+    {
+        exit(-1);
+    }
+
+     return;
+}
+//---------------------------------------------------------------------------
+class GlobalInit 
+{
+    public:
+        GlobalInit()
+        {
+            InitSignal();
+
+            //设置默认的logger
+            g_net_logger = base::Logger::stdout_logger_mt();
+        }
+}g_init;
+//---------------------------------------------------------------------------
 int CreateWakeupFd()
 {
     int fd = ::eventfd(0, EFD_NONBLOCK|EFD_CLOEXEC);
@@ -44,7 +77,8 @@ EventLoop::EventLoop()
     wakeupfd_(CreateWakeupFd()),
     wakeup_channel_(new Channel(this, wakeupfd_, "wakeup")),
     poller_(Poller::NewDefaultPoller(this)),
-    timer_queue_(new TimerQueue(this))
+    timer_queue_(new TimerQueue(this)),
+    sig_fd_(0)
 {
     NetLogger_trace("EventLoop create %p, in thread: %d, name:%s", this, tid_, tname_);
 
@@ -74,6 +108,13 @@ EventLoop::~EventLoop()
     wakeup_channel_->DisableAll();
     wakeup_channel_->Remove();
     ::close(wakeupfd_);
+
+    if(sig_channel_)
+    {
+        sig_channel_->DisableAll();
+        sig_channel_->Remove();
+        ::close(sig_fd_);
+    }
 
     return;
 }
@@ -105,7 +146,7 @@ void EventLoop::Loop()
         DoPendingTasks();
 
         //刷新日志
-        net_logger->Flush();
+        g_net_logger->Flush();
     }
 
     //处理剩下的工作
@@ -162,31 +203,68 @@ void EventLoop::QueueInLoop(Task&& task)
 
     return;
 }
-//-------EventLoop::--------------------------------------------------------------------
+//---------------------------------------------------------------------------
 TimerId EventLoop::TimerAt(base::Timestamp when, TimerCallback&& cb)
 {
     return timer_queue_->AddTimer(std::move(cb), when, 0);
 }
-//-------EventLoop::--------------------------------------------------------------------
+//---------------------------------------------------------------------------
 TimerId EventLoop::TimerAfter(int delayS, TimerCallback&& cb)
 {
     base::Timestamp when = base::Timestamp::Now().AddTime(delayS);
     return timer_queue_->AddTimer(std::move(cb), when, 0);
 }
-//-------EventLoop::--------------------------------------------------------------------
+//---------------------------------------------------------------------------
 TimerId EventLoop::TimerInterval(int intervalS, TimerCallback&& cb)
 {
     return timer_queue_->AddTimer(std::move(cb), base::Timestamp::Now(), intervalS);
 }
-//-------EventLoop::--------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void EventLoop::TimerCancel(const TimerId& timer_id)
 {
     timer_queue_->Cancel(timer_id);
 }
-//-------EventLoop::--------------------------------------------------------------------
+//---------------------------------------------------------------------------
+void EventLoop::SetHandleSingnal()
+{
+    assert(((void)"can only handle signal in main thread", base::CurrentThread::IsMainThread()));
+    assert(((void)"already have signal channel", sig_channel_.get()==0));
+
+    //handel sig through epoll
+    sigset_t signal_mask;
+    sigemptyset(&signal_mask);
+    sigaddset(&signal_mask, SIGINT);
+    sigaddset(&signal_mask, SIGQUIT);
+    sigaddset(&signal_mask, SIGUSR1);
+    sigaddset(&signal_mask, SIGUSR2);
+    int sfd = signalfd(-1, &signal_mask, SFD_NONBLOCK|SFD_CLOEXEC);
+    if(-1 == sfd)
+    {
+        NetLogger_off("create signal fd failed");
+        exit(-1);
+    }
+    sig_fd_ = sfd;
+
+    sig_channel_.reset(new Channel(this, sig_fd_));
+    sig_channel_->set_read_cb(std::bind(&EventLoop::HandleSignal, this));
+    sig_channel_->EnableReading();
+
+    return;
+}
+//---------------------------------------------------------------------------
  EventLoop* EventLoop::GetEventLoopOfCurrentThread()
 {
     return t_loop_in_current_thread;
+}
+//---------------------------------------------------------------------------
+void EventLoop::SetLogger(const std::string& path, base::Logger::Level level,
+        base::Logger::Level flush_level)
+{
+    g_net_logger = base::Logger::file_stdout_logger_mt(path);
+    g_net_logger->set_level(level);
+    g_net_logger->set_flush_level(flush_level);
+
+    return;
 }
 //---------------------------------------------------------------------------
 void EventLoop::AbortNotInLoopThread() const
@@ -218,6 +296,11 @@ void EventLoop::HandleWakeup()
     }
 
     return;
+}
+//---------------------------------------------------------------------------
+void EventLoop::HandleSignal()
+{
+
 }
 //---------------------------------------------------------------------------
 void EventLoop::DoPendingTasks()

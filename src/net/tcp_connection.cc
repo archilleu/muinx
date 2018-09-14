@@ -75,7 +75,7 @@ void TCPConnection::Send(const char* dat, size_t len)
     return;
 }
 //---------------------------------------------------------------------------
-void TCPConnection::Send(const net::MemoryBlock&& dat)
+void TCPConnection::Send(net::MemoryBlock&& dat)
 {
     if(CONNECTED == state_)
     {
@@ -188,7 +188,7 @@ void TCPConnection::_Send(const char* dat, size_t len)
     return;
 }
 //---------------------------------------------------------------------------
-void TCPConnection::SendInLoop(net::MemoryBlock dat)
+void TCPConnection::SendInLoop(const net::MemoryBlock& dat)
 {
     _Send(dat.data(), dat.size());
     return;
@@ -211,8 +211,8 @@ ssize_t TCPConnection::_SendMostPossible(const char* dat, size_t len)
             //if((EAGAIN!=errno) && (EWOULDBLOCK!=errno) && (ECONNRESET!=errno) && (EPIPE!=errno))
             {
                 NetLogger_debug("send failed, errno:%d, msg:%s, name:%s, fd:%d, localaddr:%s, peeraddr:%s",
-                        errno, OSError(errno), name_.c_str(), socket_.fd(), local_addr_.IpPort().c_str(),
-                        peer_addr_.IpPort().c_str());
+                        errno, OSError(errno), name_.c_str(), socket_.fd(), 
+                        local_addr_.IpPort().c_str(), peer_addr_.IpPort().c_str());
 
                 //不需要HandleClose，原因如上
                 //HandleClose();
@@ -233,7 +233,8 @@ void TCPConnection::_SendDatQueueInBuffer(const char* dat, size_t remain)
     //高发送水位警示
     size_t wait_send_size = buffer_output_.ReadableBytes() + remain;
     if((overstock_size_<=wait_send_size) && (high_water_mark_cb_))
-        owner_loop_->QueueInLoop(std::bind(high_water_mark_cb_, shared_from_this(), wait_send_size));
+        owner_loop_->QueueInLoop(std::bind(high_water_mark_cb_,
+                    shared_from_this(), wait_send_size));
     
     //添加未完成发送的数据到缓存
     buffer_output_.Append(dat-remain, remain);

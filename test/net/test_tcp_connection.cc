@@ -28,17 +28,17 @@ namespace
 //---------------------------------------------------------------------------
 TCPServer* svr;
 EventLoop* g_loop;
-//void Dump()
-//{
-//    svr->DumpConnections();
-//}
-////---------------------------------------------------------------------------
-//void Quit()
-//{
-//    g_loop->Quit();
-//}
-////---------------------------------------------------------------------------
-//
+void Dump()
+{
+    svr->DumpConnections();
+}
+//---------------------------------------------------------------------------
+void Quit()
+{
+    g_loop->Quit();
+}
+//---------------------------------------------------------------------------
+
 }
 //---------------------------------------------------------------------------
 bool Test_Normal()
@@ -57,9 +57,9 @@ bool Test_Normal()
     TCPServer tcp_server(&loop, 9999);
     svr = &tcp_server;
     
-    //loop.set_sig_usr1_callback(Dump);
-    //loop.set_sig_quit_callback(Quit);
-    //loop.SetAsSignalHandleEventLoop();
+    loop.set_sig_usr1_cb(Dump);
+    loop.set_sig_quit_cb(Quit);
+    loop.SetHandleSingnal();
     tcp_server.set_connection_cb(std::bind(OnConnection, std::placeholders::_1));
     tcp_server.set_disconnection_cb(std::bind(OnDisconnection, std::placeholders::_1));
     tcp_server.Start();
@@ -75,9 +75,9 @@ bool Test_MultiThread()
     EventLoop loop;
     g_loop = &loop;
     TCPServer tcp_server(&loop, 9999);
-    //loop.set_sig_usr1_callback(Dump);
-    //loop.set_sig_quit_callback(Quit);
-    //loop.SetAsSignalHandleEventLoop();
+    loop.set_sig_usr1_cb(Dump);
+    loop.set_sig_quit_cb(Quit);
+    loop.SetHandleSingnal();
     tcp_server.set_event_loop_nums(8);
     tcp_server.set_connection_cb(std::bind(OnConnection, std::placeholders::_1));
     tcp_server.set_disconnection_cb(std::bind(OnDisconnection, std::placeholders::_1));
@@ -91,6 +91,7 @@ bool Test_MultiThread()
 int main(int, char**)
 {
     Test_Normal();
+    //Test_MultiThread();
 
     return 0;
 }

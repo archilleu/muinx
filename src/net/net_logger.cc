@@ -2,7 +2,7 @@
 #include "net_logger.h"
 #include <cstring>
 //---------------------------------------------------------------------------
-std::shared_ptr<base::Logger> net_logger = base::Logger::file_stdout_logger_mt(".");
+std::shared_ptr<base::Logger> g_net_logger;
 //---------------------------------------------------------------------------
 namespace net
 {

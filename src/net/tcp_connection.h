@@ -44,7 +44,7 @@ public:
 
     //发送数据,线程安全
     void Send(const char* dat, size_t len);
-    void Send(const net::MemoryBlock&& dat);
+    void Send(net::MemoryBlock&& dat);
 
     //关闭链接
     void ShutdownWirte();
@@ -77,7 +77,7 @@ private:
 private:
     void _Send(const char* dat, size_t len);
     //如果上面的Send调用不在本io线程中调用,则转换到本线程发送数据,达到线程安全的目的
-    void SendInLoop(net::MemoryBlock dat);
+    void SendInLoop(const net::MemoryBlock& dat);
 
     ssize_t _SendMostPossible(const char* dat, size_t len);         //尽可能的发送数据
     void  _SendDatQueueInBuffer (const char* dat, size_t remain);   //未完成发送的数据放入缓存

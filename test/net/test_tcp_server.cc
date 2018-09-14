@@ -1,16 +1,14 @@
 //---------------------------------------------------------------------------
 #include <unistd.h>
-#include "test_tcp_connection.h"
-#include "../src/event_loop.h"
-#include "../src/event_loop_thread_pool.h"
-#include "../src/tcp_server.h"
-#include "../src/tcp_connection.h"
-#include "../src/acceptor.h"
-#include "../src/buffer.h"
-#include "../src/net_log.h"
+#include "../../src/net/event_loop.h"
+#include "../../src/net/event_loop_thread_pool.h"
+#include "../../src/net/tcp_server.h"
+#include "../../src/net/tcp_connection.h"
+#include "../../src/net/acceptor.h"
+#include "../../src/net/buffer.h"
+#include "../../src/net/net_logger.h"
 //---------------------------------------------------------------------------
 using namespace net;
-using namespace net::test;
 //---------------------------------------------------------------------------
 namespace
 {
@@ -33,9 +31,9 @@ public:
         if(sizeof(Header) > buffer.ReadableBytes())
             return 0;
 
-        Header header  = *reinterpret_cast<const Header*>(buffer.Peek());
+        Header header = *reinterpret_cast<const Header*>(buffer.Peek());
         header.dat_len = be32toh(header.dat_len);
-        header.type    = be32toh(header.type);
+        header.type = be32toh(header.type);
         if((sizeof(Header)+header.dat_len) > buffer.ReadableBytes())
             return 0;
 
@@ -64,21 +62,7 @@ void Quit()
 }
 }
 //---------------------------------------------------------------------------
-bool TestTCPConnection::DoTest()
-{
-    if(false == Test_Illegal())     return false;
-    if(false == Test_Normal())      return false;
-    if(false == Test_MultiThread()) return false;
-
-    return true;
-}
-//---------------------------------------------------------------------------
-bool TestTCPConnection::Test_Illegal()
-{
-    return true;
-}
-//---------------------------------------------------------------------------
-bool TestTCPConnection::Test_Normal()
+bool Test_Normal()
 {
     EventLoop::SetLogger("/tmp/logger", EventLoop::ERROR);
     EventLoop loop;

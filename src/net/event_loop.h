@@ -8,7 +8,8 @@
 #include "../base/noncopyable.h"
 #include "../base/thread.h"
 #include "../base/timestamp.h"
-#include "../net/callback.h"
+#include "callback.h"
+#include "net_logger.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -22,12 +23,24 @@ class EventLoop : public base::Noncopyable
 {
 public:
     using Task = std::function<void (void)>;
+    using SignalFunc = std::function<void (void)>;
+    using BeforLoopFunc = std::function<void (void)>;
+    using AfterLoopFunc = std::function<void (void)>;
 
     EventLoop();
     ~EventLoop();
 
+public:
     void Loop();
     void Quit();
+
+    void set_sig_int_cb(SignalFunc&& cb) { sig_int_cb_ = std::move(cb); }
+    void set_sig_quit_cb(SignalFunc&& cb) { sig_quit_cb_ = std::move(cb); }
+    void set_sig_usr1_cb(SignalFunc&& cb) { sig_usr1_cb_ = std::move(cb); }
+    void set_sig_usr2_cb(SignalFunc&& cb) { sig_usr2_cb_ = std::move(cb); }
+
+    void set_loop_befor_function(BeforLoopFunc&& cb) { loop_befor_func_ = std::move(cb); }
+    void set_loop_after_function(AfterLoopFunc&& cb) { loop_after_func_ = std::move(cb); }
 
     void AssertInLoopThread() const
     {
@@ -49,8 +62,15 @@ public:
     TimerId TimerInterval(int intervalS, TimerCallback&& cb);
     void TimerCancel(const TimerId& timer_id);
 
+    //处理信号，只能在主线程调用
+    void SetHandleSingnal();
+
 public:
     static EventLoop* GetEventLoopOfCurrentThread();
+
+    //设置日志
+    static void SetLogger(const std::string& path, base::Logger::Level level,
+            base::Logger::Level flush_level);
 
 private:
     void AbortNotInLoopThread() const;
@@ -59,6 +79,9 @@ private:
     //为避免发生这样的情况,使用额外的手动事件来触发poll
     void Wakeup();
     void HandleWakeup();
+
+    //处理信号
+    void HandleSignal();
 
     //处理RunInLoop和QueueInLoop的请求
     void DoPendingTasks();
@@ -90,6 +113,18 @@ private:
 
     std::shared_ptr<Poller> poller_;
     std::shared_ptr<TimerQueue> timer_queue_;
+
+    //signal 处理
+    int sig_fd_;
+    SignalFunc  sig_int_cb_;
+    SignalFunc  sig_quit_cb_;
+    SignalFunc  sig_usr1_cb_;
+    SignalFunc  sig_usr2_cb_;
+    std::shared_ptr<Channel> sig_channel_;
+
+    //befor after run
+    BeforLoopFunc loop_befor_func_;
+    AfterLoopFunc loop_after_func_;
 };
 
 
