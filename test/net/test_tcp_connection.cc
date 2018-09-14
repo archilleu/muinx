@@ -12,13 +12,13 @@ using namespace net;
 //---------------------------------------------------------------------------
 void OnConnection(const TCPConnectionPtr& conn_ptr)
 {
-    std::cout << "TestTCPServer" << ": connect:" << conn_ptr->name() << std::endl;
+    std::cout << "TestTCPServer" << ": connect name:" << conn_ptr->name() << std::endl;
     std::cout << "ptr owner count:" <<  conn_ptr.use_count() << std::endl;
 }
 //---------------------------------------------------------------------------
 void OnDisconnection(const TCPConnectionPtr& conn_ptr)
 {
-    std::cout << "TestTCPServer" << ": disconnect:" << conn_ptr->name() << std::endl;
+    std::cout << "TestTCPServer" << ": disconnect name:" << conn_ptr->name() << std::endl;
     std::cout << "count:" <<  conn_ptr.use_count() << std::endl;
 }
 //---------------------------------------------------------------------------
