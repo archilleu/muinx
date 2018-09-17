@@ -300,7 +300,57 @@ void EventLoop::HandleWakeup()
 //---------------------------------------------------------------------------
 void EventLoop::HandleSignal()
 {
+    struct signalfd_siginfo siginfo;
+    ssize_t len = sizeof(siginfo);
+    ssize_t offset = 0;
+    while(len)
+    {
+        ssize_t rlen = read(sig_fd_, reinterpret_cast<char*>(&siginfo)+offset, len);
+        if(-1 == rlen)
+        {
+            if(EINTR==errno || (EAGAIN==errno))
+                continue;
 
+            NetLogger_error("read signal failed, errno:%d, msg:%s", errno, OSError(errno));
+                return;
+        }
+
+        len -= rlen;
+        offset += rlen;
+    }
+
+    switch(siginfo.ssi_signo)
+    {
+        case SIGINT:
+            if(sig_int_cb_)
+                sig_int_cb_();
+
+            break;
+
+        case SIGQUIT:
+            if(sig_quit_cb_)
+                sig_quit_cb_();
+
+            break;
+
+        case SIGUSR1:
+            if(sig_usr1_cb_)
+                sig_usr1_cb_();
+
+            break;
+
+        case SIGUSR2:
+            if(sig_usr2_cb_)
+                sig_usr2_cb_();
+
+            break;
+
+        default:
+            NetLogger_error("recv error signal, signo:%d", siginfo.ssi_signo);
+            assert(((void)"recv error signal", 0));
+    }
+
+    return;
 }
 //---------------------------------------------------------------------------
 void EventLoop::DoPendingTasks()
