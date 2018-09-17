@@ -22,6 +22,8 @@ set(TESTBUFFER test_buffer)
 add_executable(${TESTBUFFER} test_buffer.cc)
 set(TESTCONNECTION test_connection)
 add_executable(${TESTCONNECTION} test_tcp_connection.cc)
+set(TESTSERVER test_server)
+add_executable(${TESTSERVER} test_tcp_server.cc)
 #---------------------------------------------------------------------------
 #add include path
 #include_directories(${LIBRARY_OUTPUT_PATH_INC})
@@ -40,6 +42,7 @@ target_link_libraries(${TESTSOCKET} ${LIBNET} ${LIBBASE} pthread rt)
 target_link_libraries(${TESTACCEPTOR} ${LIBNET} ${LIBBASE} pthread rt)
 target_link_libraries(${TESTBUFFER} ${LIBNET} ${LIBBASE} pthread rt)
 target_link_libraries(${TESTCONNECTION} ${LIBNET} ${LIBBASE} pthread rt)
+target_link_libraries(${TESTSERVER} ${LIBNET} ${LIBBASE} pthread rt)
 #---------------------------------------------------------------------------
 #install target
 #install(TARGETS json_test DESTINATION ${EXECUTABLE_OUTPUT_PATH})
