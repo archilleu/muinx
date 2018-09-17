@@ -28,8 +28,20 @@ namespace
 //---------------------------------------------------------------------------
 TCPServer* svr;
 EventLoop* g_loop;
-void Dump()
+//---------------------------------------------------------------------------
+void FunInt()
 {
+    std::cout << "sig int" << std::endl;
+}
+//---------------------------------------------------------------------------
+void FunUsr1()
+{
+    std::cout << "sig usr1" << std::endl;
+}
+//---------------------------------------------------------------------------
+void FunUsr2()
+{
+    std::cout << "sig usr2" << std::endl;
     svr->DumpConnections();
 }
 //---------------------------------------------------------------------------
@@ -57,7 +69,9 @@ bool Test_Normal()
     TCPServer tcp_server(&loop, 9999);
     svr = &tcp_server;
     
-    loop.set_sig_usr1_cb(Dump);
+    loop.set_sig_int_cb(FunInt);
+    loop.set_sig_usr1_cb(FunUsr1);
+    loop.set_sig_usr2_cb(FunUsr2);
     loop.set_sig_quit_cb(Quit);
     loop.SetHandleSingnal();
     tcp_server.set_connection_cb(std::bind(OnConnection, std::placeholders::_1));
@@ -75,7 +89,9 @@ bool Test_MultiThread()
     EventLoop loop;
     g_loop = &loop;
     TCPServer tcp_server(&loop, 9999);
-    loop.set_sig_usr1_cb(Dump);
+    loop.set_sig_int_cb(FunInt);
+    loop.set_sig_usr1_cb(FunUsr1);
+    loop.set_sig_usr2_cb(FunUsr2);
     loop.set_sig_quit_cb(Quit);
     loop.SetHandleSingnal();
     tcp_server.set_event_loop_nums(8);
@@ -90,8 +106,8 @@ bool Test_MultiThread()
 //---------------------------------------------------------------------------
 int main(int, char**)
 {
-    Test_Normal();
-    //Test_MultiThread();
+    //Test_Normal();
+    Test_MultiThread();
 
     return 0;
 }
