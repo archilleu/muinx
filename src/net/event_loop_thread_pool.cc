@@ -21,7 +21,9 @@ EventLoopThreadPool::EventLoopThreadPool(EventLoop* loop_main)
 EventLoopThreadPool::~EventLoopThreadPool()
 {
     NetLogger_trace("EventLoopThreadPool(%p) dtor");
-    Stop();
+
+    if(running_)
+        Stop();
 }
 //---------------------------------------------------------------------------
 void EventLoopThreadPool::Start()
