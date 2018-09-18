@@ -81,7 +81,7 @@ bool TestTCPServer::Test_Normal()
     loop.set_sig_quit_cb(Quit);
     loop.SetHandleSingnal();
 
-    server.set_event_loop_nums(1);
+    server.set_event_loop_nums(8);
     server.set_connection_cb(std::bind(&TestTCPServer::OnConnection,
                 this, std::placeholders::_1));
     server.set_disconnection_cb(std::bind(&TestTCPServer::OnDisconnection,
@@ -131,36 +131,49 @@ void TestTCPServer::OnRead(const TCPConnectionPtr& conn_ptr, Buffer& rbuf)
 
     std::cout << "rbuf data:" << rbuf.Peek() << std::endl;;
 
-    int len = Decoder::Decode(rbuf);
-    if(0 == len)
-        return;
-
-    if(rand()%50 == 1)
+    //循环检测是否还有未处理的包
+    for(;;)
     {
-        Close();
-    }
-        
-    Decoder::Header header = Decoder::MakeHeader(len, Decoder::Header::kReply);
-    conn_ptr->Send(reinterpret_cast<char*>(&header), sizeof(Decoder::Header));
-    std::cout << "==================>>req len:" << len << "rbuf len:"
-        << rbuf.ReadableBytes() << " char:" << rbuf.Peek()[0] << std::endl;
-    conn_ptr->Send(rbuf.Peek(), len);
-    rbuf.Retrieve(len);
+        int len = Decoder::Decode(rbuf);
+        if(0 == len)
+            return;
 
-    Notify();
+        //随机关闭
+        if(rand()%50 == 1)
+        {
+            Close();
+        }
+            
+        Decoder::Header header = Decoder::MakeHeader(len, Decoder::Header::kReply);
+        conn_ptr->Send(reinterpret_cast<char*>(&header), sizeof(Decoder::Header));
+        std::cout << "rcv len:" << len << " readable buf len:"
+            << rbuf.ReadableBytes() << " char:" << rbuf.Peek()[0] << std::endl;
+
+        //echo数据
+        conn_ptr->Send(rbuf.Peek(), len);
+        rbuf.Retrieve(len);
+
+        Notify();
+    }
 
     return;
 }
 //---------------------------------------------------------------------------
 void TestTCPServer::OnWriteComplete(const TCPConnectionPtr& conn_ptr)
 {
-    std::cout << "conn write complete:" << conn_ptr->name() << std::endl;
+    std::cout << "write complete name:" << conn_ptr->name()
+        << " local addr:" << conn_ptr->local_addr().IpPort()
+        << " peer addr:" << conn_ptr->peer_addr().IpPort()
+        << std::endl;
     return;
 }
 //---------------------------------------------------------------------------
 void TestTCPServer::OnWriteWirteHighWater(const TCPConnectionPtr& conn_ptr, size_t size)
 {
-    std::cout << "conn write high water:" << conn_ptr->name() << " size:" << size << std::endl;
+    std::cout << "write highwater name:" << conn_ptr->name() << " size:" << size
+        << " local addr:" << conn_ptr->local_addr().IpPort()
+        << " peer addr:" << conn_ptr->peer_addr().IpPort()
+        << std::endl;
     return;
 }
 //---------------------------------------------------------------------------

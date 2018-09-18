@@ -14,11 +14,21 @@ import os
 HOST = "0.0.0.0"
 PORT = 9999
 
+#客户端数量
+CLIENT_NUM = 64 
+
+#操作次数
 #TIMES = 1
-TIMES = 1000000
+TIMES = 1000 * 10
+
+#请求响应还是通知
 REPLY = 1
 NOTIFY = 2
 
+#发送数据最大带下
+MAX_SEND_LEN = 1024*64
+
+#打印源码所在行
 def no():
     try:
         raise Exception
@@ -29,8 +39,8 @@ def no():
 class EpollConnector:
     '''generic epoll connectors which connect to down stream server'''
 
-    def __init__(self, num, srv, times):
-        self.num = num
+    def __init__(self, client_num, srv, times):
+        self.client_num = client_num
         self.srv_addr = srv
         self.times= times
         self.epoll = select.epoll()
@@ -42,19 +52,22 @@ class EpollConnector:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(self.srv_addr)
             fileno = s.fileno()
-            self.epoll.register(fileno, select.EPOLLOUT | select.EPOLLIN | select.EPOLLET)
+            self.epoll.register(fileno, select.EPOLLOUT | select.EPOLLIN |
+                                select.EPOLLET)
         except socket.error:
             print('no:', no(), 'ERROR in connect to ',  self.srv_addr)
             sys.exit(1)
         else:
             self.connections[fileno] = s
-            byte_data = bytearray(random.randint(1, 1024*64))
+
+            #构造随机数据
+            byte_data = bytearray(random.randint(1, MAX_SEND_LEN))
             byte_len = len(byte_data)
             for i in range(byte_len):
                 v = random.randint(0, 255)
                 byte_data[i] = v;
-            self.dats[fileno]=byte_data
-            print('no:', no(), "connect nums:peer:", s.getpeername(), "local:",s.getsockname())
+            self.dats[fileno] = byte_data
+            print('no:', no(), "connect client_nums:peer:", s.getpeername(), "local:",s.getsockname())
 
     def Reconnect(self, fileno):
         self.epoll.unregister(fileno)
@@ -87,13 +100,13 @@ class EpollConnector:
             if len(dat) == header[0]:
                 if REPLY == header[1]:
                     if dat != self.dats[fileno]:
-                        pdb.set_trace()
                         assert False, "recv dat error"
                     else:
                         print('no:', no(), "recv dat success!!!!!")
 
                 elif NOTIFY == header[1]:
 
+                    #pdb.set_trace()
                     addr = self.connections[fileno].getsockname()
                     str_addr = addr[0] + ":" + str(addr[1])
                     if str_addr != dat.decode("utf-8"):
@@ -112,7 +125,8 @@ class EpollConnector:
             self.Reconnect(fileno)
 
         finally:
-            self.epoll.modify(fileno, select.EPOLLOUT | select.EPOLLIN | select.EPOLLET)
+            self.epoll.modify(fileno, select.EPOLLOUT | select.EPOLLIN |
+                              select.EPOLLET)
 
         pass
 
@@ -156,12 +170,10 @@ class EpollConnector:
             raise
 
     def loop_epoll(self):
-        for i in range(self.num):
+        for i in range(self.client_num):
             self.Connect()
-
         try:
             for i in range(self.times):
-
                 if 0 == random.randint(0, 64):
                     self.random_reconnect()
 
@@ -173,7 +185,7 @@ class EpollConnector:
 
 
 if __name__ == "__main__":
-    svr = EpollConnector(64, (HOST, PORT), TIMES)
+    svr = EpollConnector(CLIENT_NUM, (HOST, PORT), TIMES)
     svr.loop_epoll()
 
     p = subprocess.Popen(['ps','-A'], stdout=subprocess.PIPE)
