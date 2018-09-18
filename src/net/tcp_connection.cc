@@ -168,13 +168,13 @@ void TCPConnection::_Send(const char* dat, size_t len)
     if(CONNECTED == state_)
     {
         ssize_t remain = _SendMostPossible(dat, len);
-        if(-1 == remain)
+        if(-1 == remain)    //发送出错不需要特别处理，因为下一步会关闭连接
             return;
 
         if(0 != remain)
         {
             //放入缓存
-            _SendDatQueueInBuffer(dat, remain);
+            _SendDatQueueInBuffer(dat+(len-remain), remain);
             return;
         }
         
@@ -237,7 +237,7 @@ void TCPConnection::_SendDatQueueInBuffer(const char* dat, size_t remain)
                     shared_from_this(), wait_send_size));
     
     //添加未完成发送的数据到缓存
-    buffer_output_.Append(dat-remain, remain);
+    buffer_output_.Append(dat, remain);
     if(false == channel_.IsWriting())
         channel_.EnableWriting();
 
