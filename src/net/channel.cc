@@ -12,8 +12,8 @@ namespace net
 
 //---------------------------------------------------------------------------
 const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLERR | EPOLLHUP;
-const int Channel::kWriteEvent = EPOLLOUT | EPOLLRDHUP | EPOLLERR | EPOLLHUP;
+const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
+const int Channel::kWriteEvent = EPOLLOUT;
 //---------------------------------------------------------------------------
 Channel::Channel(EventLoop* event_loop, int fd, const char* name)
 :   event_loop_(event_loop),
