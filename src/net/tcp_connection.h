@@ -68,6 +68,7 @@ public:
 private:
     //以下方法仅供TCPServer调用
     friend class TCPServer;
+    friend class TCPClient;
     //连接就绪,这会让该连接可以收发数据
     void ConnectionEstablished();
 
