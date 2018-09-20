@@ -28,9 +28,11 @@ def SendAndRecv(conn_ptr):
         try:
             data = conn_ptr.recv(LEN, socket.MSG_WAITALL)
             if len(data) == LEN:
+                print("rcv len:", LEN) 
                 conn_ptr.send(data)
 
         except OSError as e:
+            print("oserror", e)
             break;
 
     return

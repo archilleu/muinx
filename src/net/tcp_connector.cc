@@ -74,7 +74,8 @@ void TCPConnector::StopInLoop()
 
     event_loop_->TimerCancel(timer_id_);
 
-    if(CONNECTED == state_)
+    //如果是正在连接状态，则Channel正在等待服务器建立连接，此时需要移除侦听状态
+    if(CONNECTING == state_)
     {
         state_ = DISCONNECTED;
         RemoveAndResetChannel();
