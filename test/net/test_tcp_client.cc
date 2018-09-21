@@ -67,15 +67,15 @@ void OnWirteHighWater(const TCPConnectionPtr&, size_t size)
 void OnThreadSend()
 {
 
-    for(int i=0; i<10; i++)
+    for(int i=0; i<1000; i++)
     {
 
         TCPConnectionPtr conn_ptr = g_client->connection();
         if(conn_ptr)
         {
             conn_ptr->Send(msg.data(), msg.length());
-            sleep(1);
         }
+        sleep(1);
     }
 
     g_client->Disconnect();

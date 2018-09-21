@@ -260,7 +260,11 @@ void EventLoop::SetHandleSingnal()
 void EventLoop::SetLogger(const std::string& path, base::Logger::Level level,
         base::Logger::Level flush_level)
 {
-    g_net_logger = base::Logger::file_stdout_logger_mt(path);
+    if(!path.empty())
+    {
+        g_net_logger = base::Logger::file_stdout_logger_mt(path);
+    }
+
     g_net_logger->set_level(level);
     g_net_logger->set_flush_level(flush_level);
 
