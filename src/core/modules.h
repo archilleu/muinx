@@ -1,15 +1,15 @@
 //---------------------------------------------------------------------------
-#include "core_module_core.h"
+#ifndef CORE_MODULES_H_
+#define CORE_MODULES_H_
+//---------------------------------------------------------------------------
+#include <memory>
+#include "module.h"
 //---------------------------------------------------------------------------
 namespace core
 {
 
-    std::vector<Module*> g_modules =
-    {
-        &g_core_module_core
-    };
+    extern std::vector<Module*> g_modules;
 
 }//namespace core
 //---------------------------------------------------------------------------
-
-
+#endif //CORE_MODULES_H_

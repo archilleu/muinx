@@ -17,7 +17,7 @@ add_executable(${EXENAME} ${DIR_SRC})
 #---------------------------------------------------------------------------
 #add link lib
 set(LIBBASE base)
-set(LIBTOOLS base)
+set(LIBTOOLS tools)
 target_link_libraries(${EXENAME} ${LIBBASE} ${LIBTOOLS}  pthread rt)
 #---------------------------------------------------------------------------
 #install target 
