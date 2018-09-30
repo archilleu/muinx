@@ -3,6 +3,7 @@
 #define BASE_FUNCTION_H_
 //---------------------------------------------------------------------------
 #include <string>
+#include <vector>
 //---------------------------------------------------------------------------
 namespace base
 {
@@ -55,6 +56,7 @@ bool FileExist  (const std::string& pathname);
 bool FileExist  (const char* pathname);
 
 bool LoadFile   (const std::string& path, MemoryBlock* result);
+bool LoadFile   (const std::string& path, std::vector<char>* result);
 bool LoadFile   (const char* path, MemoryBlock* result);
 bool SaveFile   (const std::string& path, const char* dat, size_t len);
 bool SaveFile   (const char* path, const char* dat, size_t len);

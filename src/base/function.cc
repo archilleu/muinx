@@ -545,6 +545,41 @@ bool LoadFile(const std::string& path, MemoryBlock* result)
     return LoadFile(path.c_str(), result);
 }
 //---------------------------------------------------------------------------
+bool LoadFile(const std::string& path, std::vector<char>* result)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    if(0 > fd)
+        return false;
+
+    //获取文件大小
+    struct stat file_info;
+    int err_code = fstat(fd, &file_info);
+    if(0 > err_code)
+    {
+        close(fd);
+        return false;
+    }
+    result->resize(file_info.st_size);
+
+    size_t offset = 0;
+    size_t size = file_info.st_size;
+    for(;0<size;)
+    {
+        ssize_t rlen = read(fd, result->data()+offset, size);
+        if(0 > rlen)
+        {
+            close(fd);
+            return false;
+        }
+
+        offset += rlen;
+        size -= rlen;
+    }
+
+    close(fd);
+    return true;
+}
+//---------------------------------------------------------------------------
 bool LoadFile(const char* path, MemoryBlock* result)
 {
     int fd = open(path, O_RDONLY);
