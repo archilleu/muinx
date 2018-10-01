@@ -4,10 +4,6 @@
 namespace core
 {
 
-    std::vector<Module*> g_modules =
-    {
-        &g_core_module_core
-    };
 
 }//namespace core
 //---------------------------------------------------------------------------

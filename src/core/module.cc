@@ -6,7 +6,7 @@ namespace core
 
 //---------------------------------------------------------------------------
 Module::Module()
-:   type_(MODULE_INVALID),
+:   type_(INVALID),
     index_(-1),
     module_index_(-1)
 {

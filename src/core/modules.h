@@ -8,7 +8,6 @@
 namespace core
 {
 
-    extern std::vector<Module*> g_modules;
 
 }//namespace core
 //---------------------------------------------------------------------------

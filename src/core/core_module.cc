@@ -10,21 +10,21 @@ namespace default_cb
 {
 
 //---------------------------------------------------------------------------
-bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module,
-        std::shared_ptr<void> module_command)
+bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
 {
-    (void) config;
-    (void) module;
-    (void) module_command;
+    auto& commands = config.args;
+    int* command = reinterpret_cast<int*>(
+            static_cast<char*>(module_command) + module.offset);
+    *command = atoi(commands[1].c_str());
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module,
-        std::shared_ptr<void> module_command)
+bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
 {
-    (void) config;
-    (void) module;
-    (void) module_command;
+    auto& commands = config.args;
+    std::string* command = reinterpret_cast<std::string*>(
+            static_cast<char*>(module_command) + module.offset);
+    *command = commands[1];
     return true;
 }
 //---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module,
 //---------------------------------------------------------------------------
 CoreModule::CoreModule()
 {
-    this->type_ = MODULE_CORE;
+    this->type_ = CORE;
 }
 //---------------------------------------------------------------------------
 CoreModule::~CoreModule()

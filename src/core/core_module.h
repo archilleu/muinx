@@ -14,8 +14,8 @@ namespace default_cb
 /*
  * 通用的配置项解析回调
  */
-bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, std::shared_ptr<void> module_command);
-bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, std::shared_ptr<void> module_command);
+bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
+bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
 
 }//namespace default_cb
 
@@ -27,9 +27,9 @@ public:
     //core 模块上下文
     struct CoreModuleCtx
     {
-        std::string name;                                           //模块名字
-        std::function<std::shared_ptr<void> (void)> create_config;  //创建模块配置结构体回调
-        std::function<bool (void)> init_config;                     //
+        std::string name;                           //模块名字
+        std::function<void* (void)> create_config;  //创建模块配置结构体回调
+        std::function<bool (void)> init_config;     //
     };
 
     CoreModule();

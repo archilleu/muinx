@@ -17,23 +17,23 @@ TokenReader::TokenType TokenReader::ReadNextToken()
     char c = reader_->Peek();
     switch(c)
     {
-        case SPACE:
+        case SPACE: //' '
             reader_->Next();
             return BLANK;
 
-        case '{':
+        case OPEN_BRACE:    //'{'
             reader_->Next();
             return BLOCK_BEGIN;
 
-        case '}':
+        case CLOSE_BRACE:   //'}'
             reader_->Next();
             return BLOCK_END;
 
-        case ';':
+        case SEMICOLON: //';'
             reader_->Next();
             return SEP_SEMICOLON;
 
-        case '\n':
+        case LF:    //'/n'
             reader_->Next();
             //换行对于状态机没有实际意义，内部消化
             return ReadNextToken();
@@ -124,7 +124,8 @@ const char* ConfFile::kRESERVED_SERVER = "server";
 const char* ConfFile::kRESERVED_LOCATION = "location";
 //---------------------------------------------------------------------------
 ConfFile::ConfFile(const char* path)
-: config_path_(path)
+:   config_path_(path),
+    module_type_(Module::ModuleType::INVALID)
 {
 }
 //---------------------------------------------------------------------------
@@ -141,11 +142,12 @@ bool ConfFile::Parse()
 {
     if(false == GetConfigFileData())
         return false;
+
     token_reader_ = std::make_shared<TokenReader>(config_dat_);
 
     //以行为单位解析
     //遇到一个单词放入cur_line_params_中，直到遇到分号结束
-    //封号后面的数据除了空格和换行\n意外，全部算是非法字符
+    //分号后面的数据除了空格和换行\n意外，全部算是非法字符
 
     stack_.push(static_cast<int>(kCONF_MAIN));
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
@@ -240,35 +242,40 @@ bool ConfFile::CaseStatusBlockBegin()
     if(!HasStatus(kEXP_STATUS_BLOCK_BEGIN))
         return false;
 
-    //检擦当前解析行是否包含保留字
+    //检擦当前解析行是否包含保留字,保留字在每行的第一个单词
     if(0 == cur_line_params_.size())
         return false;
 
-    //保留字在每行的第一个单词
-    if(kRESERVED_EVENTS == cur_line_params_[0])
+    auto& reserve = cur_line_params_[0];
+    if(kRESERVED_EVENTS ==reserve) 
     {
         if(kCONF_MAIN != stack_.top())
             return false;
         stack_.push(static_cast<int>(kCONF_EVENT));
     }
-    if(kRESERVED_HTTP == cur_line_params_[0])
+    else if(kRESERVED_HTTP == reserve)
     {
         if(kCONF_MAIN != stack_.top())
             return false;
         stack_.push(static_cast<int>(kCONF_HTTP));
     }
-    if(kRESERVED_SERVER == cur_line_params_[0])
+    else if(kRESERVED_SERVER == reserve)
     {
         if(kCONF_HTTP != stack_.top())
             return false;
         stack_.push(static_cast<int>(kCONF_SERVICE));
     }
-    if(kRESERVED_LOCATION == cur_line_params_[0])
+    else if(kRESERVED_LOCATION == reserve)
     {
         if((kCONF_SERVICE!=stack_.top()) && (kCONF_LOCATION!=stack_.top()))
             return false;
 
         stack_.push(static_cast<int>(kCONF_LOCATION));
+    }
+    else
+    {
+        //没有找到保留字，因为目前不支持自定义的保留字，返回失败
+        return false;
     }
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END | kEXP_STATUS_BLOCK_END;
@@ -302,9 +309,11 @@ bool ConfFile::CaseStatusSepSemicolon()
     if(!HasStatus(kEXP_STATUS_SEP_SEMICOLON))
         return false;
 
-    //todo 回调
-    PrintParam(cur_line_params_);
-    cur_line_params_.clear();
+    //回调
+    CommandConfig command_config;
+    command_config.args.swap(cur_line_params_);
+    command_config.conf_type = kCONF_MAIN;
+    command_cb_(command_config);
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END;

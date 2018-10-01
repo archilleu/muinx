@@ -1,4 +1,6 @@
 //---------------------------------------------------------------------------
+#include <cstddef>
+#include "defines.h"
 #include "core_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -17,18 +19,18 @@ CoreModuleCore::CoreModuleCore()
     this->commands_ =
     {
         {
-            "log level",
+            "user",
+            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetStringSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            0,
+            offsetof(CoreModuleCore::CoreConfig, user)
+        },
+        {
+            "worker_processes",
             MAIN_CONF|DIRECT_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetNumberSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             0,
-            0
-        },
-        {
-            "deamon",
-            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetFlagSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-            0,
-            0
+            offsetof(CoreModuleCore::CoreConfig, worker_processes)
         }
     };
 }
@@ -37,17 +39,17 @@ CoreModuleCore::~CoreModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-std::shared_ptr<void> CoreModuleCore::CreateConfig()
+void* CoreModuleCore::CreateConfig()
 {
-    std::shared_ptr<CoreConfig> core_config = std::make_shared<CoreConfig>(); 
-    core_config->deamon = false;
-    core_config->level = -1;
+    CoreConfig* core_config = new CoreConfig();
+    core_config->user = "unset";
+    core_config->worker_processes = -1;
     return core_config;
 }
 //---------------------------------------------------------------------------
 bool CoreModuleCore::InitConfig()
 {
-    return true;
+    return false;
 }
 //---------------------------------------------------------------------------
 

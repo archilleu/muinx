@@ -7,7 +7,7 @@
 #include <stack>
 #include <cassert>
 #include <memory>
-#include "../base/memory_block.h"
+#include "module.h"
 //---------------------------------------------------------------------------
 
 namespace core
@@ -17,15 +17,15 @@ namespace core
 class CharReader
 {
 public:
-    CharReader(const base::MemoryBlock& dat)
+    CharReader(const std::vector<char>& dat)
     :   pos_(0),
         dat_(dat)
     {}
     ~CharReader()
     {}
 
-    bool HasMore() { return pos_ < dat_.len(); }
-    size_t Remain() { return dat_.len() - pos_; }
+    bool HasMore() { return pos_ < dat_.size(); }
+    size_t Remain() { return dat_.size() - pos_; }
 
     char Peek()
     {
@@ -39,17 +39,17 @@ public:
         return dat_[pos_++];
     }
 
-    std::string  Next(size_t size)
+    std::string Next(size_t size)
     {
-        assert((pos_+size) <= dat_.len());
-        std::string val(dat_.dat()+pos_ , size);
+        assert((pos_+size) <= dat_.size());
+        std::string val(dat_.data()+pos_ , size);
         pos_ += size;
         return val;
     }
 
 private:
     size_t pos_;                    //配置文件当前解析数据位置下标
-    const base::MemoryBlock& dat_;  //配置文件数据
+    const std::vector<char>& dat_;  //配置文件数据
 };
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class TokenReader
 {
 
 public:
-    TokenReader(const base::MemoryBlock& dat)
+    TokenReader(const std::vector<char>& dat)
     :   reader_(std::make_shared<CharReader>(dat))
     {}
 
@@ -107,12 +107,28 @@ private:
 class ConfFile
 {
 public:
+    //param1：当前解析层级, param2:行参数内容
+    using CommandCallback = std::function<bool (const CommandConfig& command_config)>;
+
     ConfFile(const char* path);
     ConfFile(const std::string& path);
     ~ConfFile();
 
 public:
+    void set_command_callback(const CommandCallback& cb) { command_cb_ = cb; }
+
     bool Parse();
+
+    //设置解析过程中，当前关注的块
+    void set_module_type(Module::ModuleType type) { module_type_ = type; }
+
+public:
+    //解析过程中处的块
+    static const int kCONF_MAIN     = 0x0001;   //域为Main
+    static const int kCONF_EVENT    = 0x0002;   //域为Event
+    static const int kCONF_HTTP     = 0x0004;   //域为HTTP
+    static const int kCONF_SERVICE  = 0x0008;   //域为Service
+    static const int kCONF_LOCATION = 0x0010;   //域为Location
 
 private:
     bool GetConfigFileData();
@@ -127,21 +143,18 @@ private:
 
 private:
     std::string config_path_;                   //配置文件路径
-    base::MemoryBlock config_dat_;              //配置文件数据
+    std::vector<char> config_dat_;              //配置文件数据
     std::shared_ptr<TokenReader> token_reader_; //读取配置文件的token
 
     int cur_status_;
     std::vector<std::string> cur_line_params_;
     std::stack<int> stack_;
 
-private:
-    //解析过程中处的块
-    static const int kCONF_MAIN     = 0x0001;   //域为Main
-    static const int kCONF_EVENT    = 0x0002;   //域为Event
-    static const int kCONF_HTTP     = 0x0004;   //域为HTTP
-    static const int kCONF_SERVICE  = 0x0008;   //域为Service
-    static const int kCONF_LOCATION = 0x0010;   //域为Location
+    std::stack<void*> level_;   //解析过程中遇到{就进入一个层级
+    Module::ModuleType module_type_;
+    CommandCallback command_cb_;    //解析完整配置项后的回调
 
+private:
     //解析过程中的状态(期待的下一个字符类型)
     static const int kEXP_STATUS_STRING         = 0x0001;   //期待单词
     static const int kEXP_STATUS_BLANK          = 0x0002;   //期待空白
@@ -155,7 +168,6 @@ private:
     static const char* kRESERVED_SERVER;    //虚拟主机块
     static const char* kRESERVED_LOCATION;  //特定location块
 };
-
 
 }//namespace core
 //---------------------------------------------------------------------------

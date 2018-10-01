@@ -16,12 +16,12 @@ public:
     //core 模块的配置项
     struct CoreConfig
     {
-        int level;
-        bool deamon;
+        std::string user;
+        int worker_processes;
     };
 
 private:
-    std::shared_ptr<void> CreateConfig();
+    void* CreateConfig();
     bool InitConfig();
 };
 //---------------------------------------------------------------------------
