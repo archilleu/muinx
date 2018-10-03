@@ -6,6 +6,32 @@
 namespace core
 {
 
+namespace default_cb
+{
+
+//---------------------------------------------------------------------------
+bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
+{
+    auto& commands = config.args;
+    int* command = reinterpret_cast<int*>(
+            static_cast<char*>(module_command) + module.offset);
+    *command = atoi(commands[1].c_str());
+    return true;
+}
+//---------------------------------------------------------------------------
+bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
+{
+    auto& commands = config.args;
+    std::string* command = reinterpret_cast<std::string*>(
+            static_cast<char*>(module_command) + module.offset);
+    *command = commands[1];
+    return true;
+}
+//---------------------------------------------------------------------------
+
+}//namespace default_cb
+
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 TokenReader::TokenType TokenReader::ReadNextToken()
 {
@@ -229,14 +255,6 @@ bool ConfFile::CaseStatusBlank()
     return true;
 }
 //---------------------------------------------------------------------------
-void PrintParam(std::vector<std::string>& param)
-{
-        std::cout << "param: ";
-        for(std::string a : param)
-            std::cout << a << " ";
-        std::cout << std::endl;
-}
-//---------------------------------------------------------------------------
 bool ConfFile::CaseStatusBlockBegin()
 {
     if(!HasStatus(kEXP_STATUS_BLOCK_BEGIN))
@@ -280,9 +298,12 @@ bool ConfFile::CaseStatusBlockBegin()
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END | kEXP_STATUS_BLOCK_END;
 
-    //todo 调用回调
-    PrintParam(cur_line_params_);
-    cur_line_params_.clear();
+    //回调
+    CommandConfig command_config;
+    command_config.args.swap(cur_line_params_);
+    command_config.conf_type = stack_.top();
+    command_config.module_type = module_type_;
+    command_cb_(command_config);
 
     return true;
 }
@@ -312,7 +333,8 @@ bool ConfFile::CaseStatusSepSemicolon()
     //回调
     CommandConfig command_config;
     command_config.args.swap(cur_line_params_);
-    command_config.conf_type = kCONF_MAIN;
+    command_config.conf_type = stack_.top();
+    command_config.module_type = module_type_;
     command_cb_(command_config);
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN

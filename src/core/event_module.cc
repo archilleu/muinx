@@ -1,26 +1,26 @@
 //---------------------------------------------------------------------------
 #include <cassert>
-#include "core_module.h"
+#include "event_module.h"
 #include "defines.h"
 //---------------------------------------------------------------------------
 namespace core
 {
 
 //---------------------------------------------------------------------------
-CoreModule::CoreModule()
+EventModule::EventModule()
 {
-    this->type_ = CORE;
+    this->type_ = EVENT;
 }
 //---------------------------------------------------------------------------
-CoreModule::~CoreModule()
+EventModule::~EventModule()
 {
 }
 //---------------------------------------------------------------------------
-const CoreModule::CoreModuleCtx* CoreModule::ctx() const
+const EventModule::EventModuleCtx* EventModule::ctx() const
 {
     void* ctx = this->ctx_.get();
     assert(((void)"ctx is nullptr", ctx));
-    return static_cast<CoreModuleCtx*>(ctx);
+    return static_cast<EventModuleCtx*>(ctx);
 }
 //---------------------------------------------------------------------------
 

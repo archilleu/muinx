@@ -40,6 +40,7 @@
 #define DIRECT_CONF     0x00010000 //与MAIN_CONF同时使用，代表不属于任何{}块的配置
 
 #define MAIN_CONF       0x01000000 //配置项可以出现在全局中，不属于任何{}，即为events、http
+#define EVENT_CONF      0x02000000
 #define ANY_CONF        0x0F000000
 
 //配置项默认无效值

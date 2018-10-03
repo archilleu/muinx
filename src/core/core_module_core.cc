@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 #include <cstddef>
 #include "defines.h"
+#include "conf_file.h"
 #include "core_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -31,7 +32,15 @@ CoreModuleCore::CoreModuleCore()
             std::bind(default_cb::ConfigSetNumberSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             0,
             offsetof(CoreModuleCore::CoreConfig, worker_processes)
+        },
+        {
+            "pid",
+            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetStringSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            0,
+            offsetof(CoreModuleCore::CoreConfig, pid)
         }
+        
     };
 }
 //---------------------------------------------------------------------------

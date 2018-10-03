@@ -25,13 +25,17 @@ public:
 
     std::vector<class Module*> modules_;
 
-    void**** config_ctxs_;  //全局配置文件结构体指针
-    void** main_config_ctxs_;   //main 配置文件块指针
+    void**** config_ctxs_;      //全局配置文件结构体指针,数组指针指向数组指针
+    void** main_config_ctxs_;   //main 配置文件块指针,指针数组
+    void** block_config_ctxs_;  //block 配置文件块指针,如events块
 
 private:
     void InitGlobalModules();
     bool ConfigFileParseCallback(const core::CommandConfig& command_config);
 };
+//---------------------------------------------------------------------------
+extern core::Core g_core;
+//---------------------------------------------------------------------------
 
 }//namespace core
 //---------------------------------------------------------------------------

@@ -1,34 +1,34 @@
 //---------------------------------------------------------------------------
-#ifndef CORE_MODULE_CORE_H_
-#define CORE_MODULE_CORE_H_
+#ifndef CORE_MODULE_EVENT_H_
+#define CORE_MODULE_EVENT_H_
 //---------------------------------------------------------------------------
 #include "core_module.h"
 //---------------------------------------------------------------------------
 namespace core
 {
 
-class CoreModuleCore : public CoreModule
+class CoreModuleEvent : public CoreModule
 {
 public:
-    CoreModuleCore();
-    virtual ~CoreModuleCore();
+    CoreModuleEvent();
+    virtual ~CoreModuleEvent();
 
-    //core 模块的配置项
-    struct CoreConfig
+    //event 模块的配置项,只是用于引导event模块启动，不需要配置项
+    struct EventConfig
     {
-        std::string user;
-        int worker_processes;
-        std::string pid;
     };
 
+public:
+    static int s_max_event_module;
+
 private:
-    void* CreateConfig();
-    bool InitConfig();
+    bool ConfigSetEventBlock(const CommandConfig& config, const CommandModule& module, void* module_command);
 };
 //---------------------------------------------------------------------------
-extern CoreModuleCore g_core_module_core;
+extern CoreModuleEvent g_core_module_event;
 //---------------------------------------------------------------------------
 
 }//namespace core
 //---------------------------------------------------------------------------
-#endif //CORE_MODULE_CORE_H_
+#endif //CORE_MODULE_EVENT_H_
+

@@ -46,7 +46,8 @@ public:
         INVALID,
         CORE,
         CONF,
-        EVENT
+        EVENT,
+        HTTP
     };
 
 public:
@@ -59,6 +60,9 @@ public:
     const std::vector<CommandModule>& commands() const { return commands_; }
 
     ModuleType type() const { return type_; }
+
+public:
+    static int s_max_module;
 
 protected:
     ModuleType type_;                       //模块类型
