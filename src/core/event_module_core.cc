@@ -1,20 +1,20 @@
 //---------------------------------------------------------------------------
 #include "defines.h"
 #include "conf_file.h"
-#include "core_module_event_core.h"
+#include "event_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
 
 //---------------------------------------------------------------------------
-CoreModuleEventCore g_core_module_event_core;
+EventModuleCore g_event_module_core;
 //---------------------------------------------------------------------------
-CoreModuleEventCore::CoreModuleEventCore()
+EventModuleCore::EventModuleCore()
 {
     EventModuleCtx* ctx = new EventModuleCtx();
     ctx->name = "event_core";
-    ctx->create_config = std::bind(&CoreModuleEventCore::CreateConfig, this);
-    ctx->init_config = std::bind(&CoreModuleEventCore::InitConfig, this);
+    ctx->create_config = std::bind(&EventModuleCore::CreateConfig, this);
+    ctx->init_config = std::bind(&EventModuleCore::InitConfig, this);
     this->ctx_.reset(ctx);
     this->commands_ =
     {
@@ -28,22 +28,22 @@ CoreModuleEventCore::CoreModuleEventCore()
     };
 }
 //---------------------------------------------------------------------------
-CoreModuleEventCore::~CoreModuleEventCore()
+EventModuleCore::~EventModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-void* CoreModuleEventCore::CreateConfig()
+void* EventModuleCore::CreateConfig()
 {
     EventCoreConfig* config = new EventCoreConfig();
     config->worker_connections = -1;
     return config;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleEventCore::InitConfig()
+bool EventModuleCore::InitConfig()
 {
-    return false;
+    //初始化网络事件处理模块
+    return true;
 }
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
 }//namespace core

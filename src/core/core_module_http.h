@@ -1,32 +1,33 @@
 //---------------------------------------------------------------------------
-#ifndef CORE_MODULE_EVENT_CORE_H_
-#define CORE_MODULE_EVENT_CORE_H_
+#ifndef CORE_MODULE_HTTP_H_
+#define CORE_MODULE_HTTP_H_
 //---------------------------------------------------------------------------
-#include "event_module.h"
+#include "core_module.h"
 //---------------------------------------------------------------------------
 namespace core
 {
 
-class CoreModuleEventCore : public EventModule
+class CoreModuleHttp : public CoreModule
 {
 public:
-    CoreModuleEventCore();
-    virtual ~CoreModuleEventCore();
+    CoreModuleHttp();
+    virtual ~CoreModuleHttp();
 
     //event 模块的配置项,只是用于引导event模块启动，不需要配置项
-    struct EventCoreConfig
+    struct HttpConfig
     {
-        int worker_connections;
     };
 
+public:
+    static int s_max_http_module;
+
 private:
-    void* CreateConfig();
-    bool InitConfig();
+    bool ConfigSetHttpBlock(const CommandConfig& config, const CommandModule& module, void* module_command);
 };
 //---------------------------------------------------------------------------
-extern CoreModuleEventCore g_core_module_event_core;
+extern CoreModuleHttp g_core_module_http;
 //---------------------------------------------------------------------------
 
 }//namespace core
 //---------------------------------------------------------------------------
-#endif //CORE_MODULE_EVENT_CORE_H_
+#endif //CORE_MODULE_HTTP_H_

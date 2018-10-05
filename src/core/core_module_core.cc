@@ -58,7 +58,7 @@ void* CoreModuleCore::CreateConfig()
 //---------------------------------------------------------------------------
 bool CoreModuleCore::InitConfig()
 {
-    return false;
+    return true;
 }
 //---------------------------------------------------------------------------
 

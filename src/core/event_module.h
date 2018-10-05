@@ -17,7 +17,7 @@ public:
     {
         std::string name;                           //模块名字
         std::function<void* (void)> create_config;  //创建模块配置结构体回调
-        std::function<bool (void)> init_config;     //
+        std::function<bool (void*)> init_config;     //
 
         net::ConnectionCallback connection_cb;
         net::DisconnectionCallback disconnection_cb;

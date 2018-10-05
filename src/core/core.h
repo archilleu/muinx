@@ -32,6 +32,7 @@ public:
 private:
     void InitGlobalModules();
     bool ConfigFileParseCallback(const core::CommandConfig& command_config);
+    bool ConfigFileBlockEndCallback(const core::CommandConfig& command_config);
 };
 //---------------------------------------------------------------------------
 extern core::Core g_core;

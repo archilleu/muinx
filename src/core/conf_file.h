@@ -121,6 +121,7 @@ class ConfFile
 public:
     //param1：当前解析层级, param2:行参数内容
     using CommandCallback = std::function<bool (const CommandConfig& command_config)>;
+    using BlockEndCallback = std::function<bool (const CommandConfig& command_config)>;
 
     ConfFile(const char* path);
     ConfFile(const std::string& path);
@@ -128,6 +129,7 @@ public:
 
 public:
     void set_command_callback(const CommandCallback& cb) { command_cb_ = cb; }
+    void set_block_end_callback(const CommandCallback& cb) { block_end_cb_ = cb; }
 
     bool Parse();
 
@@ -165,6 +167,7 @@ private:
     std::stack<void*> level_;   //解析过程中遇到{就进入一个层级
     Module::ModuleType module_type_;
     CommandCallback command_cb_;    //解析完整配置项后的回调
+    BlockEndCallback block_end_cb_;    //解析完整配置块后的回调
 
 private:
     //解析过程中的状态(期待的下一个字符类型)

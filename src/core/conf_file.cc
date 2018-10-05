@@ -322,6 +322,12 @@ bool ConfFile::CaseStatusBlockEnd()
     if(kCONF_MAIN != stack_.top())
         cur_status_ |= kEXP_STATUS_BLOCK_END;
 
+    //回调
+    CommandConfig command_config;
+    command_config.conf_type = stack_.top();
+    command_config.module_type = module_type_;
+    block_end_cb_(command_config);
+
     return true;
 }
 //---------------------------------------------------------------------------

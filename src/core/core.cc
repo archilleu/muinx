@@ -2,7 +2,7 @@
 #include "core.h"
 #include "core_module_core.h"
 #include "core_module_event.h"
-#include "core_module_event_core.h"
+#include "event_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -33,6 +33,10 @@ bool Core::Initialize()
     for(size_t i=0; i<modules_.size(); i++)
     {
         auto& module = modules_[i];
+
+        //如果是核心模块，则直接分配核心模块配置结构体内存，由核心模块管理的模块
+        //会在需要的时候在分配，也就是解析配置文件回调条件command.type&MAIN_CONF
+        //成立时分配
         if(module->type() != Module::ModuleType::CORE)
             continue;
 
@@ -46,11 +50,33 @@ bool Core::Initialize()
     conf_file_->set_module_type(core::Module::ModuleType::CORE);
     conf_file_->set_command_callback(std::bind(&Core::ConfigFileParseCallback,
                 this, std::placeholders::_1));
+    conf_file_->set_block_end_callback(std::bind(&Core::ConfigFileBlockEndCallback,
+                this, std::placeholders::_1));
 
     if(false == conf_file_->Parse())
     {
         assert(((void)"config file parse failed", 0));
         return false;
+    }
+
+    //解析完配置项目后调用初始化配置项，此刻可以对配置项进行默认值或者其他操作,
+    //该初始化只初始化CORE类型的模块，其他模块在对应管理的模块内初始化
+    for(size_t i=0; i<modules_.size(); i++)
+    {
+        auto& module = modules_[i];
+        if(module->type() != Module::ModuleType::CORE)
+            continue;
+
+        auto module_ctx = (static_cast<core::CoreModule*>(module))->ctx();
+        if(module_ctx->init_config)
+        {
+            auto config = reinterpret_cast<CoreModuleCore::CoreConfig*>(main_config_ctxs_[module->index()]);
+            if(false == module_ctx->init_config(config))
+            {
+                assert(((void)"init config failed", 0));
+                return false;
+            }
+        }
     }
 
     return true;
@@ -61,7 +87,7 @@ void Core::InitGlobalModules()
     std::vector<Module*> modules = {
         &g_core_module_core,
         &g_core_module_event,
-        &g_core_module_event_core
+        &g_event_module_core
     };
     modules_.swap(modules);
 
@@ -107,10 +133,8 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             else if((command.type&EVENT_CONF)
                     && (command_config.conf_type==ConfFile::kCONF_EVENT))
             {
-                void* tmp = &(block_config_ctxs_[g_core_module_event.index()]);
-                void*** ctx1 = reinterpret_cast<void***>(tmp);
-
-                ctx =(*ctx1)[module->module_index()];
+                void*** tmp = reinterpret_cast<void***>(&(block_config_ctxs_[g_core_module_event.index()]));
+                ctx =(*tmp)[module->module_index()];
             }
             //HTTP配置项
             else
@@ -121,6 +145,30 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
         }
     }
 
+    return true;
+}
+//---------------------------------------------------------------------------
+bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
+{
+    
+    if((command_config.module_type==Module::ModuleType::EVENT)
+            && (command_config.conf_type==ConfFile::kCONF_EVENT))
+        {
+            void*** tmp = reinterpret_cast<void***>(&(block_config_ctxs_[g_core_module_event.index()]));
+            for(auto module : modules_)
+            {
+                if(module->type() != Module::ModuleType::EVENT)
+                    continue;
+
+                EventModule* event_module = static_cast<EventModule*>(module);
+                auto ctx = event_module->ctx();
+                if(ctx->init_config)
+                {
+                    auto config = reinterpret_cast<EventModule::EventModuleCtx*>((*tmp)[module->module_index()]);
+                    event_module->ctx()->init_config(config);
+                }
+            }
+        }
     return true;
 }
 //---------------------------------------------------------------------------
