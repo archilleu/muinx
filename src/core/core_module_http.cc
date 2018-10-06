@@ -20,7 +20,7 @@ CoreModuleHttp::CoreModuleHttp()
     {
         {
             "events",
-            MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
+            MAIN_CONF|CONF_NOARGS,
             std::bind(&CoreModuleHttp::ConfigSetHttpBlock, this, std::placeholders::_1,
                     std::placeholders::_2, std::placeholders::_3),
             0,
@@ -47,9 +47,8 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
         module->set_module_index(CoreModuleHttp::s_max_http_module++);
     }
 
-    /*
     void*** ctx = reinterpret_cast<void***>(new void*);
-    *ctx = new void*[CoreModule::s_max_event_module];
+    *ctx = new void*[CoreModuleHttp::s_max_http_module];
     *reinterpret_cast<void**>(module_command) = ctx;
 
     for(auto module : g_core.modules_)
@@ -66,7 +65,6 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
     }
 
     g_core.conf_file_->set_module_type(Module::ModuleType::EVENT);
-    */
 
     return true;
 }

@@ -31,4 +31,3 @@ extern CoreModuleEvent g_core_module_event;
 }//namespace core
 //---------------------------------------------------------------------------
 #endif //CORE_MODULE_EVENT_H_
-
