@@ -20,6 +20,7 @@ namespace default_cb
  */
 bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
 bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
+bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
 
 }//namespace default_cb
 //---------------------------------------------------------------------------

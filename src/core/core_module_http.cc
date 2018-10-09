@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "core.h"
 #include "core_module_http.h"
+#include "http_module.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -14,13 +15,13 @@ int CoreModuleHttp::s_max_http_module = 0;
 CoreModuleHttp::CoreModuleHttp()
 {
     CoreModuleCtx* ctx = new CoreModuleCtx();
-    ctx->name = "events";
+    ctx->name = "http";
     this->ctx_.reset(ctx);
     this->commands_ =
     {
         {
-            "events",
-            MAIN_CONF|CONF_NOARGS,
+            "http",
+            MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&CoreModuleHttp::ConfigSetHttpBlock, this, std::placeholders::_1,
                     std::placeholders::_2, std::placeholders::_3),
             0,
@@ -38,6 +39,10 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
 {
     (void)config;
     (void)module_command;
+
+    HttpModule::HttpModuleCtxs* ctx = new HttpModule::HttpModuleCtxs();
+    *reinterpret_cast<HttpModule::HttpModuleCtxs**>(module_command) = ctx;
+
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)
     {
@@ -47,24 +52,35 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
         module->set_module_index(CoreModuleHttp::s_max_http_module++);
     }
 
-    void*** ctx = reinterpret_cast<void***>(new void*);
-    *ctx = new void*[CoreModuleHttp::s_max_http_module];
-    *reinterpret_cast<void**>(module_command) = ctx;
+    ctx->main_conf = new void*[CoreModuleHttp::s_max_http_module];
+    ctx->srv_conf = new void*[CoreModuleHttp::s_max_http_module];
+    ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
 
-    for(auto module : g_core.modules_)
+    for(size_t i=0; i<g_core.modules_.size(); i++)
     {
-        if(module->type() != Module::ModuleType::EVENT)
+        if(Module::ModuleType::HTTP != g_core.modules_[i]->type())
             continue;
 
-        auto event = static_cast<CoreModule*>(module);
-        auto core_module_ctx = event->ctx();
-        if(core_module_ctx->create_config)
+        HttpModule* module = static_cast<HttpModule*>(g_core.modules_[i]);
+        const HttpModule::HttpModuleCtx* module_ctx = module->ctx();
+        int module_index  = module->module_index();
+        if(module_ctx->create_main_config)
         {
-            (*ctx)[module->module_index()] = core_module_ctx->create_config();
+            ctx->main_conf[module_index] = module_ctx->create_main_config();
+        }
+        if(module_ctx->create_srv_config)
+        {
+            ctx->srv_conf[module_index] = module_ctx->create_srv_config();
+        }
+        if(module_ctx->create_loc_config)
+        {
+            ctx->loc_conf[module_index] = module_ctx->create_loc_config();
         }
     }
 
-    g_core.conf_file_->set_module_type(Module::ModuleType::EVENT);
+    g_core.conf_file_->set_module_type(Module::ModuleType::HTTP);
+
+    //todo 在block end 里面合并配置块
 
     return true;
 }

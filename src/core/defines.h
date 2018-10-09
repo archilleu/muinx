@@ -41,6 +41,15 @@
 
 #define MAIN_CONF       0x01000000 //配置项可以出现在全局中，不属于任何{}，即为events、http
 #define EVENT_CONF      0x02000000
+
+#define HTTP_MAIN_CONF  0x02000000
+#define HTTP_SRV_CONF   0x04000000
+#define HTTP_LOC_CONF   0x08000000
+#define HTTP_UPS_CONF   0x10000000
+#define HTTP_SIF_CONF   0x20000000
+#define HTTP_LIF_CONF   0x40000000
+#define HTTP_LMT_CONF   0x80000000  
+
 #define ANY_CONF        0x0F000000
 
 //配置项默认无效值
@@ -54,11 +63,9 @@
 #define CORE_MODULE     0x45524F43  /* "CORE" */
 #define CONF_MODULE     0x464E4F43  /* "CONF" */
 
-/*
-#define NGX_HTTP_MAIN_CONF_OFFSET  offsetof(ngx_http_conf_ctx_t, main_conf)
-#define NGX_HTTP_SRV_CONF_OFFSET   offsetof(ngx_http_conf_ctx_t, srv_conf)
-#define NGX_HTTP_LOC_CONF_OFFSET   offsetof(ngx_http_conf_ctx_t, loc_conf)
-*/
+#define HTTP_MAIN_CONF_OFFSET  offsetof(HttpModule::HttpModuleCtxs, main_conf)
+#define HTTP_SRV_CONF_OFFSET   offsetof(HttpModule::HttpModuleCtxs, srv_conf)
+#define HTTP_LOC_CONF_OFFSET   offsetof(HttpModule::HttpModuleCtxs, loc_conf)
 
 //---------------------------------------------------------------------------
 #endif //CORE_DEFINES_H_

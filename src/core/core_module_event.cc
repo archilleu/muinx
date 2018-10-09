@@ -20,7 +20,7 @@ CoreModuleEvent::CoreModuleEvent()
     {
         {
             "events",
-            MAIN_CONF|CONF_NOARGS,
+            MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&CoreModuleEvent::ConfigSetEventBlock, this, std::placeholders::_1,
                     std::placeholders::_2, std::placeholders::_3),
             0,

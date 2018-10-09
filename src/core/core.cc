@@ -3,6 +3,8 @@
 #include "core_module_core.h"
 #include "core_module_event.h"
 #include "event_module_core.h"
+#include "core_module_http.h"
+#include <iostream>
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -87,7 +89,8 @@ void Core::InitGlobalModules()
     std::vector<Module*> modules = {
         &g_core_module_core,
         &g_core_module_event,
-        &g_event_module_core
+        &g_event_module_core,
+        &g_core_module_http
     };
     modules_.swap(modules);
 
@@ -107,6 +110,7 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
     {
         if(module->type() != command_config.module_type)
             continue;
+        std::cout << "type:" << command_config.args[0] << std::endl;
 
         auto commands = module->commands();
         for(const auto& command : commands)
@@ -123,9 +127,8 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             {
                 ctx = main_config_ctxs_[module->index()];
             }
-            //块配置项目，引导该块的所有配置，该块无实际的配置项
-            else if((command.type&MAIN_CONF)
-                    && (command_config.conf_type==ConfFile::kCONF_EVENT))
+            //块配置项目，引导该块的所有配置，该块无实际的配置项, 像events、http
+            else if(command.type&MAIN_CONF)
             {
                 ctx = &(block_config_ctxs_[module->index()]);
             }

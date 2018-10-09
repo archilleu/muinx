@@ -28,6 +28,19 @@ bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& modul
     return true;
 }
 //---------------------------------------------------------------------------
+bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
+{
+    auto& commands = config.args;
+    bool* command = reinterpret_cast<bool*>(
+            static_cast<char*>(module_command) + module.offset);
+    bool flag = false;
+    if("on" == commands[1])
+        flag = true;
+
+    *command = flag;
+    return true;
+}
+//---------------------------------------------------------------------------
 
 }//namespace default_cb
 
