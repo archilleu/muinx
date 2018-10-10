@@ -164,7 +164,7 @@ const char* ConfFile::kRESERVED_LOCATION = "location";
 //---------------------------------------------------------------------------
 ConfFile::ConfFile(const char* path)
 :   config_path_(path),
-    module_type_(Module::ModuleType::INVALID)
+    module_type_(Module::ModuleType::CORE)
 {
 }
 //---------------------------------------------------------------------------
@@ -282,18 +282,24 @@ bool ConfFile::CaseStatusBlockBegin()
     {
         if(kCONF_MAIN != stack_.top())
             return false;
+
+        module_type_ = Module::ModuleType::CORE;
         stack_.push(static_cast<int>(kCONF_EVENT));
     }
     else if(kRESERVED_HTTP == reserve)
     {
         if(kCONF_MAIN != stack_.top())
             return false;
+
+        module_type_ = Module::ModuleType::CORE;
         stack_.push(static_cast<int>(kCONF_HTTP));
     }
     else if(kRESERVED_SERVER == reserve)
     {
         if(kCONF_HTTP != stack_.top())
             return false;
+
+        module_type_ = Module::ModuleType::HTTP;
         stack_.push(static_cast<int>(kCONF_SERVICE));
     }
     else if(kRESERVED_LOCATION == reserve)
@@ -301,11 +307,13 @@ bool ConfFile::CaseStatusBlockBegin()
         if((kCONF_SERVICE!=stack_.top()) && (kCONF_LOCATION!=stack_.top()))
             return false;
 
+        module_type_ = Module::ModuleType::HTTP;
         stack_.push(static_cast<int>(kCONF_LOCATION));
     }
     else
     {
         //没有找到保留字，因为目前不支持自定义的保留字，返回失败
+        module_type_ = Module::ModuleType::INVALID;
         return false;
     }
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
@@ -335,6 +343,23 @@ bool ConfFile::CaseStatusBlockEnd()
     if(kCONF_MAIN != stack_.top())
         cur_status_ |= kEXP_STATUS_BLOCK_END;
 
+    switch(stack_.top())
+    {
+        case kCONF_MAIN:
+        case kCONF_EVENT:
+        case kCONF_HTTP:
+            module_type_ = Module::ModuleType::CORE;
+            break;
+
+        case kCONF_SERVICE:
+        case kCONF_LOCATION:
+            module_type_ = Module::ModuleType::HTTP;
+            break;
+
+        default:
+            module_type_ = Module::ModuleType::INVALID;
+    }
+
     //回调
     CommandConfig command_config;
     command_config.conf_type = stack_.top();
@@ -348,6 +373,27 @@ bool ConfFile::CaseStatusSepSemicolon()
 {
     if(!HasStatus(kEXP_STATUS_SEP_SEMICOLON))
         return false;
+
+    switch(stack_.top())
+    {
+        case kCONF_MAIN:
+            module_type_ = Module::ModuleType::CORE;
+            break;
+
+        case kCONF_EVENT:
+            module_type_ = Module::ModuleType::EVENT;
+            break;
+
+        case kCONF_HTTP:
+        case kCONF_SERVICE:
+        case kCONF_LOCATION:
+            module_type_ = Module::ModuleType::HTTP;
+            break;
+
+        default:
+            module_type_ = Module::ModuleType::INVALID;
+    }
+
 
     //回调
     CommandConfig command_config;

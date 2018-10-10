@@ -64,8 +64,6 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig& config,
         }
     }
 
-    g_core.conf_file_->set_module_type(Module::ModuleType::EVENT);
-
     return true;
 }
 //---------------------------------------------------------------------------

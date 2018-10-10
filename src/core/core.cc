@@ -4,6 +4,7 @@
 #include "core_module_event.h"
 #include "event_module_core.h"
 #include "core_module_http.h"
+#include "http_module_core.h"
 #include <iostream>
 //---------------------------------------------------------------------------
 namespace core
@@ -49,7 +50,6 @@ bool Core::Initialize()
         }
     }
 
-    conf_file_->set_module_type(core::Module::ModuleType::CORE);
     conf_file_->set_command_callback(std::bind(&Core::ConfigFileParseCallback,
                 this, std::placeholders::_1));
     conf_file_->set_block_end_callback(std::bind(&Core::ConfigFileBlockEndCallback,
@@ -90,7 +90,8 @@ void Core::InitGlobalModules()
         &g_core_module_core,
         &g_core_module_event,
         &g_event_module_core,
-        &g_core_module_http
+        &g_core_module_http,
+        &g_http_module_core
     };
     modules_.swap(modules);
 
@@ -106,20 +107,20 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
      * 第一个循环,循环所有的模块,并对照当前配置项所处的块位置是不是对应模块类型
      * 第二个循环，循环所有的配置项,对比配置项的名字是否相同
      */
+        std::cout << "type:" << command_config.args[0] << std::endl;
     for(auto module : modules_)
     {
         if(module->type() != command_config.module_type)
             continue;
-        std::cout << "type:" << command_config.args[0] << std::endl;
 
         auto commands = module->commands();
         for(const auto& command : commands)
         {
-            void* ctx = nullptr;
-
             //配置项名不匹配
             if(command_config.args[0] != command.name)
                 continue;
+
+            void* ctx = nullptr;
 
             //全局配置项目
             if((command.type&DIRECT_CONF)
@@ -136,12 +137,16 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             else if((command.type&EVENT_CONF)
                     && (command_config.conf_type==ConfFile::kCONF_EVENT))
             {
-                void*** tmp = reinterpret_cast<void***>(&(block_config_ctxs_[g_core_module_event.index()]));
+                void*** tmp = reinterpret_cast<void***>
+                    (&(block_config_ctxs_[g_core_module_event.index()]));
                 ctx =(*tmp)[module->module_index()];
             }
             //HTTP配置项
             else
             {
+                void*** tmp = reinterpret_cast<void***>
+                    (&(block_config_ctxs_[g_core_module_http.index()]));
+                ctx =(*tmp)[module->module_index()];
             }
 
             command.Set(command_config, command, ctx);

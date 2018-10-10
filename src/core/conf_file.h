@@ -134,9 +134,6 @@ public:
 
     bool Parse();
 
-    //设置解析过程中，当前关注的块
-    void set_module_type(Module::ModuleType type) { module_type_ = type; }
-
 public:
     //解析过程中处的块
     static const int kCONF_MAIN     = 0x0001;   //域为Main

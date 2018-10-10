@@ -78,8 +78,6 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
         }
     }
 
-    g_core.conf_file_->set_module_type(Module::ModuleType::HTTP);
-
     //todo 在block end 里面合并配置块
 
     return true;

@@ -13,7 +13,7 @@ public:
     CoreModuleHttp();
     virtual ~CoreModuleHttp();
 
-    //event 模块的配置项,只是用于引导event模块启动，不需要配置项
+    //http 模块的配置项,只是用于引导http模块启动，不需要配置项
     struct HttpConfig
     {
     };
