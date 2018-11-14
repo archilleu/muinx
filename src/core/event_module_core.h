@@ -13,7 +13,6 @@ public:
     EventModuleCore();
     virtual ~EventModuleCore();
 
-    //event 模块的配置项,只是用于引导event模块启动，不需要配置项
     struct EventCoreConfig
     {
         int worker_connections;

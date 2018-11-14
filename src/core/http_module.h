@@ -13,13 +13,6 @@ public:
     HttpModule();
     virtual ~HttpModule();
 
-    struct HttpModuleCtxs
-    {
-        void** main_conf;
-        void** srv_conf;
-        void** loc_conf;
-    };
-
     struct HttpModuleCtx
     {
         std::function<bool (void)> preconfiguration;

@@ -2,6 +2,7 @@
 #ifndef HTTP_MODULE_CORE_H_
 #define HTTP_MODULE_CORE_H_
 //---------------------------------------------------------------------------
+#include <vector>
 #include "http_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -18,6 +19,28 @@ public:
     {
         int worker_connections;
     };
+
+public:
+    struct HttpConfigCtxs
+    {
+        void** main_conf;
+        void** srv_conf;
+        void** loc_conf;
+    };
+
+    struct HttpLocConf
+    {
+    };
+
+    struct HttpSrvConf
+    {
+    };
+
+    struct HttpMainConf
+    {
+        std::vector<HttpSrvConf> servers;
+    };
+    int cur_server_;    //当前解析的server块
 
 private:
     bool PreConfiguration();

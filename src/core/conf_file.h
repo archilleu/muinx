@@ -120,8 +120,8 @@ private:
 class ConfFile
 {
 public:
-    //param1：当前解析层级, param2:行参数内容
     using CommandCallback = std::function<bool (const CommandConfig& command_config)>;
+    using BlockBeginCallback = std::function<bool (const CommandConfig& command_config)>;
     using BlockEndCallback = std::function<bool (const CommandConfig& command_config)>;
 
     ConfFile(const char* path);

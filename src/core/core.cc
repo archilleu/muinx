@@ -107,7 +107,7 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
      * 第一个循环,循环所有的模块,并对照当前配置项所处的块位置是不是对应模块类型
      * 第二个循环，循环所有的配置项,对比配置项的名字是否相同
      */
-        std::cout << "type:" << command_config.args[0] << std::endl;
+    std::cout << "type:" << command_config.args[0] << std::endl;
     for(auto module : modules_)
     {
         if(module->type() != command_config.module_type)
@@ -156,9 +156,16 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
     return true;
 }
 //---------------------------------------------------------------------------
+bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_config)
+{
+    std::cout << "type:" << command_config.args[0] << std::endl;
+    return true;
+}
+//---------------------------------------------------------------------------
 bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
 {
     
+    //Event 模块配置解析完成后调用Event模块的初始化回调
     if((command_config.module_type==Module::ModuleType::EVENT)
             && (command_config.conf_type==ConfFile::kCONF_EVENT))
         {
@@ -177,6 +184,7 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
                 }
             }
         }
+
     return true;
 }
 //---------------------------------------------------------------------------

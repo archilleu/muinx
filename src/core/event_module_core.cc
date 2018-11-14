@@ -16,6 +16,7 @@ EventModuleCore::EventModuleCore()
     ctx->create_config = std::bind(&EventModuleCore::CreateConfig, this);
     ctx->init_config = std::bind(&EventModuleCore::InitConfig, this);
     this->ctx_.reset(ctx);
+
     this->commands_ =
     {
         {

@@ -23,8 +23,8 @@ HttpModuleCore::HttpModuleCore()
     ctx->create_loc_config = std::bind(&HttpModuleCore::CreateLocConfig, this);
     ctx->merge_loc_config = std::bind(&HttpModuleCore::MergeLocConfig, this,
             std::placeholders::_1);
-
     this->ctx_.reset(ctx);
+
     this->commands_ =
     {
         {
@@ -35,6 +35,8 @@ HttpModuleCore::HttpModuleCore()
             0
         }
     };
+
+    cur_server_ = 0;
 }
 //---------------------------------------------------------------------------
 HttpModuleCore::~HttpModuleCore()
@@ -53,7 +55,8 @@ bool HttpModuleCore::PostConfiguration()
 //---------------------------------------------------------------------------
 void* HttpModuleCore::CreateMainConfig()
 {
-    return 0;
+    HttpMainConf* conf = new HttpMainConf();
+    return conf;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::InitMainConfig(void* conf)
@@ -64,7 +67,8 @@ bool HttpModuleCore::InitMainConfig(void* conf)
 //---------------------------------------------------------------------------
 void* HttpModuleCore::CreateSrvConfig()
 {
-    return 0;
+    HttpSrvConf* conf = new HttpSrvConf();
+    return conf;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::MergeSrvConfig(void* conf)
@@ -75,7 +79,8 @@ bool HttpModuleCore::MergeSrvConfig(void* conf)
 //---------------------------------------------------------------------------
 void* HttpModuleCore::CreateLocConfig()
 {
-    return 0;
+    HttpLocConf* conf = new HttpLocConf();
+    return conf;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::MergeLocConfig(void* conf)

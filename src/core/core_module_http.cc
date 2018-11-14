@@ -2,7 +2,7 @@
 #include "defines.h"
 #include "core.h"
 #include "core_module_http.h"
-#include "http_module.h"
+#include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -40,8 +40,8 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
     (void)config;
     (void)module_command;
 
-    HttpModule::HttpModuleCtxs* ctx = new HttpModule::HttpModuleCtxs();
-    *reinterpret_cast<HttpModule::HttpModuleCtxs**>(module_command) = ctx;
+    HttpModuleCore::HttpConfigCtxs* ctx = new HttpModuleCore::HttpConfigCtxs();
+    *reinterpret_cast<HttpModuleCore::HttpConfigCtxs**>(module_command) = ctx;
 
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)

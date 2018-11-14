@@ -24,7 +24,7 @@ struct CommandConfig
 };
 //---------------------------------------------------------------------------
 //模块配置项结构，模块用于解析配置文件的配置项目
-struct CommandModule 
+struct CommandModule
 {
     std::string name;   //配置项目名称
     uint32_t type;      //配置项类别

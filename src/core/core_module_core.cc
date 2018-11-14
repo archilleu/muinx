@@ -17,6 +17,7 @@ CoreModuleCore::CoreModuleCore()
     ctx->create_config = std::bind(&CoreModuleCore::CreateConfig, this);
     ctx->init_config = std::bind(&CoreModuleCore::InitConfig, this);
     this->ctx_.reset(ctx);
+
     this->commands_ =
     {
         {

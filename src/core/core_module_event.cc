@@ -16,6 +16,7 @@ CoreModuleEvent::CoreModuleEvent()
     CoreModuleCtx* ctx = new CoreModuleCtx();
     ctx->name = "events";
     this->ctx_.reset(ctx);
+
     this->commands_ =
     {
         {
