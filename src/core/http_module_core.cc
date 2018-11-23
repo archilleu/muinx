@@ -31,8 +31,8 @@ HttpModuleCore::HttpModuleCore()
             "sendfile",
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetFlagSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-            0,
-            0
+            HTTP_LOC_CONF_OFFSET,
+            offsetof(HttpLocConf, sendfile)
         }
     };
 

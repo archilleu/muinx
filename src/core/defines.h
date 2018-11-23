@@ -65,9 +65,9 @@
 #define CORE_MODULE     0x45524F43  /* "CORE" */
 #define CONF_MODULE     0x464E4F43  /* "CONF" */
 
-#define HTTP_MAIN_CONF_OFFSET  offsetof(HttpModule::HttpModuleCtxs, main_conf)
-#define HTTP_SRV_CONF_OFFSET   offsetof(HttpModule::HttpModuleCtxs, srv_conf)
-#define HTTP_LOC_CONF_OFFSET   offsetof(HttpModule::HttpModuleCtxs, loc_conf)
+#define HTTP_MAIN_CONF_OFFSET  offsetof(HttpModuleCore::HttpConfigCtxs, main_conf)
+#define HTTP_SRV_CONF_OFFSET   offsetof(HttpModuleCore::HttpConfigCtxs, srv_conf)
+#define HTTP_LOC_CONF_OFFSET   offsetof(HttpModuleCore::HttpConfigCtxs, loc_conf)
 
 //---------------------------------------------------------------------------
 #endif //CORE_DEFINES_H_

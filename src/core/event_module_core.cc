@@ -24,7 +24,7 @@ EventModuleCore::EventModuleCore()
             EVENT_CONF|CONF_NOARGS,
             std::bind(default_cb::ConfigSetNumberSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             0,
-            0
+            offsetof(EventModuleCore::EventCoreConfig, worker_connections)
         }
     };
 }

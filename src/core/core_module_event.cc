@@ -39,6 +39,13 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig& config,
 {
     (void)config;
     (void)module_command;
+
+    //只能有一个event
+    if(*reinterpret_cast<void**>(module_command))
+    {
+        return false;
+    }
+
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)
     {

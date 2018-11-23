@@ -157,10 +157,10 @@ void TokenReader::SkipCommentLine()
     }
 }
 //---------------------------------------------------------------------------
-const char* ConfFile::kRESERVED_EVENTS = "events";
-const char* ConfFile::kRESERVED_HTTP = "http";         
-const char* ConfFile::kRESERVED_SERVER = "server";
-const char* ConfFile::kRESERVED_LOCATION = "location";
+const char* ConfFile::kRESERVED_EVENTS      = "events";
+const char* ConfFile::kRESERVED_HTTP        = "http";         
+const char* ConfFile::kRESERVED_SERVER      = "server";
+const char* ConfFile::kRESERVED_LOCATION    = "location";
 //---------------------------------------------------------------------------
 ConfFile::ConfFile(const char* path)
 :   config_path_(path),
@@ -324,6 +324,7 @@ bool ConfFile::CaseStatusBlockBegin()
     command_config.args.swap(cur_line_params_);
     command_config.conf_type = stack_.top();
     command_config.module_type = module_type_;
+    block_begin_cb_(command_config);
     command_cb_(command_config);
 
     return true;

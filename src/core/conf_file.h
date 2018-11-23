@@ -130,7 +130,8 @@ public:
 
 public:
     void set_command_callback(const CommandCallback& cb) { command_cb_ = cb; }
-    void set_block_end_callback(const CommandCallback& cb) { block_end_cb_ = cb; }
+    void set_block_begin_callback(const BlockBeginCallback& cb) { block_begin_cb_ = cb; }
+    void set_block_end_callback(const BlockEndCallback& cb) { block_end_cb_ = cb; }
 
     bool Parse();
 
@@ -162,10 +163,11 @@ private:
     std::vector<std::string> cur_line_params_;
     std::stack<int> stack_;
 
-    std::stack<void*> level_;   //解析过程中遇到{就进入一个层级
-    Module::ModuleType module_type_;
-    CommandCallback command_cb_;    //解析完整配置项后的回调
-    BlockEndCallback block_end_cb_;    //解析完整配置块后的回调
+    Module::ModuleType module_type_;    //当前模块的层级
+
+    CommandCallback command_cb_;        //解析完整配置项后的回调
+    BlockEndCallback block_begin_cb_;   //解析完整配置块后的回调
+    BlockEndCallback block_end_cb_;     //解析完整配置块后的回调
 
 private:
     //解析过程中的状态(期待的下一个字符类型)
@@ -176,7 +178,7 @@ private:
     static const int kEXP_STATUS_SEP_SEMICOLON  = 0x0010;   //期待分号(;)
     static const int kEXP_STATUS_END            = 0x0220;   //期待配置文件结束
 
-    static const char* kRESERVED_EVENTS;    //事件参数块
+    const static char* kRESERVED_EVENTS;    //事件参数块
     static const char* kRESERVED_HTTP;      //http服务块
     static const char* kRESERVED_SERVER;    //虚拟主机块
     static const char* kRESERVED_LOCATION;  //特定location块

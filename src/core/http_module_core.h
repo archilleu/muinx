@@ -30,6 +30,7 @@ public:
 
     struct HttpLocConf
     {
+        bool sendfile;
     };
 
     struct HttpSrvConf

@@ -52,6 +52,8 @@ bool Core::Initialize()
 
     conf_file_->set_command_callback(std::bind(&Core::ConfigFileParseCallback,
                 this, std::placeholders::_1));
+    conf_file_->set_block_begin_callback(std::bind(&Core::ConfigFileBlockBeginCallback,
+                this, std::placeholders::_1));
     conf_file_->set_block_end_callback(std::bind(&Core::ConfigFileBlockEndCallback,
                 this, std::placeholders::_1));
 
@@ -122,7 +124,8 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
 
             void* ctx = nullptr;
 
-            //全局配置项目
+            //全局配置项目，内存布局。
+            //https://blog.csdn.net/qiuhui00/article/details/79239640
             if((command.type&DIRECT_CONF)
                     && (command_config.conf_type==ConfFile::kCONF_MAIN))
             {
@@ -131,22 +134,31 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             //块配置项目，引导该块的所有配置，该块无实际的配置项, 像events、http
             else if(command.type&MAIN_CONF)
             {
+                //在event、http块里面new另外的指针数组，所以需要传递指针的地址(传递引用也行)
                 ctx = &(block_config_ctxs_[module->index()]);
             }
             //EVENT块内配置项
             else if((command.type&EVENT_CONF)
                     && (command_config.conf_type==ConfFile::kCONF_EVENT))
             {
-                void*** tmp = reinterpret_cast<void***>
-                    (&(block_config_ctxs_[g_core_module_event.index()]));
-                ctx =(*tmp)[module->module_index()];
+                void** tmp = reinterpret_cast<void**>
+                    (block_config_ctxs_[g_core_module_event.index()]);
+                ctx = (tmp)[module->module_index()];
             }
             //HTTP配置项
+            //因为有command.type的条件，所以不会导致main或者event层拦截http配置
             else
             {
-                void*** tmp = reinterpret_cast<void***>
-                    (&(block_config_ctxs_[g_core_module_http.index()]));
-                ctx =(*tmp)[module->module_index()];
+                void** tmp = reinterpret_cast<void**>
+                    (block_config_ctxs_[g_core_module_http.index()]);
+                ctx = (tmp)[module->module_index()];
+                
+                //ctx 为HttpConfigCtxs结构体
+                void** confp = reinterpret_cast<void**>(static_cast<char*>(ctx) + command.conf);
+                if(confp)
+                {
+                    ctx = confp[module->module_index()];
+                }
             }
 
             command.Set(command_config, command, ctx);
@@ -158,7 +170,7 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
 //---------------------------------------------------------------------------
 bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_config)
 {
-    std::cout << "type:" << command_config.args[0] << std::endl;
+    std::cout << "block begin-type:" << command_config.args[0] << std::endl;
     return true;
 }
 //---------------------------------------------------------------------------
