@@ -109,7 +109,6 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
      * 第一个循环,循环所有的模块,并对照当前配置项所处的块位置是不是对应模块类型
      * 第二个循环，循环所有的配置项,对比配置项的名字是否相同
      */
-    std::cout << "type:" << command_config.args[0] << std::endl;
     for(auto module : modules_)
     {
         if(module->type() != command_config.module_type)
@@ -149,12 +148,10 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             //因为有command.type的条件，所以不会导致main或者event层拦截http配置
             else
             {
-                void** tmp = reinterpret_cast<void**>
-                    (block_config_ctxs_[g_core_module_http.index()]);
-                ctx = (tmp)[module->module_index()];
+                ctx = block_config_ctxs_[g_core_module_http.index()];
                 
-                //ctx 为HttpConfigCtxs结构体
-                void** confp = reinterpret_cast<void**>(static_cast<char*>(ctx) + command.conf);
+                //ctx为HttpConfigCtxs结构,指针运算按照运算类型对象所占字节数 sizeof(char) + ...
+                void** confp = *reinterpret_cast<void***>(static_cast<char*>(ctx) + command.conf);
                 if(confp)
                 {
                     ctx = confp[module->module_index()];

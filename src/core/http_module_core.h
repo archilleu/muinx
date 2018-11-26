@@ -30,6 +30,7 @@ public:
 
     struct HttpLocConf
     {
+        int keepalive_timeout; 
         bool sendfile;
     };
 
