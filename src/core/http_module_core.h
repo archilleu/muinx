@@ -37,7 +37,8 @@ public:
     struct HttpSrvConf
     {
         std::string server_name;    //域名localhost
-        int port;                   //端口
+        std::string ip;
+        int port;
 
         //指向解析server块时新生成的HttpConfigCtxs结构体
         HttpConfigCtxs* ctx;
@@ -47,9 +48,9 @@ public:
     {
         std::vector<HttpSrvConf*> servers;
     };
-    int cur_server_;    //当前解析的server块
 
 public:
+    int get_cur_server_idx() const { return cur_server_idx_; }
     HttpMainConf* GetModuleMainConf(const Module& module);
     HttpSrvConf* GetModuleSrvConf(const Module& module);
     HttpLocConf* GetModuleLocConf(const Module& module);
@@ -67,6 +68,8 @@ private:
     bool MergeSrvConfig(void* conf);
     void* CreateLocConfig();
     bool MergeLocConfig(void* conf);
+
+    int cur_server_idx_;    //当前解析的server块
 };
 //---------------------------------------------------------------------------
 extern HttpModuleCore g_http_module_core;

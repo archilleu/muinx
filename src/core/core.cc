@@ -174,7 +174,8 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
                         HttpModuleCore::HttpMainConf* main_conf =
                             g_http_module_core.GetModuleMainConf(g_http_module_core);
                         //取得适当的server结构体
-                        HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(0);
+                        HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(
+                                g_http_module_core.get_cur_server_idx());
                         void** confp = *reinterpret_cast<void***>(reinterpret_cast<char*>
                                 (srv_conf->ctx) + command.conf);
                         if(confp)

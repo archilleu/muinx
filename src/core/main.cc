@@ -34,9 +34,13 @@ int main(int, char**)
 
     core::HttpModuleCore::HttpMainConf* main_conf =
         core::g_http_module_core.GetModuleMainConf(core::g_http_module_core);
-    core::HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(0);
-    std::cout << "listen:" << srv_conf->port << std::endl;
-    std::cout << "server_name:" << srv_conf->server_name << std::endl;
+
+    for(auto& srv_conf : main_conf->servers)
+    {
+        std::cout << "listen:" << srv_conf->port << std::endl;
+        std::cout << "server_name:" << srv_conf->server_name << std::endl;
+    }
+
     return 0;
 }
 //---------------------------------------------------------------------------

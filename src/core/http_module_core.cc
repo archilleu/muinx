@@ -68,7 +68,7 @@ HttpModuleCore::HttpModuleCore()
         }
     };
 
-    cur_server_ = 0;
+    cur_server_idx_ = -1;
 }
 //---------------------------------------------------------------------------
 HttpModuleCore::~HttpModuleCore()
@@ -141,6 +141,8 @@ bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandMod
         (ctx->main_conf[g_http_module_core.module_index()]);
     main_conf->servers.push_back(srv_conf);
 
+    //当前server block
+    cur_server_idx_++;
     return true;
 }
 //---------------------------------------------------------------------------
