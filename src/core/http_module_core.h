@@ -36,13 +36,26 @@ public:
 
     struct HttpSrvConf
     {
+        std::string server_name;    //域名localhost
+        int port;                   //端口
+
+        //指向解析server块时新生成的HttpConfigCtxs结构体
+        HttpConfigCtxs* ctx;
     };
 
     struct HttpMainConf
     {
-        std::vector<HttpSrvConf> servers;
+        std::vector<HttpSrvConf*> servers;
     };
     int cur_server_;    //当前解析的server块
+
+public:
+    HttpMainConf* GetModuleMainConf(const Module& module);
+    HttpSrvConf* GetModuleSrvConf(const Module& module);
+    HttpLocConf* GetModuleLocConf(const Module& module);
+
+private:
+    bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
 
 private:
     bool PreConfiguration();

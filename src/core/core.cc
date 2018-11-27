@@ -148,14 +148,53 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             //因为有command.type的条件，所以不会导致main或者event层拦截http配置
             else
             {
+                //获取HTTP模块的配置入口
+                //ctx为HttpConfigCtxs结构,指针运算按照运算类型对象所占字节数,取得二维数组的地址(void***)
+                //取得相应的偏移成员地址(&ctx->main_conf,&ctx->srv_conf,&ctx->loc_conf),需要解引用
                 ctx = block_config_ctxs_[g_core_module_http.index()];
-                
-                //ctx为HttpConfigCtxs结构,指针运算按照运算类型对象所占字节数 sizeof(char) + ...
-                void** confp = *reinterpret_cast<void***>(static_cast<char*>(ctx) + command.conf);
-                if(confp)
+
+                switch(command_config.conf_type)
                 {
-                    ctx = confp[module->module_index()];
+                    case ConfFile::kCONF_HTTP:
+                    {
+                        void** confp = *reinterpret_cast<void***>(static_cast<char*>(ctx) + command.conf);
+                        if(confp)
+                        {
+                            ctx = confp[module->module_index()];
+                            if(nullptr == ctx)
+                                continue;
+                        }
+
+                        break;
+                    }
+
+                    case ConfFile::kCONF_SERVICE:
+                    {
+                        //server结构体在main_conf中记录
+                        HttpModuleCore::HttpMainConf* main_conf =
+                            g_http_module_core.GetModuleMainConf(g_http_module_core);
+                        //取得适当的server结构体
+                        HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(0);
+                        void** confp = *reinterpret_cast<void***>(reinterpret_cast<char*>
+                                (srv_conf->ctx) + command.conf);
+                        if(confp)
+                        {
+                            ctx = confp[module->module_index()];
+                            if(nullptr == ctx)
+                                continue;
+                        }
+
+                        break;
+                    }
+
+                    case ConfFile::kCONF_LOCATION:
+                        break;
+
+                    default:
+                        break;
                 }
+
+                
             }
 
             command.Set(command_config, command, ctx);

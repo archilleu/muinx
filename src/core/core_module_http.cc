@@ -34,12 +34,9 @@ CoreModuleHttp::~CoreModuleHttp()
 {
 }
 //---------------------------------------------------------------------------
-bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
+bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
         const CommandModule&, void* module_command)
 {
-    (void)config;
-    (void)module_command;
-
     HttpModuleCore::HttpConfigCtxs* ctx = new HttpModuleCore::HttpConfigCtxs();
     *reinterpret_cast<HttpModuleCore::HttpConfigCtxs**>(module_command) = ctx;
 
@@ -63,7 +60,7 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig& config,
 
         HttpModule* module = static_cast<HttpModule*>(g_core.modules_[i]);
         const HttpModule::HttpModuleCtx* module_ctx = module->ctx();
-        int module_index  = module->module_index();
+        int module_index = module->module_index();
         if(module_ctx->create_main_config)
         {
             ctx->main_conf[module_index] = module_ctx->create_main_config();
