@@ -3,6 +3,7 @@
 #define HTTP_MODULE_CORE_H_
 //---------------------------------------------------------------------------
 #include <vector>
+#include <queue>
 #include "http_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -30,6 +31,15 @@ public:
 
     struct HttpLocConf
     {
+        std::string name;
+        std::queue<HttpLocConf*> locations;
+
+        /*
+         * 指向所属location块内ngx_http_conf_ctx_t结构中的loc_conf指针数组，它保存
+         * 着当前location块内所有HTTP模块create_loc_conf方法产生的结构体指针
+         */
+        void** loc_conf;
+
         int keepalive_timeout; 
         bool sendfile;
     };
@@ -51,12 +61,16 @@ public:
 
 public:
     int get_cur_server_idx() const { return cur_server_idx_; }
+
     HttpMainConf* GetModuleMainConf(const Module& module);
     HttpSrvConf* GetModuleSrvConf(const Module& module);
     HttpLocConf* GetModuleLocConf(const Module& module);
 
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
+    bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
+
+    bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
 
 private:
     bool PreConfiguration();

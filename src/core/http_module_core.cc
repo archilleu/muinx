@@ -1,4 +1,5 @@
 //---------------------------------------------------------------------------
+#include <cstring>
 #include "core.h"
 #include "defines.h"
 #include "conf_file.h"
@@ -50,14 +51,14 @@ HttpModuleCore::HttpModuleCore()
             MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&HttpModuleCore::ConfigSetServerBlock, this, _1, _2, _3),
             0,
-            offsetof(HttpLocConf, sendfile)
+            0
         },
         {
             "listen",
             HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
+            std::bind(&HttpModuleCore::ConfigSetListen, this, _1, _2, _3),
             HTTP_SRV_CONF_OFFSET,
-            offsetof(HttpSrvConf, port)
+            0
         },
         {
             "server_name",
@@ -65,6 +66,13 @@ HttpModuleCore::HttpModuleCore()
             std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             HTTP_SRV_CONF_OFFSET,
             offsetof(HttpSrvConf, server_name)
+        },
+        {
+            "location",
+            MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
+            std::bind(&HttpModuleCore::ConfigSetLocationBlock, this, _1, _2, _3),
+            0,
+            0
         }
     };
 
@@ -87,7 +95,7 @@ HttpModuleCore::HttpSrvConf* HttpModuleCore::GetModuleSrvConf(const Module& modu
 {
     HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
         (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpSrvConf* srv = reinterpret_cast<HttpSrvConf*>(ctx->loc_conf[module.module_index()]);
+    HttpSrvConf* srv = reinterpret_cast<HttpSrvConf*>(ctx->srv_conf[module.module_index()]);
     return srv;
 }
 //---------------------------------------------------------------------------
@@ -143,6 +151,78 @@ bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandMod
 
     //当前server block
     cur_server_idx_++;
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config, const CommandModule&, void*)
+{
+    if(2 != command_config.args.size())
+        return false;
+
+    //遇到了location配置项，就新建立一个HttpConfigCtxs，获取当前server层HttpConfigCtxs结构体
+    HttpConfigCtxs* ctx = new HttpConfigCtxs();
+    HttpConfigCtxs* http = reinterpret_cast<HttpConfigCtxs*>(
+            g_core.block_config_ctxs_[g_core_module_http.index()]);
+    HttpMainConf* main_conf = reinterpret_cast<HttpMainConf*>(
+            http->main_conf[g_http_module_core.module_index()]);
+    HttpSrvConf* srv_conf = main_conf->servers.at(
+            g_http_module_core.get_cur_server_idx());
+    ctx->main_conf = srv_conf->ctx->main_conf;
+    ctx->srv_conf = srv_conf->ctx->srv_conf;
+
+    ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
+    for(size_t i=0; i<g_core.modules_.size(); i++)
+    {
+        if(Module::ModuleType::HTTP != g_core.modules_[i]->type())
+            continue;
+
+        HttpModule* module = static_cast<HttpModule*>(g_core.modules_[i]);
+        const HttpModule::HttpModuleCtx* module_ctx = module->ctx();
+        int module_index = module->module_index();
+        //该main_conf指向上一层（http）的main_conf
+        //if(module_ctx->create_main_config)
+        //{
+        //    ctx->main_conf[module_index] = module_ctx->create_main_config();
+        //}
+        //if(module_ctx->create_srv_config)
+        //{
+        //    ctx->srv_conf[module_index] = module_ctx->create_srv_config();
+        //}
+        if(module_ctx->create_loc_config)
+        {
+            ctx->loc_conf[module_index] = module_ctx->create_loc_config();
+        }
+    }
+
+    HttpLocConf* loc_conf = reinterpret_cast<HttpLocConf*>(
+            ctx->loc_conf[g_http_module_core.module_index()]);
+    loc_conf->loc_conf = ctx->loc_conf;
+
+    const std::string& name = command_config.args[1];
+    loc_conf->name = name;
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandModule&, void* module_command)
+{
+    if(config.args.size() != 2)
+        return false;
+
+    HttpSrvConf* srv_conf = reinterpret_cast<HttpSrvConf*>(module_command);
+    const std::string& listen = config.args[1];
+    std::size_t found = listen.find(':');
+    if(std::string::npos == found)
+    {
+        srv_conf->ip = IPADDR_ALL;
+        srv_conf->port = std::atoi(listen.c_str());
+    }
+    else
+    {
+        srv_conf->ip = listen.substr(0, found);
+        srv_conf->port = std::atoi(listen.substr(found+1).c_str());
+    }
+
     return true;
 }
 //---------------------------------------------------------------------------

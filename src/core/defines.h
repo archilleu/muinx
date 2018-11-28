@@ -69,5 +69,6 @@
 #define HTTP_SRV_CONF_OFFSET   offsetof(HttpModuleCore::HttpConfigCtxs, srv_conf)
 #define HTTP_LOC_CONF_OFFSET   offsetof(HttpModuleCore::HttpConfigCtxs, loc_conf)
 
+#define IPADDR_ALL "ALL"
 //---------------------------------------------------------------------------
 #endif //CORE_DEFINES_H_

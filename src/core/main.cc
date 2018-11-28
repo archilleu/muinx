@@ -37,8 +37,9 @@ int main(int, char**)
 
     for(auto& srv_conf : main_conf->servers)
     {
-        std::cout << "listen:" << srv_conf->port << std::endl;
         std::cout << "server_name:" << srv_conf->server_name << std::endl;
+        std::cout << "ip:" << srv_conf->ip<< std::endl;
+        std::cout << "port:" << srv_conf->port << std::endl;
     }
 
     return 0;
