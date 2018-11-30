@@ -9,6 +9,8 @@
 #include "http_module_core.h"
 #include "core_module_http.h"
 //---------------------------------------------------------------------------
+using namespace core;
+//---------------------------------------------------------------------------
 int main(int, char**)
 {
 
@@ -37,9 +39,23 @@ int main(int, char**)
 
     for(auto& srv_conf : main_conf->servers)
     {
-        std::cout << "server_name:" << srv_conf->server_name << std::endl;
-        std::cout << "ip:" << srv_conf->ip<< std::endl;
-        std::cout << "port:" << srv_conf->port << std::endl;
+        std::cout << "server_name: " << srv_conf->server_name << std::endl;
+        std::cout << "ip: " << srv_conf->ip<< std::endl;
+        std::cout << "port: " << srv_conf->port << std::endl;
+        HttpModuleCore::HttpLocConf* srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
+                srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
+        for(const auto& location : srv_loc_conf->locations)
+        {
+            //location对应的两个指针之一记录了当前location中所用的HTTP模块create_loc_config结构体
+            const auto& loc_conf = nullptr!=location.exact ? location.exact: location.inclusive;
+            for(int i=0; i<CoreModuleHttp::s_max_http_module; i++)
+            {
+                HttpModuleCore::HttpLocConf* loc =
+                    reinterpret_cast<HttpModuleCore::HttpLocConf*>(loc_conf->loc_conf[i]);
+                std::cout << "location: " <<  loc->name << std::endl;
+                std::cout << "root: " << loc->root << std::endl;;
+            }
+        }
     }
 
     return 0;

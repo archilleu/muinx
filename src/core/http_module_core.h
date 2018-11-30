@@ -3,7 +3,6 @@
 #define HTTP_MODULE_CORE_H_
 //---------------------------------------------------------------------------
 #include <vector>
-#include <queue>
 #include "http_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -29,10 +28,13 @@ public:
         void** loc_conf;
     };
 
+    struct Location;
     struct HttpLocConf
     {
         std::string name;
-        std::queue<HttpLocConf*> locations;
+
+        //同一个server块内的location,可能location有嵌套，所以放在该结构体内部
+        std::vector<Location> locations;
 
         /*
          * 指向所属location块内ngx_http_conf_ctx_t结构中的loc_conf指针数组，它保存
@@ -40,9 +42,20 @@ public:
          */
         void** loc_conf;
 
+        bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
+
         int keepalive_timeout; 
         bool sendfile;
+        std::string root;
     };
+
+    struct Location
+    {
+        HttpLocConf* exact;
+        HttpLocConf* inclusive;
+        std::string name;
+    };
+
 
     struct HttpSrvConf
     {
@@ -61,6 +74,7 @@ public:
 
 public:
     int get_cur_server_idx() const { return cur_server_idx_; }
+    int get_cur_location_idx() const { return cur_location_idx_; }
 
     HttpMainConf* GetModuleMainConf(const Module& module);
     HttpSrvConf* GetModuleSrvConf(const Module& module);
@@ -83,7 +97,8 @@ private:
     void* CreateLocConfig();
     bool MergeLocConfig(void* conf);
 
-    int cur_server_idx_;    //当前解析的server块
+    int cur_server_idx_;    //当前解析的server块下标
+    int cur_location_idx_;  //当前server块解析的location块下标
 };
 //---------------------------------------------------------------------------
 extern HttpModuleCore g_http_module_core;

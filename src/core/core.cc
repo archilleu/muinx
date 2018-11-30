@@ -189,13 +189,30 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
                     }
 
                     case ConfFile::kCONF_LOCATION:
+                    {
+                        //server结构体在main_conf中记录
+                        HttpModuleCore::HttpMainConf* main_conf =
+                            g_http_module_core.GetModuleMainConf(g_http_module_core);
+                        //取得适当的server结构体
+                        HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(
+                                g_http_module_core.get_cur_server_idx());
+                        //server的loc_conf[g_http_module_core.module_index]记录了含有location的数据结构
+                        HttpModuleCore::HttpLocConf* srv_loc_conf =
+                            reinterpret_cast<HttpModuleCore::HttpLocConf*>(
+                                srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
+                        //取得当前配置文件对应该server下面对应的location
+                        const auto& location = srv_loc_conf->locations.at(g_http_module_core.get_cur_location_idx());
+                        //location对应的两个指针之一记录了当前location中所用的HTTP模块create_loc_config结构体
+                        const auto& loc_conf = nullptr!=location.exact ? location.exact: location.inclusive;
+                        //取得当前模块感兴趣的配置项指针
+                        ctx = loc_conf->loc_conf[module->module_index()];
+
                         break;
+                    }
 
                     default:
                         break;
                 }
-
-                
             }
 
             command.Set(command_config, command, ctx);
