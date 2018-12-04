@@ -5,7 +5,7 @@
 #include "event_module_core.h"
 #include "core_module.h"
 #include "core.h"
-#include "conf_file.h"
+#include "core_module_conf.h"
 #include "http_module_core.h"
 #include "core_module_http.h"
 //---------------------------------------------------------------------------

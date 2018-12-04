@@ -7,7 +7,7 @@
 #include <memory>
 #include <functional>
 #include "defines.h"
-#include "conf_file.h"
+#include "core_module_conf.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -21,8 +21,6 @@ public:
 public:
     bool Initialize();
 
-    std::shared_ptr<ConfFile> conf_file_;
-
     std::vector<class Module*> modules_;
 
     //TODO:
@@ -34,6 +32,13 @@ public:
 
 private:
     void InitGlobalModules();
+    void InitModulesIndex();
+    void ActionCoreModulesCreatConfig();
+    void BindCallback();
+    bool ParseConfigFile();
+    bool ActionCoreModuleInitConfig();
+
+private:
     bool ConfigFileParseCallback(const core::CommandConfig& command_config);
     bool ConfigFileBlockBeginCallback(const core::CommandConfig& command_config);
     bool ConfigFileBlockEndCallback(const core::CommandConfig& command_config);

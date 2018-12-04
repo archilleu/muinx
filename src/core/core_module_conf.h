@@ -132,8 +132,8 @@ public:
     void set_block_begin_callback(const BlockBeginCallback& cb) { block_begin_cb_ = cb; }
     void set_block_end_callback(const BlockEndCallback& cb) { block_end_cb_ = cb; }
 
-    void set_conf_ctx(void* ctx) { conf_ctx_ = ctx; }
-    void* get_conf_ctx() const { return conf_ctx_; }
+    void set_block_ctx(void* ctx) { block_ctx_ = ctx; }
+    void* get_block_ctx() const { return block_ctx_; }
 
     bool Parse(const std::string& path);
 
@@ -167,7 +167,7 @@ private:
 
     Module::ModuleType module_type_;    //当前模块的类型
     int conf_type_;                     //当前域
-    void* conf_ctx_;                    //当前使用的HttpConfCtxs结构体，在http{}使用
+    void* block_ctx_;                   //当前使用的上下文,在event{}, http{}使用
 
     CommandCallback command_cb_;        //解析完整配置项后的回调
     BlockEndCallback block_begin_cb_;   //解析完整配置块后的回调

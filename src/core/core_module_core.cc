@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 #include <cstddef>
 #include "defines.h"
-#include "conf_file.h"
+#include "core_module_conf.h"
 #include "core_module_core.h"
 //---------------------------------------------------------------------------
 namespace core

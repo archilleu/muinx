@@ -10,14 +10,13 @@
 namespace core
 {
 
+using namespace std::placeholders;
+
 //---------------------------------------------------------------------------
 core::Core g_core;
 //---------------------------------------------------------------------------
 Core::Core()
 {
-    std::string path = "/home/archilleu/workspace/muinx/test/files/nginx.conf";
-    conf_file_ = std::make_shared<core::ConfFile>(path);
-    InitGlobalModules();
 }
 //---------------------------------------------------------------------------
 Core::~Core()
@@ -26,6 +25,42 @@ Core::~Core()
 //---------------------------------------------------------------------------
 bool Core::Initialize()
 {
+    InitGlobalModules();
+
+    InitModulesIndex();
+
+    ActionCoreModulesCreatConfig();
+
+    BindCallback();
+
+    if(false == ParseConfigFile())
+        return false;
+
+    if(false == ActionCoreModuleInitConfig())
+        return false;
+
+    return true;
+}
+//---------------------------------------------------------------------------
+void Core::InitGlobalModules()
+{
+    std::vector<Module*> modules = {
+        &g_core_module_core,
+        &g_core_module_conf,
+        &g_core_module_event,
+        &g_event_module_core,
+        &g_core_module_http,
+        &g_http_module_core
+    };
+    modules_.swap(modules);
+
+    config_ctxs_ = reinterpret_cast<void****>(new void*[modules_.size()]);
+    main_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
+    block_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
+}
+//---------------------------------------------------------------------------
+void Core::InitModulesIndex()
+{
     //初始化模块下标
     for(size_t i=0; i<modules_.size(); i++)
     {
@@ -33,41 +68,54 @@ bool Core::Initialize()
         Module::s_max_module++;
     }
 
-    for(size_t i=0; i<modules_.size(); i++)
+    return;
+}
+//---------------------------------------------------------------------------
+void Core::ActionCoreModulesCreatConfig()
+{
+    for(auto& module : modules_)
     {
-        auto& module = modules_[i];
-
-        //如果是核心模块，则直接分配核心模块配置结构体内存，由核心模块管理的模块
-        //会在需要的时候在分配，也就是解析配置文件回调条件command.type&MAIN_CONF
+        //如果是核心模块，初始化的时候已经分配核心模块配置结构体内存，由核心模块管
+        //理的模块会在需要的时候在分配，也就是解析配置文件回调条件command.type&MAIN_CONF
         //成立时分配
         if(module->type() != Module::ModuleType::CORE)
             continue;
 
-        auto module_ctx = (static_cast<core::CoreModule*>(module))->ctx();
+        auto module_ctx = static_cast<core::CoreModule*>(module)->ctx();
         if(module_ctx->create_config)
         {
             main_config_ctxs_[module->index()] =  module_ctx->create_config();
         }
     }
 
-    conf_file_->set_command_callback(std::bind(&Core::ConfigFileParseCallback,
-                this, std::placeholders::_1));
-    conf_file_->set_block_begin_callback(std::bind(&Core::ConfigFileBlockBeginCallback,
-                this, std::placeholders::_1));
-    conf_file_->set_block_end_callback(std::bind(&Core::ConfigFileBlockEndCallback,
-                this, std::placeholders::_1));
-
-    if(false == conf_file_->Parse())
+    return;
+}
+//---------------------------------------------------------------------------
+void Core::BindCallback()
+{
+    g_core_module_conf.set_command_callback(std::bind(&Core::ConfigFileParseCallback, this, _1));
+    g_core_module_conf.set_block_begin_callback(std::bind(&Core::ConfigFileBlockBeginCallback, this, _1));
+    g_core_module_conf.set_block_end_callback(std::bind(&Core::ConfigFileBlockEndCallback, this, _1));
+}
+//---------------------------------------------------------------------------
+bool Core::ParseConfigFile()
+{
+    std::string path = "/home/archilleu/workspace/muinx/test/files/nginx.conf";
+    if(false == g_core_module_conf.Parse(path))
     {
         assert(((void)"config file parse failed", 0));
         return false;
     }
 
+    return true;
+}
+//---------------------------------------------------------------------------
+bool Core::ActionCoreModuleInitConfig()
+{
     //解析完配置项目后调用初始化配置项，此刻可以对配置项进行默认值或者其他操作,
     //该初始化只初始化CORE类型的模块，其他模块在对应管理的模块内初始化
-    for(size_t i=0; i<modules_.size(); i++)
+    for(auto& module : modules_)
     {
-        auto& module = modules_[i];
         if(module->type() != Module::ModuleType::CORE)
             continue;
 
@@ -86,22 +134,6 @@ bool Core::Initialize()
     return true;
 }
 //---------------------------------------------------------------------------
-void Core::InitGlobalModules()
-{
-    std::vector<Module*> modules = {
-        &g_core_module_core,
-        &g_core_module_event,
-        &g_event_module_core,
-        &g_core_module_http,
-        &g_http_module_core
-    };
-    modules_.swap(modules);
-
-    config_ctxs_ = reinterpret_cast<void****>(new void*[modules_.size()]);
-    main_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
-    block_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
-}
-//---------------------------------------------------------------------------
 bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
 {
     /*
@@ -111,108 +143,55 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
      */
     for(auto module : modules_)
     {
-        if(module->type() != command_config.module_type)
+        //模块类型不是配置模块并且是否匹配
+        if((module->type()==Module::ModuleType::CONF) || (module->type()!=command_config.module_type))
             continue;
 
-        auto commands = module->commands();
-        for(const auto& command : commands)
+        //遍历所有的配置项
+        for(const auto& command : module->commands())
         {
-            //配置项名不匹配
+            //配置项名是否匹配
             if(command_config.args[0] != command.name)
                 continue;
 
+            //当前配置项所在域是否匹配
+            if(!(command_config.conf_type&command.type))
+                continue;
+
+            //TODO 检擦参数个数
+
+            //设置配置文件对应项的上下文
             void* ctx = nullptr;
 
             //全局配置项目，内存布局。
             //https://blog.csdn.net/qiuhui00/article/details/79239640
             if((command.type&DIRECT_CONF)
-                    && (command_config.conf_type==ConfFile::kCONF_MAIN))
+                    && (command_config.conf_type==MAIN_CONF))
             {
                 ctx = main_config_ctxs_[module->index()];
             }
             //块配置项目，引导该块的所有配置，该块无实际的配置项, 像events、http
             else if(command.type&MAIN_CONF)
             {
-                //在event、http块里面new另外的指针数组，所以需要传递指针的地址(传递引用也行)
+                //在event{}、http{}里面new另外的指针数组，所以需要传递指针的地址(传递引用也行)
                 ctx = &(block_config_ctxs_[module->index()]);
             }
-            //EVENT块内配置项
-            else if((command.type&EVENT_CONF)
-                    && (command_config.conf_type==ConfFile::kCONF_EVENT))
+            //event{}
+            //http{}里面的HttpConfCtx结构体，每一个http{}、server{}、location{}都独立一个
+            else if(g_core_module_conf.get_block_ctx())
             {
-                void** tmp = reinterpret_cast<void**>
-                    (block_config_ctxs_[g_core_module_event.index()]);
-                ctx = (tmp)[module->module_index()];
+                void** confp = *reinterpret_cast<void***>
+                    (static_cast<char*>(g_core_module_conf.get_block_ctx()) + command.conf);
+                if(confp)
+                {
+                    ctx = confp[module->module_index()];
+                    if(nullptr == ctx)
+                        continue;
+                }
             }
-            //HTTP配置项
-            //因为有command.type的条件，所以不会导致main或者event层拦截http配置
             else
             {
-                //获取HTTP模块的配置入口
-                //ctx为HttpConfigCtxs结构,指针运算按照运算类型对象所占字节数,取得二维数组的地址(void***)
-                //取得相应的偏移成员地址(&ctx->main_conf,&ctx->srv_conf,&ctx->loc_conf),需要解引用
-                ctx = block_config_ctxs_[g_core_module_http.index()];
-
-                switch(command_config.conf_type)
-                {
-                    case ConfFile::kCONF_HTTP:
-                    {
-                        void** confp = *reinterpret_cast<void***>(static_cast<char*>(ctx) + command.conf);
-                        if(confp)
-                        {
-                            ctx = confp[module->module_index()];
-                            if(nullptr == ctx)
-                                continue;
-                        }
-
-                        break;
-                    }
-
-                    case ConfFile::kCONF_SERVICE:
-                    {
-                        //server结构体在main_conf中记录
-                        HttpModuleCore::HttpMainConf* main_conf =
-                            g_http_module_core.GetModuleMainConf(&g_http_module_core);
-                        //取得适当的server结构体
-                        HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(
-                                g_http_module_core.get_cur_server_idx());
-                        void** confp = *reinterpret_cast<void***>(reinterpret_cast<char*>
-                                (srv_conf->ctx) + command.conf);
-                        if(confp)
-                        {
-                            ctx = confp[module->module_index()];
-                            if(nullptr == ctx)
-                                continue;
-                        }
-
-                        break;
-                    }
-
-                    case ConfFile::kCONF_LOCATION:
-                    {
-                        //server结构体在main_conf中记录
-                        HttpModuleCore::HttpMainConf* main_conf =
-                            g_http_module_core.GetModuleMainConf(&g_http_module_core);
-                        //取得适当的server结构体
-                        HttpModuleCore::HttpSrvConf* srv_conf = main_conf->servers.at(
-                                g_http_module_core.get_cur_server_idx());
-                        //server的loc_conf[g_http_module_core.module_index]记录了含有location的数据结构
-                        HttpModuleCore::HttpLocConf* srv_loc_conf =
-                            reinterpret_cast<HttpModuleCore::HttpLocConf*>(
-                                srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
-                        //取得当前配置文件对应该server下面对应的location
-                        const auto& location = srv_loc_conf->locations.at(g_http_module_core.get_cur_location_idx());
-                        //location对应的两个指针之一记录了当前location中所用的HTTP模块create_loc_config结构体
-                        const auto& loc_conf = nullptr!=location.exact ? location.exact: location.inclusive;
-                        //取得当前模块感兴趣的配置项指针
-                        ctx = loc_conf->loc_conf[module->module_index()];
-
-                        break;
-                    }
-
-                    default:
-                        break;
-                }
+                //TODO 错误的配置项或者文件
             }
 
             command.Set(command_config, command, ctx);
@@ -230,6 +209,8 @@ bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_confi
 //---------------------------------------------------------------------------
 bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
 {
+    (void)command_config;
+    /*
     //event模块配置解析完成后调用Event模块的初始化回调
     if((command_config.module_type==Module::ModuleType::CORE)
             && (command_config.conf_type==ConfFile::kCONF_EVENT))
@@ -272,6 +253,7 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
             g_core_module_http.MergeServers(dynamic_cast<HttpModule*>(module));
         }
     }
+    */
 
     return true;
 }

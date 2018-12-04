@@ -91,6 +91,8 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
     HttpModuleCore::HttpConfigCtxs* ctx = new HttpModuleCore::HttpConfigCtxs();
     *reinterpret_cast<HttpModuleCore::HttpConfigCtxs**>(module_command) = ctx;
 
+    g_core_module_conf.set_block_ctx(ctx);
+
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)
     {
@@ -104,13 +106,13 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
     ctx->srv_conf = new void*[CoreModuleHttp::s_max_http_module];
     ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
 
-    for(size_t i=0; i<g_core.modules_.size(); i++)
+    for(auto module : g_core.modules_)
     {
-        if(Module::ModuleType::HTTP != g_core.modules_[i]->type())
+        if(Module::ModuleType::HTTP != module->type())
             continue;
 
-        HttpModule* module = static_cast<HttpModule*>(g_core.modules_[i]);
-        const HttpModule::HttpModuleCtx* module_ctx = module->ctx();
+        HttpModule* http_module = static_cast<HttpModule*>(module);
+        const HttpModule::HttpModuleCtx* module_ctx = http_module->ctx();
         int module_index = module->module_index();
         if(module_ctx->create_main_config)
         {
@@ -125,8 +127,6 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
             ctx->loc_conf[module_index] = module_ctx->create_loc_config();
         }
     }
-
-    //todo 在block end 里面合并配置块
 
     return true;
 }

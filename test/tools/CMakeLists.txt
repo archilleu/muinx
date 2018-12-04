@@ -7,7 +7,8 @@ aux_source_directory(. DIR_TESTS)
 #---------------------------------------------------------------------------
 #generate test
 set(TESTTOOLS test_tools)
-add_executable(${TESTTOOLS} ${DIR_TESTS} ../../src/core/conf_file.cc)
+add_executable(${TESTTOOLS} ${DIR_TESTS} ../../src/core/module.cc
+    ../../src/core/core_module_conf.cc)
 #---------------------------------------------------------------------------
 #add include path
 #include_directories(${LIBRARY_OUTPUT_PATH_INC})

@@ -1,7 +1,8 @@
 //---------------------------------------------------------------------------
-#include "conf_file.h"
-#include "../base/function.h"
 #include <iostream>
+#include "core_module_conf.h"
+#include "../base/function.h"
+#include "defines.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -157,28 +158,29 @@ void TokenReader::SkipCommentLine()
     }
 }
 //---------------------------------------------------------------------------
-const char* ConfFile::kRESERVED_EVENTS      = "events";
-const char* ConfFile::kRESERVED_HTTP        = "http";         
-const char* ConfFile::kRESERVED_SERVER      = "server";
-const char* ConfFile::kRESERVED_LOCATION    = "location";
+CoreModuleConf g_core_module_conf;
 //---------------------------------------------------------------------------
-ConfFile::ConfFile(const char* path)
-:   config_path_(path),
-    module_type_(Module::ModuleType::CORE)
+const char* CoreModuleConf::kRESERVED_EVENTS      = "events";
+const char* CoreModuleConf::kRESERVED_HTTP        = "http";         
+const char* CoreModuleConf::kRESERVED_SERVER      = "server";
+const char* CoreModuleConf::kRESERVED_LOCATION    = "location";
+//---------------------------------------------------------------------------
+CoreModuleConf::CoreModuleConf()
+:   module_type_(Module::ModuleType::CORE),
+    conf_type_(MAIN_CONF),
+    block_ctx_(nullptr)
+{
+    this->type_ = Module::ModuleType::CONF;
+    this->set_module_index(0);
+}
+//---------------------------------------------------------------------------
+CoreModuleConf::~CoreModuleConf()
 {
 }
 //---------------------------------------------------------------------------
-ConfFile::ConfFile(const std::string& path)
-: config_path_(path)
+bool CoreModuleConf::Parse(const std::string& path)
 {
-}
-//---------------------------------------------------------------------------
-ConfFile::~ConfFile()
-{
-}
-//---------------------------------------------------------------------------
-bool ConfFile::Parse()
-{
+    config_path_ = path;
     if(false == GetConfigFileData())
         return false;
 
@@ -243,12 +245,12 @@ bool ConfFile::Parse()
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfFile::GetConfigFileData()
+bool CoreModuleConf::GetConfigFileData()
 {
     return base::LoadFile(config_path_, &config_dat_);
 }
 //---------------------------------------------------------------------------
-bool ConfFile::CaseStatusEnd()
+bool CoreModuleConf::CaseStatusEnd()
 {
     if(!HasStatus(kEXP_STATUS_END))
         return false;
@@ -260,7 +262,7 @@ bool ConfFile::CaseStatusEnd()
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfFile::CaseStatusBlank()
+bool CoreModuleConf::CaseStatusBlank()
 {
     if(!HasStatus(kEXP_STATUS_BLANK))
         return false;
@@ -268,7 +270,7 @@ bool ConfFile::CaseStatusBlank()
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfFile::CaseStatusBlockBegin()
+bool CoreModuleConf::CaseStatusBlockBegin()
 {
     if(!HasStatus(kEXP_STATUS_BLOCK_BEGIN))
         return false;
@@ -277,13 +279,25 @@ bool ConfFile::CaseStatusBlockBegin()
     if(0 == cur_line_params_.size())
         return false;
 
-    auto& reserve = cur_line_params_[0];
+    std::string reserve = cur_line_params_[0];
+
+    //回调,因为本质上event{}
+    //http{}等都是属于同一层级的作用域，所以先回调再修改作用域
+    CommandConfig command_config;
+    command_config.args.swap(cur_line_params_);
+    command_config.module_type = module_type_;
+    command_config.conf_type = conf_type_;
+    if(block_begin_cb_) block_begin_cb_(command_config);
+    if(command_cb_) command_cb_(command_config);
+
+    //第一次进入该函数前，module_type_=Module::ModuleType::CORE;
     if(kRESERVED_EVENTS ==reserve) 
     {
         if(kCONF_MAIN != stack_.top())
             return false;
 
-        module_type_ = Module::ModuleType::CORE;
+        module_type_ = Module::ModuleType::EVENT;
+        conf_type_ = EVENT_CONF;
         stack_.push(static_cast<int>(kCONF_EVENT));
     }
     else if(kRESERVED_HTTP == reserve)
@@ -291,7 +305,8 @@ bool ConfFile::CaseStatusBlockBegin()
         if(kCONF_MAIN != stack_.top())
             return false;
 
-        module_type_ = Module::ModuleType::CORE;
+        module_type_ = Module::ModuleType::HTTP;
+        conf_type_ = HTTP_MAIN_CONF;
         stack_.push(static_cast<int>(kCONF_HTTP));
     }
     else if(kRESERVED_SERVER == reserve)
@@ -300,6 +315,7 @@ bool ConfFile::CaseStatusBlockBegin()
             return false;
 
         module_type_ = Module::ModuleType::HTTP;
+        conf_type_ = HTTP_SRV_CONF;
         stack_.push(static_cast<int>(kCONF_SERVICE));
     }
     else if(kRESERVED_LOCATION == reserve)
@@ -308,29 +324,23 @@ bool ConfFile::CaseStatusBlockBegin()
             return false;
 
         module_type_ = Module::ModuleType::HTTP;
+        conf_type_ = HTTP_LOC_CONF;
         stack_.push(static_cast<int>(kCONF_LOCATION));
     }
     else
     {
         //没有找到保留字，因为目前不支持自定义的保留字，返回失败
         module_type_ = Module::ModuleType::INVALID;
+        conf_type_ = DIRECT_CONF;
         return false;
     }
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END | kEXP_STATUS_BLOCK_END;
 
-    //回调
-    CommandConfig command_config;
-    command_config.args.swap(cur_line_params_);
-    command_config.conf_type = stack_.top();
-    command_config.module_type = module_type_;
-    block_begin_cb_(command_config);
-    command_cb_(command_config);
-
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfFile::CaseStatusBlockEnd()
+bool CoreModuleConf::CaseStatusBlockEnd()
 {
     if(!HasStatus(kEXP_STATUS_BLOCK_END))
         return false;
@@ -338,75 +348,37 @@ bool ConfFile::CaseStatusBlockEnd()
     if(kCONF_MAIN == stack_.top())
         return false;
 
+    stack_.pop();
+    if(kCONF_MAIN != stack_.top())
+    {
+        cur_status_ |= kEXP_STATUS_BLOCK_END;
+    }
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END;
 
-    switch(stack_.top())
-    {
-        case kCONF_MAIN:
-        case kCONF_EVENT:
-        case kCONF_HTTP:
-            module_type_ = Module::ModuleType::CORE;
-            break;
-
-        case kCONF_SERVICE:
-        case kCONF_LOCATION:
-            module_type_ = Module::ModuleType::HTTP;
-            break;
-
-        default:
-            module_type_ = Module::ModuleType::INVALID;
-    }
-
     //回调
     CommandConfig command_config;
-    command_config.conf_type = stack_.top();
+    command_config.conf_type = conf_type_;
     command_config.module_type = module_type_;
-    block_end_cb_(command_config);
-
-    stack_.pop();
-    if(kCONF_MAIN != stack_.top())
-        cur_status_ |= kEXP_STATUS_BLOCK_END;
+    if(block_end_cb_) block_end_cb_(command_config);
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfFile::CaseStatusSepSemicolon()
+bool CoreModuleConf::CaseStatusSepSemicolon()
 {
     if(!HasStatus(kEXP_STATUS_SEP_SEMICOLON))
         return false;
 
-    switch(stack_.top())
-    {
-        case kCONF_MAIN:
-            module_type_ = Module::ModuleType::CORE;
-            break;
-
-        case kCONF_EVENT:
-            module_type_ = Module::ModuleType::EVENT;
-            break;
-
-        case kCONF_HTTP:
-        case kCONF_SERVICE:
-        case kCONF_LOCATION:
-            module_type_ = Module::ModuleType::HTTP;
-            break;
-
-        default:
-            module_type_ = Module::ModuleType::INVALID;
-    }
-
-
     //回调
     CommandConfig command_config;
     command_config.args.swap(cur_line_params_);
-    command_config.conf_type = stack_.top();
+    command_config.conf_type = conf_type_;
     command_config.module_type = module_type_;
-    command_cb_(command_config);
+    if(command_cb_) command_cb_(command_config);
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END;
-
     //如果当前stack_不是main域，则认为进入到了子域
     if(kCONF_MAIN != stack_.top())
     {
@@ -416,7 +388,7 @@ bool ConfFile::CaseStatusSepSemicolon()
     return true;
 }
 //---------------------------------------------------------------------------
-bool ConfFile::CaseStatusString()
+bool CoreModuleConf::CaseStatusString()
 {
     if(!HasStatus(kEXP_STATUS_STRING))
         return false;

@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-#include "../../src/core/conf_file.h"
+#include "../../src/core/core_module_conf.h"
 #include "../../src/tools/muinx_logger.h"
 #include <memory>
 #include <exception>
@@ -9,8 +9,8 @@ int main(int , char** )
 {
 
     {
-    std::shared_ptr<core::ConfFile> conf_file = std::make_shared<core::ConfFile>("invalid");
-    if(true == conf_file->Parse())
+    core::CoreModuleConf conf_file;
+    if(true == conf_file.Parse("invalid"))
     {
         Logger_off("%s", "pase success! expect false"); 
         return -1;
@@ -19,8 +19,8 @@ int main(int , char** )
 
     {
     std::string path = "/home/archilleu/workspace/muinx/test/files/nginx.conf";
-    std::shared_ptr<core::ConfFile> conf_file = std::make_shared<core::ConfFile>(path);
-    if(false == conf_file->Parse())
+    core::CoreModuleConf conf_file;
+    if(false == conf_file.Parse(path))
     {
         Logger_trace("%s", "parse failed! expect true");
         return -1;

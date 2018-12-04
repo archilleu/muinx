@@ -34,12 +34,8 @@ CoreModuleEvent::~CoreModuleEvent()
 {
 }
 //---------------------------------------------------------------------------
-bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig& config,
-        const CommandModule&, void* module_command)
+bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandModule&, void* module_command)
 {
-    (void)config;
-    (void)module_command;
-
     //只能有一个event
     if(*reinterpret_cast<void**>(module_command))
     {
@@ -58,6 +54,8 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig& config,
     void*** ctx = reinterpret_cast<void***>(new void*);
     *ctx = new void*[CoreModuleEvent::s_max_event_module];
     *reinterpret_cast<void**>(module_command) = ctx;
+
+    g_core_module_conf.set_block_ctx(ctx);
 
     for(auto module : g_core.modules_)
     {

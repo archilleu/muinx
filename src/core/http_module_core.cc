@@ -2,7 +2,7 @@
 #include <cstring>
 #include "core.h"
 #include "defines.h"
-#include "conf_file.h"
+#include "core_module_conf.h"
 #include "http_module_core.h"
 #include "core_module_http.h"
 //---------------------------------------------------------------------------
@@ -31,21 +31,21 @@ HttpModuleCore::HttpModuleCore()
     {
         {
             "sendfile",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET,
             offsetof(HttpLocConf, sendfile)
         },
         {
             "keepalive_timeout",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET,
             offsetof(HttpLocConf, keepalive_timeout)
         },
         {
             "merge_server",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             HTTP_SRV_CONF_OFFSET,
             offsetof(HttpSrvConf, merge_server)
@@ -59,14 +59,14 @@ HttpModuleCore::HttpModuleCore()
         },
         {
             "listen",
-            HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(&HttpModuleCore::ConfigSetListen, this, _1, _2, _3),
             HTTP_SRV_CONF_OFFSET,
             0
         },
         {
             "server_name",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             HTTP_SRV_CONF_OFFSET,
             offsetof(HttpSrvConf, server_name)
@@ -80,7 +80,7 @@ HttpModuleCore::HttpModuleCore()
         },
         {
             "root",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET,
             offsetof(HttpLocConf, root)
