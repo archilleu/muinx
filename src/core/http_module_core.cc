@@ -20,14 +20,11 @@ HttpModuleCore::HttpModuleCore()
     ctx->preconfiguration = std::bind(&HttpModuleCore::PreConfiguration, this);
     ctx->postconfiguration = std::bind(&HttpModuleCore::PostConfiguration, this);
     ctx->create_main_config = std::bind(&HttpModuleCore::CreateMainConfig, this);
-    ctx->init_main_config = std::bind(&HttpModuleCore::InitMainConfig, this,
-            std::placeholders::_1);
+    ctx->init_main_config = std::bind(&HttpModuleCore::InitMainConfig, this, _1);
     ctx->create_srv_config = std::bind(&HttpModuleCore::CreateSrvConfig, this);
-    ctx->merge_srv_config = std::bind(&HttpModuleCore::MergeSrvConfig, this,
-            std::placeholders::_1);
+    ctx->merge_srv_config = std::bind(&HttpModuleCore::MergeSrvConfig, this, _1, _2);
     ctx->create_loc_config = std::bind(&HttpModuleCore::CreateLocConfig, this);
-    ctx->merge_loc_config = std::bind(&HttpModuleCore::MergeLocConfig, this,
-            std::placeholders::_1);
+    ctx->merge_loc_config = std::bind(&HttpModuleCore::MergeLocConfig, this, _1, _2);
     this->ctx_.reset(ctx);
 
     this->commands_ =
@@ -45,6 +42,13 @@ HttpModuleCore::HttpModuleCore()
             std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET,
             offsetof(HttpLocConf, keepalive_timeout)
+        },
+        {
+            "merge_server",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
+            HTTP_SRV_CONF_OFFSET,
+            offsetof(HttpSrvConf, merge_server)
         },
         {
             "server",
@@ -91,27 +95,27 @@ HttpModuleCore::~HttpModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpMainConf* HttpModuleCore::GetModuleMainConf(const Module& module)
+HttpModuleCore::HttpMainConf* HttpModuleCore::GetModuleMainConf(const Module* module)
 {
     HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
         (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpMainConf* main = reinterpret_cast<HttpMainConf*>(ctx->main_conf[module.module_index()]);
+    HttpMainConf* main = reinterpret_cast<HttpMainConf*>(ctx->main_conf[module->module_index()]);
     return main;
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpSrvConf* HttpModuleCore::GetModuleSrvConf(const Module& module)
+HttpModuleCore::HttpSrvConf* HttpModuleCore::GetModuleSrvConf(const Module* module)
 {
     HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
         (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpSrvConf* srv = reinterpret_cast<HttpSrvConf*>(ctx->srv_conf[module.module_index()]);
+    HttpSrvConf* srv = reinterpret_cast<HttpSrvConf*>(ctx->srv_conf[module->module_index()]);
     return srv;
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module& module)
+HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module* module)
 {
     HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
         (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpLocConf* loc = reinterpret_cast<HttpLocConf*>(ctx->loc_conf[module.module_index()]);
+    HttpLocConf* loc = reinterpret_cast<HttpLocConf*>(ctx->loc_conf[module->module_index()]);
     return loc;
 }
 //---------------------------------------------------------------------------
@@ -293,9 +297,15 @@ void* HttpModuleCore::CreateSrvConfig()
     return conf;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::MergeSrvConfig(void* conf)
+bool HttpModuleCore::MergeSrvConfig(void* parent, void* child)
 {
-    (void)conf;
+    auto prev = reinterpret_cast<HttpSrvConf*>(parent);
+    auto conf = reinterpret_cast<HttpSrvConf*>(child);
+
+    std::string s1 = prev->merge_server;
+    std::string s2 = conf->merge_server;
+    conf->merge_server = s1;
+
     return true;
 }
 //---------------------------------------------------------------------------
@@ -305,8 +315,11 @@ void* HttpModuleCore::CreateLocConfig()
     return conf;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::MergeLocConfig(void* conf)
+bool HttpModuleCore::MergeLocConfig(void* parent, void* child)
 {
+    auto prev = reinterpret_cast<HttpLocConf*>(parent);
+    auto conf = reinterpret_cast<HttpLocConf*>(child);
+    (void)prev;
     (void)conf;
     return true;
 }

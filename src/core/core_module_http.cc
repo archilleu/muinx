@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 #include "defines.h"
 #include "core.h"
+#include "http_module.h"
 #include "core_module_http.h"
 #include "http_module_core.h"
 //---------------------------------------------------------------------------
@@ -32,6 +33,56 @@ CoreModuleHttp::CoreModuleHttp()
 //---------------------------------------------------------------------------
 CoreModuleHttp::~CoreModuleHttp()
 {
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::MergeServers(const HttpModule* module)
+{
+    //获取HTTP core模块的上下文
+    HttpModuleCore::HttpConfigCtxs* ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (g_core.block_config_ctxs_[g_core_module_http.index()]);
+    HttpModuleCore::HttpConfigCtxs saved = *ctx;
+
+    //server结构体在main_conf中记录
+    HttpModuleCore::HttpMainConf* main_conf =
+        g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    for(HttpModuleCore::HttpSrvConf* srv_conf : main_conf->servers)
+    {
+        const HttpModule::HttpModuleCtx* http_module_ctx = module->ctx();
+        //合并server{}s srv_conf
+        if(http_module_ctx->merge_srv_config)
+        {
+            http_module_ctx->merge_srv_config(saved.srv_conf[module->module_index()],
+                    srv_conf->ctx->srv_conf[module->module_index()]);
+        }
+
+        //合并locations{}s loc_conf
+        if(http_module_ctx->merge_loc_config)
+        {
+            //首先http{}的location和server{}的location合并
+            //http_module_ctx->merge_loc_config(saved.loc_conf[module->module_index()],
+                    //srv_conf->ctx->srv_conf[module->module_index()]);
+
+            //其次，用server{}合并后的location和location{}合并
+            //MergeLocations(srv_conf, srv_conf->ctx->srv_conf, module);
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::MergeLocations(HttpModuleCore::HttpSrvConf* srv_conf,
+        void** loc_conf, const HttpModule* module)
+{
+    const auto& locations = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
+            srv_conf->ctx->loc_conf[this->module_index()])->locations;
+    for(const auto& location : locations)
+    {
+        HttpModuleCore::HttpLocConf* http_loc_conf = location.exact ? location.exact : location.inclusive;
+        module->ctx()->merge_loc_config(loc_conf[module->module_index()],
+                http_loc_conf->loc_conf[module->module_index()]);
+    }
+
+    return true;
 }
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,

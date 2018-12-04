@@ -63,6 +63,8 @@ public:
         std::string ip;
         int port;
 
+        std::string merge_server;
+
         //指向解析server块时新生成的HttpConfigCtxs结构体
         HttpConfigCtxs* ctx;
     };
@@ -76,9 +78,9 @@ public:
     int get_cur_server_idx() const { return cur_server_idx_; }
     int get_cur_location_idx() const { return cur_location_idx_; }
 
-    HttpMainConf* GetModuleMainConf(const Module& module);
-    HttpSrvConf* GetModuleSrvConf(const Module& module);
-    HttpLocConf* GetModuleLocConf(const Module& module);
+    HttpMainConf* GetModuleMainConf(const Module* module);
+    HttpSrvConf* GetModuleSrvConf(const Module* module);
+    HttpLocConf* GetModuleLocConf(const Module* module);
 
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
@@ -93,9 +95,9 @@ private:
     void* CreateMainConfig();
     bool InitMainConfig(void* conf);
     void* CreateSrvConfig();
-    bool MergeSrvConfig(void* conf);
+    bool MergeSrvConfig(void* parent, void* child);
     void* CreateLocConfig();
-    bool MergeLocConfig(void* conf);
+    bool MergeLocConfig(void* parent, void* child);
 
     int cur_server_idx_;    //当前解析的server块下标
     int cur_location_idx_;  //当前server块解析的location块下标

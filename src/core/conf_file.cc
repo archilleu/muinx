@@ -338,11 +338,8 @@ bool ConfFile::CaseStatusBlockEnd()
     if(kCONF_MAIN == stack_.top())
         return false;
 
-    stack_.pop();
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END;
-    if(kCONF_MAIN != stack_.top())
-        cur_status_ |= kEXP_STATUS_BLOCK_END;
 
     switch(stack_.top())
     {
@@ -366,6 +363,10 @@ bool ConfFile::CaseStatusBlockEnd()
     command_config.conf_type = stack_.top();
     command_config.module_type = module_type_;
     block_end_cb_(command_config);
+
+    stack_.pop();
+    if(kCONF_MAIN != stack_.top())
+        cur_status_ |= kEXP_STATUS_BLOCK_END;
 
     return true;
 }

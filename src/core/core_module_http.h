@@ -3,9 +3,12 @@
 #define CORE_MODULE_HTTP_H_
 //---------------------------------------------------------------------------
 #include "core_module.h"
+#include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
+
+class HttpModule;
 
 class CoreModuleHttp : public CoreModule
 {
@@ -17,6 +20,9 @@ public:
     struct HttpConfig
     {
     };
+
+    bool MergeServers(const HttpModule* module);
+    bool MergeLocations(HttpModuleCore::HttpSrvConf* srv_conf, void** loc_conf, const HttpModule* module);
 
 public:
     static int s_max_http_module;
