@@ -75,9 +75,6 @@ public:
     };
 
 public:
-    int get_cur_server_idx() const { return cur_server_idx_; }
-    int get_cur_location_idx() const { return cur_location_idx_; }
-
     HttpMainConf* GetModuleMainConf(const Module* module);
     HttpSrvConf* GetModuleSrvConf(const Module* module);
     HttpLocConf* GetModuleLocConf(const Module* module);
@@ -98,9 +95,6 @@ private:
     bool MergeSrvConfig(void* parent, void* child);
     void* CreateLocConfig();
     bool MergeLocConfig(void* parent, void* child);
-
-    int cur_server_idx_;    //当前解析的server块下标
-    int cur_location_idx_;  //当前server块解析的location块下标
 };
 //---------------------------------------------------------------------------
 extern HttpModuleCore g_http_module_core;

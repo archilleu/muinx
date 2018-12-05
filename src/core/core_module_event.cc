@@ -55,7 +55,7 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandMod
     *ctx = new void*[CoreModuleEvent::s_max_event_module];
     *reinterpret_cast<void**>(module_command) = ctx;
 
-    g_core_module_conf.set_block_ctx(ctx);
+    g_core_module_conf.PushCtx(ctx);
 
     for(auto module : g_core.modules_)
     {

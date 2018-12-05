@@ -6,6 +6,8 @@
 namespace core
 {
 
+using namespace std::placeholders;
+
 //---------------------------------------------------------------------------
 EventModuleCore g_event_module_core;
 //---------------------------------------------------------------------------
@@ -22,9 +24,16 @@ EventModuleCore::EventModuleCore()
         {
             "worker_connections",
             EVENT_CONF|CONF_NOARGS,
-            std::bind(default_cb::ConfigSetNumberSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
             0,
             offsetof(EventModuleCore::EventCoreConfig, worker_connections)
+        },
+        {
+            "use",
+            EVENT_CONF|CONF_NOARGS,
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
+            0,
+            offsetof(EventModuleCore::EventCoreConfig, use)
         }
     };
 }
@@ -37,6 +46,7 @@ void* EventModuleCore::CreateConfig()
 {
     EventCoreConfig* config = new EventCoreConfig();
     config->worker_connections = -1;
+    config->use = "unset";
     return config;
 }
 //---------------------------------------------------------------------------

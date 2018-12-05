@@ -167,8 +167,7 @@ const char* CoreModuleConf::kRESERVED_LOCATION    = "location";
 //---------------------------------------------------------------------------
 CoreModuleConf::CoreModuleConf()
 :   module_type_(Module::ModuleType::CORE),
-    conf_type_(MAIN_CONF),
-    block_ctx_(nullptr)
+    conf_type_(MAIN_CONF)
 {
     this->type_ = Module::ModuleType::CONF;
     this->set_module_index(0);
@@ -288,7 +287,6 @@ bool CoreModuleConf::CaseStatusBlockBegin()
     command_config.module_type = module_type_;
     command_config.conf_type = conf_type_;
     if(block_begin_cb_) block_begin_cb_(command_config);
-    if(command_cb_) command_cb_(command_config);
 
     //第一次进入该函数前，module_type_=Module::ModuleType::CORE;
     if(kRESERVED_EVENTS ==reserve) 
@@ -348,19 +346,46 @@ bool CoreModuleConf::CaseStatusBlockEnd()
     if(kCONF_MAIN == stack_.top())
         return false;
 
-    stack_.pop();
-    if(kCONF_MAIN != stack_.top())
-    {
-        cur_status_ |= kEXP_STATUS_BLOCK_END;
-    }
-    cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
-                | kEXP_STATUS_END;
-
     //回调
     CommandConfig command_config;
     command_config.conf_type = conf_type_;
     command_config.module_type = module_type_;
     if(block_end_cb_) block_end_cb_(command_config);
+
+    cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
+        | kEXP_STATUS_END;
+
+    stack_.pop();
+    if(kCONF_MAIN != stack_.top())
+    {
+        cur_status_ |= kEXP_STATUS_BLOCK_END;
+    }
+    switch(stack_.top())
+    {
+        case kCONF_MAIN:
+        case kCONF_EVENT:
+            module_type_ = Module::ModuleType::CORE;
+            conf_type_ = MAIN_CONF;
+            break;
+
+        case kCONF_HTTP:
+            module_type_ = Module::ModuleType::HTTP;
+            conf_type_ = HTTP_MAIN_CONF;
+            break;
+
+        case kCONF_SERVICE:
+            module_type_ = Module::ModuleType::HTTP;
+            conf_type_ = HTTP_SRV_CONF;
+            break;
+
+        case kCONF_LOCATION:
+            module_type_ = Module::ModuleType::HTTP;
+            conf_type_ = HTTP_LOC_CONF;
+            break;
+
+        default:
+            break;
+    }
 
     return true;
 }

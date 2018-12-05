@@ -52,7 +52,7 @@ HttpModuleCore::HttpModuleCore()
         },
         {
             "server",
-            MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
+            HTTP_MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&HttpModuleCore::ConfigSetServerBlock, this, _1, _2, _3),
             0,
             0
@@ -73,7 +73,7 @@ HttpModuleCore::HttpModuleCore()
         },
         {
             "location",
-            MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
+            HTTP_SRV_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&HttpModuleCore::ConfigSetLocationBlock, this, _1, _2, _3),
             0,
             0
@@ -86,9 +86,6 @@ HttpModuleCore::HttpModuleCore()
             offsetof(HttpLocConf, root)
         }
     };
-
-    cur_server_idx_ = -1;
-    cur_location_idx_ = -1;
 }
 //---------------------------------------------------------------------------
 HttpModuleCore::~HttpModuleCore()
@@ -123,24 +120,19 @@ bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandMod
 {
     //遇到了server配置项，就新建立一个HttpConfigCtxs，并使main_conf指向http层的main_conf
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
-    ctx->main_conf = reinterpret_cast<HttpConfigCtxs*>
-        (g_core.block_config_ctxs_[g_core_module_http.index()])->main_conf;
+    ctx->main_conf = reinterpret_cast<HttpConfigCtxs*>(g_core_module_conf.CurrentCtx())->main_conf;
+    g_core_module_conf.PushCtx(ctx);
 
     ctx->srv_conf = new void*[CoreModuleHttp::s_max_http_module];
     ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
-    for(size_t i=0; i<g_core.modules_.size(); i++)
+    for(auto module : g_core.modules_)
     {
-        if(Module::ModuleType::HTTP != g_core.modules_[i]->type())
+        if(Module::ModuleType::HTTP != module->type())
             continue;
 
-        HttpModule* module = static_cast<HttpModule*>(g_core.modules_[i]);
-        const HttpModule::HttpModuleCtx* module_ctx = module->ctx();
+        HttpModule* http_module = static_cast<HttpModule*>(module);
+        const HttpModule::HttpModuleCtx* module_ctx = http_module->ctx();
         int module_index = module->module_index();
-        //该main_conf指向上一层（http）的main_conf
-        //if(module_ctx->create_main_config)
-        //{
-        //    ctx->main_conf[module_index] = module_ctx->create_main_config();
-        //}
         if(module_ctx->create_srv_config)
         {
             ctx->srv_conf[module_index] = module_ctx->create_srv_config();
@@ -151,20 +143,16 @@ bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandMod
         }
     }
 
-    //指向解析server块时新生成的HttpConfigCtxs结构体
+    //HttpSrvConf ctx成员指向解析server块时新生成的HttpConfigCtxs结构体
     HttpSrvConf* srv_conf = reinterpret_cast<HttpSrvConf*>
         (ctx->srv_conf[this->module_index()]);
     srv_conf->ctx = ctx;
 
-    //添加server到http下面的servers数组
+    //添加server到http{}下面的servers数组
     HttpMainConf* main_conf = reinterpret_cast<HttpMainConf*>
         (ctx->main_conf[this->module_index()]);
     main_conf->servers.push_back(srv_conf);
 
-    //当前server block
-    cur_server_idx_++;
-    //新的server 需要重置location下标
-    cur_location_idx_ = -1;
     return true;
 }
 //---------------------------------------------------------------------------
@@ -175,32 +163,20 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
 
     //遇到了location配置项，就新建立一个HttpConfigCtxs，获取当前server层HttpConfigCtxs结构体
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
-    HttpConfigCtxs* http = reinterpret_cast<HttpConfigCtxs*>(
-            g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpMainConf* main_conf = reinterpret_cast<HttpMainConf*>(
-            http->main_conf[this->module_index()]);
-    HttpSrvConf* srv_conf = main_conf->servers.at(cur_server_idx_);
-    ctx->main_conf = srv_conf->ctx->main_conf;
-    ctx->srv_conf = srv_conf->ctx->srv_conf;
+    HttpConfigCtxs* srv_ctx = reinterpret_cast<HttpConfigCtxs*>(g_core_module_conf.CurrentCtx());
+    ctx->main_conf = srv_ctx->main_conf;
+    ctx->srv_conf = srv_ctx->srv_conf;
+    g_core_module_conf.PushCtx(ctx);
 
     ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
-    for(size_t i=0; i<g_core.modules_.size(); i++)
+    for(auto module: g_core.modules_)
     {
-        if(Module::ModuleType::HTTP != g_core.modules_[i]->type())
+        if(Module::ModuleType::HTTP != module->type())
             continue;
 
-        HttpModule* module = static_cast<HttpModule*>(g_core.modules_[i]);
-        const HttpModule::HttpModuleCtx* module_ctx = module->ctx();
-        int module_index = module->module_index();
-        //该main_conf指向上一层（http）的main_conf
-        //if(module_ctx->create_main_config)
-        //{
-        //    ctx->main_conf[module_index] = module_ctx->create_main_config();
-        //}
-        //if(module_ctx->create_srv_config)
-        //{
-        //    ctx->srv_conf[module_index] = module_ctx->create_srv_config();
-        //}
+        HttpModule* http_module = static_cast<HttpModule*>(module);
+        const HttpModule::HttpModuleCtx* module_ctx = http_module->ctx();
+        int module_index = http_module->module_index();
         if(module_ctx->create_loc_config)
         {
             ctx->loc_conf[module_index] = module_ctx->create_loc_config();
@@ -227,7 +203,7 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
     //server层的loc_http结构体locations成员，因为location有可能嵌套，所以不能
     //直接放server结构体成员内部，该locations存储该server下面的所有location
     HttpLocConf* srv_loc_conf = reinterpret_cast<HttpLocConf*>(
-            srv_conf->ctx->loc_conf[this->module_index()]);
+            srv_ctx->loc_conf[this->module_index()]);
     Location location;
     location.name = loc_conf->name;
     if(loc_conf->exact_match)
@@ -242,8 +218,6 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
     }
     srv_loc_conf->locations.push_back(location);
     
-    //当前location block
-    cur_location_idx_++;
     return true;
 }
 //---------------------------------------------------------------------------

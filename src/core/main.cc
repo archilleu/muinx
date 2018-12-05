@@ -11,53 +11,86 @@
 //---------------------------------------------------------------------------
 using namespace core;
 //---------------------------------------------------------------------------
-int main(int, char**)
+void MainConfig()
 {
-
-    core::g_core.Initialize();
-    void* v = core::g_core.main_config_ctxs_[core::g_core_module_core.index()];
-    auto core_config = static_cast<core::CoreModuleCore::CoreConfig*>(v);
+    std::cout << ""<< std::endl;
+    void* main_core = g_core.main_config_ctxs_[g_core_module_core.index()];
+    auto core_config = static_cast<CoreModuleCore::CoreConfig*>(main_core);
     std::cout << "user: " << core_config->user << std::endl;
     std::cout << "worker_processes: " << core_config->worker_processes << std::endl;
+    std::cout << "error_log: " << core_config->error_log << std::endl;
     std::cout << "pid: " << core_config->pid << std::endl;
+    std::cout << "" << std::endl << std::endl;
+}
+//---------------------------------------------------------------------------
+void EventConfig()
+{
+    std::cout << "" << std::endl;
+    void*** event_ctx = reinterpret_cast<void***>(g_core.block_config_ctxs_[g_core_module_event.index()]);
+    void* ctx =(*event_ctx)[g_event_module_core.module_index()];
+    auto core_event_core = static_cast<EventModuleCore::EventCoreConfig*>(ctx);
+    std::cout << "worker_connections:" << core_event_core->worker_connections << std::endl;
+    std::cout << "use:" << core_event_core->use << std::endl;
+    std::cout << "" << std::endl<<std::endl;;
+}
+//---------------------------------------------------------------------------
+void HttpConfig()
+{
+    std::cout << ""<< std::endl;
 
-    void* tmp = &(core::g_core.block_config_ctxs_[core::g_core_module_event.index()]);
-    void*** ctx1 = reinterpret_cast<void***>(tmp);
-    void* ctx =(*ctx1)[core::g_event_module_core.module_index()];
-    if(nullptr != ctx)
+    HttpModuleCore::HttpConfigCtxs* ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (g_core.block_config_ctxs_[g_core_module_http.index()]);
+    for(int i=0; i<g_core_module_http.s_max_http_module; i++)
     {
-        auto core_event_core = static_cast<core::EventModuleCore::EventCoreConfig*>(ctx);
-        std::cout << "worker_connections:" << core_event_core->worker_connections << std::endl;
-    }
-    core::HttpModuleCore::HttpLocConf* loc = 
-        core::g_http_module_core.GetModuleLocConf(&core::g_http_module_core);
-    std::cout << "sendfile: " << loc->sendfile << std::endl;
-    std::cout << "keepalive_timeout:: " << loc->keepalive_timeout<< std::endl;
-
-    core::HttpModuleCore::HttpMainConf* main_conf =
-        core::g_http_module_core.GetModuleMainConf(&core::g_http_module_core);
-
-    for(auto& srv_conf : main_conf->servers)
-    {
+        std::cout << std::endl;
+        auto srv_conf = reinterpret_cast<HttpModuleCore::HttpSrvConf*>(ctx->srv_conf[i]);
         std::cout << "server_name: " << srv_conf->server_name << std::endl;
         std::cout << "ip: " << srv_conf->ip<< std::endl;
         std::cout << "port: " << srv_conf->port << std::endl;
         std::cout << "merge_server: " << srv_conf->merge_server<< std::endl;
-        HttpModuleCore::HttpLocConf* srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
-                srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
-        for(const auto& location : srv_loc_conf->locations)
+        std::cout << std::endl;
+        auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(ctx->loc_conf[i]);
+        std::cout << "location: " <<  loc_conf->name << std::endl;
+        std::cout << "root: " << loc_conf->root << std::endl;;
+        auto main_conf = reinterpret_cast<HttpModuleCore::HttpMainConf*>(ctx->main_conf[i]);
+        std::cout << std::endl;
+
+        for(auto& inner_srv_conf : main_conf->servers)
         {
-            //location对应的两个指针之一记录了当前location中所用的HTTP模块create_loc_config结构体
-            const auto& loc_conf = nullptr!=location.exact ? location.exact: location.inclusive;
-            for(int i=0; i<CoreModuleHttp::s_max_http_module; i++)
+            std::cout << "\tserver_name: " << inner_srv_conf->server_name << std::endl;
+            std::cout << "\tip: " << inner_srv_conf->ip<< std::endl;
+            std::cout << "\tport: " << inner_srv_conf->port << std::endl;
+            std::cout << "\tmerge_server: " << inner_srv_conf->merge_server<< std::endl;
+            HttpModuleCore::HttpLocConf* srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
+                    inner_srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
+            for(const auto& location : srv_loc_conf->locations)
             {
-                HttpModuleCore::HttpLocConf* loc1 =
-                    reinterpret_cast<HttpModuleCore::HttpLocConf*>(loc_conf->loc_conf[i]);
-                std::cout << "location: " <<  loc1->name << std::endl;
-                std::cout << "root: " << loc1->root << std::endl;;
+                //location对应的两个指针之一记录了当前location中所用的HTTP模块create_loc_config结构体
+                const auto& srv_loc_conf1 = nullptr!=location.exact ? location.exact: location.inclusive;
+                for(int j=0; j<CoreModuleHttp::s_max_http_module; j++)
+                {
+                    HttpModuleCore::HttpLocConf* loc1 =
+                        reinterpret_cast<HttpModuleCore::HttpLocConf*>(srv_loc_conf1->loc_conf[j]);
+                    std::cout << "\t\t location: " <<  loc1->name << std::endl;
+                    std::cout << "\t\t root: " << loc1->root << std::endl;;
+                }
             }
         }
     }
+    
+
+    std::cout << "" << std::endl;
+}
+//---------------------------------------------------------------------------
+int main(int, char**)
+{
+
+    if(false == g_core.Initialize())
+        return -1;
+
+    MainConfig();
+    EventConfig();
+    HttpConfig();
 
     return 0;
 }

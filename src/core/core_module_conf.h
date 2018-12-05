@@ -132,8 +132,13 @@ public:
     void set_block_begin_callback(const BlockBeginCallback& cb) { block_begin_cb_ = cb; }
     void set_block_end_callback(const BlockEndCallback& cb) { block_end_cb_ = cb; }
 
-    void set_block_ctx(void* ctx) { block_ctx_ = ctx; }
-    void* get_block_ctx() const { return block_ctx_; }
+    void PushCtx(void* ctx) { stack_ctx_.push(ctx); }
+    void* CurrentCtx() { return stack_ctx_.top(); }
+    void PopCtx()
+    {
+        if(!stack_ctx_.empty())
+            stack_ctx_.pop();
+    }
 
     bool Parse(const std::string& path);
 
@@ -167,7 +172,7 @@ private:
 
     Module::ModuleType module_type_;    //当前模块的类型
     int conf_type_;                     //当前域
-    void* block_ctx_;                   //当前使用的上下文,在event{}, http{}使用
+    std::stack<void*> stack_ctx_;       //当前使用的上下文,在event{}, http{}使用
 
     CommandCallback command_cb_;        //解析完整配置项后的回调
     BlockEndCallback block_begin_cb_;   //解析完整配置块后的回调
@@ -180,7 +185,7 @@ private:
     static const int kEXP_STATUS_BLOCK_BEGIN    = 0x0004;   //期待域开始
     static const int kEXP_STATUS_BLOCK_END      = 0x0008;   //期待域结束
     static const int kEXP_STATUS_SEP_SEMICOLON  = 0x0010;   //期待分号(;)
-    static const int kEXP_STATUS_END            = 0x0220;   //期待配置文件结束
+    static const int kEXP_STATUS_END            = 0x0200;   //期待配置文件结束
 
     const static char* kRESERVED_EVENTS;    //事件参数块
     static const char* kRESERVED_HTTP;      //http服务块

@@ -19,6 +19,7 @@ public:
         std::string user;
         int worker_processes;
         std::string pid;
+        std::string error_log;
     };
 
 private:

@@ -136,6 +136,72 @@ bool Core::ActionCoreModuleInitConfig()
 //---------------------------------------------------------------------------
 bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
 {
+    return ConfigCallback(command_config);
+}
+//---------------------------------------------------------------------------
+bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_config)
+{
+    return ConfigCallback(command_config);
+}
+//---------------------------------------------------------------------------
+bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
+{
+    (void)command_config;
+
+    /*
+    //event模块配置解析完成后调用Event模块的初始化回调
+    if((command_config.module_type==Module::ModuleType::CORE)
+            && (command_config.conf_type==ConfFile::kCONF_EVENT))
+        {
+            void** event_conf = reinterpret_cast<void**>(block_config_ctxs_[g_core_module_event.index()]);
+            for(auto module : modules_)
+            {
+                if(module->type() != Module::ModuleType::EVENT)
+                    continue;
+
+                EventModule* event_module = static_cast<EventModule*>(module);
+                auto ctx = event_module->ctx();
+                if(ctx->init_config)
+                {
+                    void* config  = event_conf[module->module_index()];
+                    event_module->ctx()->init_config(config);
+                }
+            }
+        }
+    */
+
+    //http 配置模块解析完成后
+    /*
+    if((command_config.module_type==Module::ModuleType::HTTP)
+            && (command_config.conf_type==HTTP_MAIN_CONF))
+    {
+        for(auto module : modules_)
+        {
+            if(module->type() != Module::ModuleType::HTTP)
+                continue;
+
+            HttpModule* http_module = static_cast<HttpModule*>(module);
+            auto ctx = http_module->ctx();
+            if(ctx->init_main_config)
+            {
+                HttpModuleCore::HttpMainConf* main_conf =
+                    g_http_module_core.GetModuleMainConf(module);
+                ctx->init_main_config(main_conf);
+            }
+
+            //合并配置项
+            g_core_module_http.MergeServers(dynamic_cast<HttpModule*>(module));
+        }
+    }
+    */
+
+    g_core_module_conf.PopCtx();
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool Core::ConfigCallback(const core::CommandConfig& command_config)
+{
     /*
      * 对于解析到的每一行配置项，都需要遍历所有的模块找出对该配置项感兴趣的模块
      * 第一个循环,循环所有的模块,并对照当前配置项所处的块位置是不是对应模块类型
@@ -178,10 +244,10 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             }
             //event{}
             //http{}里面的HttpConfCtx结构体，每一个http{}、server{}、location{}都独立一个
-            else if(g_core_module_conf.get_block_ctx())
+            else if(g_core_module_conf.CurrentCtx())
             {
                 void** confp = *reinterpret_cast<void***>
-                    (static_cast<char*>(g_core_module_conf.get_block_ctx()) + command.conf);
+                    (static_cast<char*>(g_core_module_conf.CurrentCtx()) + command.conf);
                 if(confp)
                 {
                     ctx = confp[module->module_index()];
@@ -197,63 +263,6 @@ bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
             command.Set(command_config, command, ctx);
         }
     }
-
-    return true;
-}
-//---------------------------------------------------------------------------
-bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_config)
-{
-    std::cout << "block begin-type:" << command_config.args[0] << std::endl;
-    return true;
-}
-//---------------------------------------------------------------------------
-bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
-{
-    (void)command_config;
-    /*
-    //event模块配置解析完成后调用Event模块的初始化回调
-    if((command_config.module_type==Module::ModuleType::CORE)
-            && (command_config.conf_type==ConfFile::kCONF_EVENT))
-        {
-            void** event_conf = reinterpret_cast<void**>(block_config_ctxs_[g_core_module_event.index()]);
-            for(auto module : modules_)
-            {
-                if(module->type() != Module::ModuleType::EVENT)
-                    continue;
-
-                EventModule* event_module = static_cast<EventModule*>(module);
-                auto ctx = event_module->ctx();
-                if(ctx->init_config)
-                {
-                    void* config  = event_conf[module->module_index()];
-                    event_module->ctx()->init_config(config);
-                }
-            }
-        }
-
-    //http 配置模块解析完成后
-    if((command_config.module_type==Module::ModuleType::CORE)
-            && (command_config.conf_type==ConfFile::kCONF_HTTP))
-    {
-        for(auto module : modules_)
-        {
-            if(module->type() != Module::ModuleType::HTTP)
-                continue;
-
-            HttpModule* http_module = static_cast<HttpModule*>(module);
-            auto ctx = http_module->ctx();
-            if(ctx->init_main_config)
-            {
-                HttpModuleCore::HttpMainConf* main_conf =
-                    g_http_module_core.GetModuleMainConf(module);
-                ctx->init_main_config(main_conf);
-            }
-
-            //合并配置项
-            g_core_module_http.MergeServers(dynamic_cast<HttpModule*>(module));
-        }
-    }
-    */
 
     return true;
 }

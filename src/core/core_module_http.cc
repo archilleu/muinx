@@ -37,9 +37,10 @@ CoreModuleHttp::~CoreModuleHttp()
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::MergeServers(const HttpModule* module)
 {
-    //获取HTTP core模块的上下文
+    //获取当前模块的上下文
     HttpModuleCore::HttpConfigCtxs* ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
-        (g_core.block_config_ctxs_[g_core_module_http.index()]);
+        (g_core_module_conf.CurrentCtx());
+
     HttpModuleCore::HttpConfigCtxs saved = *ctx;
 
     //server结构体在main_conf中记录
@@ -91,7 +92,7 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
     HttpModuleCore::HttpConfigCtxs* ctx = new HttpModuleCore::HttpConfigCtxs();
     *reinterpret_cast<HttpModuleCore::HttpConfigCtxs**>(module_command) = ctx;
 
-    g_core_module_conf.set_block_ctx(ctx);
+    g_core_module_conf.PushCtx(ctx);
 
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)

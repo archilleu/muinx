@@ -16,6 +16,7 @@ public:
     struct EventCoreConfig
     {
         int worker_connections;
+        std::string use;
     };
 
 private:

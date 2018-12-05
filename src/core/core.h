@@ -42,6 +42,8 @@ private:
     bool ConfigFileParseCallback(const core::CommandConfig& command_config);
     bool ConfigFileBlockBeginCallback(const core::CommandConfig& command_config);
     bool ConfigFileBlockEndCallback(const core::CommandConfig& command_config);
+
+    bool ConfigCallback(const core::CommandConfig& command_config);
 };
 //---------------------------------------------------------------------------
 extern core::Core g_core;

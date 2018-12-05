@@ -7,6 +7,8 @@
 namespace core
 {
 
+using namespace std::placeholders;
+
 //---------------------------------------------------------------------------
 CoreModuleCore g_core_module_core;
 //---------------------------------------------------------------------------
@@ -23,21 +25,28 @@ CoreModuleCore::CoreModuleCore()
         {
             "user",
             MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             0,
             offsetof(CoreModuleCore::CoreConfig, user)
         },
         {
             "worker_processes",
             MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetNumberSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
             0,
             offsetof(CoreModuleCore::CoreConfig, worker_processes)
         },
         {
+            "error_log",
+            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
+            0,
+            offsetof(CoreModuleCore::CoreConfig, error_log)
+        },
+        {
             "pid",
             MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             0,
             offsetof(CoreModuleCore::CoreConfig, pid)
         }
@@ -52,6 +61,8 @@ CoreModuleCore::~CoreModuleCore()
 void* CoreModuleCore::CreateConfig()
 {
     CoreConfig* core_config = new CoreConfig();
+    core_config->error_log = "unset";
+    core_config->pid = "unset";
     core_config->user = "unset";
     core_config->worker_processes = -1;
     return core_config;
