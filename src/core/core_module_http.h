@@ -22,7 +22,8 @@ public:
     };
 
     bool MergeServers(const HttpModule* module);
-    bool MergeLocations(HttpModuleCore::HttpSrvConf* srv_conf, void** loc_conf, const HttpModule* module);
+    bool MergeLocations(const std::vector<HttpModuleCore::Location>& locations,
+            void** srv_loc_conf, const HttpModule* module);
 
 public:
     static int s_max_http_module;

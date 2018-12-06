@@ -1,8 +1,9 @@
 //---------------------------------------------------------------------------
 #include <iostream>
-#include "core_module_conf.h"
 #include "../base/function.h"
-#include "defines.h"
+#include "core.h"
+#include "core_module_conf.h"
+#include "core_module_http.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -171,6 +172,11 @@ CoreModuleConf::CoreModuleConf()
 {
     this->type_ = Module::ModuleType::CONF;
     this->set_module_index(0);
+
+    //分配配置文件内存
+    config_ctxs_ = reinterpret_cast<void****>(new void*[g_core.modules_.size()]);
+    main_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
+    block_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
 }
 //---------------------------------------------------------------------------
 CoreModuleConf::~CoreModuleConf()

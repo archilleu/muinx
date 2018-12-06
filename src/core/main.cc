@@ -13,33 +13,30 @@ using namespace core;
 //---------------------------------------------------------------------------
 void MainConfig()
 {
-    std::cout << ""<< std::endl;
-    void* main_core = g_core.main_config_ctxs_[g_core_module_core.index()];
+    void* main_core = g_core_module_conf.main_config_ctxs_[g_core_module_core.index()];
     auto core_config = static_cast<CoreModuleCore::CoreConfig*>(main_core);
     std::cout << "user: " << core_config->user << std::endl;
     std::cout << "worker_processes: " << core_config->worker_processes << std::endl;
     std::cout << "error_log: " << core_config->error_log << std::endl;
     std::cout << "pid: " << core_config->pid << std::endl;
-    std::cout << "" << std::endl << std::endl;
+    std::cout << std::endl;
 }
 //---------------------------------------------------------------------------
 void EventConfig()
 {
-    std::cout << "" << std::endl;
-    void*** event_ctx = reinterpret_cast<void***>(g_core.block_config_ctxs_[g_core_module_event.index()]);
+    void*** event_ctx = reinterpret_cast<void***>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_event.index()]);
     void* ctx =(*event_ctx)[g_event_module_core.module_index()];
     auto core_event_core = static_cast<EventModuleCore::EventCoreConfig*>(ctx);
     std::cout << "worker_connections:" << core_event_core->worker_connections << std::endl;
     std::cout << "use:" << core_event_core->use << std::endl;
-    std::cout << "" << std::endl<<std::endl;;
+    std::cout << std::endl;;
 }
 //---------------------------------------------------------------------------
 void HttpConfig()
 {
-    std::cout << ""<< std::endl;
-
     HttpModuleCore::HttpConfigCtxs* ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
-        (g_core.block_config_ctxs_[g_core_module_http.index()]);
+        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
     for(int i=0; i<g_core_module_http.s_max_http_module; i++)
     {
         std::cout << std::endl;

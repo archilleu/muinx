@@ -17,6 +17,7 @@ core::Core g_core;
 //---------------------------------------------------------------------------
 Core::Core()
 {
+    InitGlobalModules();
 }
 //---------------------------------------------------------------------------
 Core::~Core()
@@ -25,8 +26,6 @@ Core::~Core()
 //---------------------------------------------------------------------------
 bool Core::Initialize()
 {
-    InitGlobalModules();
-
     InitModulesIndex();
 
     ActionCoreModulesCreatConfig();
@@ -53,10 +52,6 @@ void Core::InitGlobalModules()
         &g_http_module_core
     };
     modules_.swap(modules);
-
-    config_ctxs_ = reinterpret_cast<void****>(new void*[modules_.size()]);
-    main_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
-    block_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
 }
 //---------------------------------------------------------------------------
 void Core::InitModulesIndex()
@@ -84,7 +79,7 @@ void Core::ActionCoreModulesCreatConfig()
         auto module_ctx = static_cast<core::CoreModule*>(module)->ctx();
         if(module_ctx->create_config)
         {
-            main_config_ctxs_[module->index()] =  module_ctx->create_config();
+            g_core_module_conf.main_config_ctxs_[module->index()] =  module_ctx->create_config();
         }
     }
 
@@ -122,7 +117,7 @@ bool Core::ActionCoreModuleInitConfig()
         auto module_ctx = (static_cast<core::CoreModule*>(module))->ctx();
         if(module_ctx->init_config)
         {
-            auto config = reinterpret_cast<CoreModuleCore::CoreConfig*>(main_config_ctxs_[module->index()]);
+            auto config = reinterpret_cast<CoreModuleCore::CoreConfig*>(g_core_module_conf.main_config_ctxs_[module->index()]);
             if(false == module_ctx->init_config(config))
             {
                 assert(((void)"init config failed", 0));
@@ -171,7 +166,6 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
     */
 
     //http 配置模块解析完成后
-    /*
     if((command_config.module_type==Module::ModuleType::HTTP)
             && (command_config.conf_type==HTTP_MAIN_CONF))
     {
@@ -193,8 +187,8 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
             g_core_module_http.MergeServers(dynamic_cast<HttpModule*>(module));
         }
     }
-    */
 
+    //当前{}结束，弹出该上下文栈
     g_core_module_conf.PopCtx();
 
     return true;
@@ -234,13 +228,13 @@ bool Core::ConfigCallback(const core::CommandConfig& command_config)
             if((command.type&DIRECT_CONF)
                     && (command_config.conf_type==MAIN_CONF))
             {
-                ctx = main_config_ctxs_[module->index()];
+                ctx = g_core_module_conf.main_config_ctxs_[module->index()];
             }
             //块配置项目，引导该块的所有配置，该块无实际的配置项, 像events、http
             else if(command.type&MAIN_CONF)
             {
                 //在event{}、http{}里面new另外的指针数组，所以需要传递指针的地址(传递引用也行)
-                ctx = &(block_config_ctxs_[module->index()]);
+                ctx = &(g_core_module_conf.block_config_ctxs_[module->index()]);
             }
             //event{}
             //http{}里面的HttpConfCtx结构体，每一个http{}、server{}、location{}都独立一个

@@ -23,13 +23,6 @@ public:
 
     std::vector<class Module*> modules_;
 
-    //TODO:
-    //放到conf_file里面，cur_server_idx_等等也放到里面去，conf_filetigong
-    //索引
-    void**** config_ctxs_;      //全局配置文件结构体指针,数组指针指向数组指针
-    void** main_config_ctxs_;   //main 配置文件块指针,指针数组
-    void** block_config_ctxs_;  //block 配置文件块指针,如events块
-
 private:
     void InitGlobalModules();
     void InitModulesIndex();

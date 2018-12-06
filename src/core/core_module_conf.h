@@ -8,6 +8,7 @@
 #include <cassert>
 #include <memory>
 #include "module.h"
+#include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -141,6 +142,12 @@ public:
     }
 
     bool Parse(const std::string& path);
+
+public:
+    void**** config_ctxs_;      //全局配置文件结构体指针,数组指针指向数组指针
+    void** main_config_ctxs_;   //main 配置文件块指针,指针数组
+    void** block_config_ctxs_;  //block 配置文件块指针,如events块
+
 
 public:
     //解析过程中处的块

@@ -79,6 +79,7 @@ public:
     HttpSrvConf* GetModuleSrvConf(const Module* module);
     HttpLocConf* GetModuleLocConf(const Module* module);
 
+
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);

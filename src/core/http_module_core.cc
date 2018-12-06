@@ -45,6 +45,10 @@ HttpModuleCore::HttpModuleCore()
         },
         {
             "merge_server",
+
+            /*该选项出现可以出现在main srv* loc中，但是因为loc中的srv指向包
+             * 含loc的srv，所以srv的会被覆盖
+             */
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             HTTP_SRV_CONF_OFFSET,
@@ -88,32 +92,38 @@ HttpModuleCore::HttpModuleCore()
     };
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::~HttpModuleCore()
-{
-}
-//---------------------------------------------------------------------------
 HttpModuleCore::HttpMainConf* HttpModuleCore::GetModuleMainConf(const Module* module)
 {
-    HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
-        (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpMainConf* main = reinterpret_cast<HttpMainConf*>(ctx->main_conf[module->module_index()]);
+    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
+    auto main = reinterpret_cast<HttpModuleCore::HttpMainConf*>
+        (ctx->main_conf[module->module_index()]);
+
     return main;
 }
 //---------------------------------------------------------------------------
 HttpModuleCore::HttpSrvConf* HttpModuleCore::GetModuleSrvConf(const Module* module)
 {
-    HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
-        (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpSrvConf* srv = reinterpret_cast<HttpSrvConf*>(ctx->srv_conf[module->module_index()]);
+    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
+    auto srv = reinterpret_cast<HttpModuleCore::HttpSrvConf*>
+        (ctx->srv_conf[module->module_index()]);
+
     return srv;
 }
 //---------------------------------------------------------------------------
 HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module* module)
 {
-    HttpConfigCtxs* ctx = reinterpret_cast<HttpConfigCtxs*>
-        (g_core.block_config_ctxs_[g_core_module_http.index()]);
-    HttpLocConf* loc = reinterpret_cast<HttpLocConf*>(ctx->loc_conf[module->module_index()]);
+    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
+    auto loc = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+        (ctx->loc_conf[module->module_index()]);
+
     return loc;
+}
+//---------------------------------------------------------------------------
+HttpModuleCore::~HttpModuleCore()
+{
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*)
@@ -268,16 +278,25 @@ bool HttpModuleCore::InitMainConfig(void* conf)
 void* HttpModuleCore::CreateSrvConfig()
 {
     HttpSrvConf* conf = new HttpSrvConf();
+    conf->ctx = nullptr;
+    conf->port = -1;
+    conf->ip = "unset";
+    conf->merge_server = "unset";
+    conf->server_name = "unset";
     return conf;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::MergeSrvConfig(void* parent, void* child)
 {
+    //父亲层的配置
     auto prev = reinterpret_cast<HttpSrvConf*>(parent);
+    //当前层的配置
     auto conf = reinterpret_cast<HttpSrvConf*>(child);
 
     std::string s1 = prev->merge_server;
     std::string s2 = conf->merge_server;
+    (void)s1;
+    (void)s2;
     conf->merge_server = s1;
 
     return true;
@@ -286,15 +305,28 @@ bool HttpModuleCore::MergeSrvConfig(void* parent, void* child)
 void* HttpModuleCore::CreateLocConfig()
 {
     HttpLocConf* conf = new HttpLocConf();
+    conf->exact_match = false;
+    conf->keepalive_timeout = -1;
+    conf->loc_conf = nullptr;
+    conf->name = "unset";
+    conf->root = "unset";
+    conf->sendfile = false;
     return conf;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::MergeLocConfig(void* parent, void* child)
 {
+    //父亲层的配置
     auto prev = reinterpret_cast<HttpLocConf*>(parent);
+    //当前层的配置
     auto conf = reinterpret_cast<HttpLocConf*>(child);
-    (void)prev;
-    (void)conf;
+
+    int t1 = prev->keepalive_timeout;
+    int t2 = conf->keepalive_timeout;
+    (void)t1;
+    (void)t2;
+    conf->keepalive_timeout = t2;
+
     return true;
 }
 //---------------------------------------------------------------------------

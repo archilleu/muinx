@@ -4,6 +4,18 @@
 #include <memory>
 #include <exception>
 #include <iostream>
+#include <vector>
+//---------------------------------------------------------------------------
+namespace core
+{
+
+class Mock
+{
+public:
+    std::vector<int> modules_;
+}g_core;
+
+}
 //---------------------------------------------------------------------------
 int main(int , char** )
 {

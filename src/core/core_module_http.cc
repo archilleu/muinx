@@ -60,27 +60,34 @@ bool CoreModuleHttp::MergeServers(const HttpModule* module)
         if(http_module_ctx->merge_loc_config)
         {
             //首先http{}的location和server{}的location合并
-            //http_module_ctx->merge_loc_config(saved.loc_conf[module->module_index()],
-                    //srv_conf->ctx->srv_conf[module->module_index()]);
+            http_module_ctx->merge_loc_config(saved.loc_conf[module->module_index()],
+                    srv_conf->ctx->loc_conf[module->module_index()]);
 
-            //其次，用server{}合并后的location和location{}合并
-            //MergeLocations(srv_conf, srv_conf->ctx->srv_conf, module);
+            /*其次，用server{}合并后的location和location{}合并
+             *获取server{}下面的location数组每一个server{}内的location{}的第一个
+             *结构体记录了该server{}下面所有的location{}s
+             */
+            auto srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+                    (srv_conf->ctx->loc_conf[this->module_index()]);
+            MergeLocations(srv_loc_conf->locations, srv_conf->ctx->loc_conf, module);
         }
     }
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleHttp::MergeLocations(HttpModuleCore::HttpSrvConf* srv_conf,
-        void** loc_conf, const HttpModule* module)
+bool CoreModuleHttp::MergeLocations(const std::vector<HttpModuleCore::Location>& locations,
+        void** srv_loc_conf, const HttpModule* module)
 {
-    const auto& locations = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
-            srv_conf->ctx->loc_conf[this->module_index()])->locations;
+    //合并server{}和location下面的数据
     for(const auto& location : locations)
     {
-        HttpModuleCore::HttpLocConf* http_loc_conf = location.exact ? location.exact : location.inclusive;
-        module->ctx()->merge_loc_config(loc_conf[module->module_index()],
-                http_loc_conf->loc_conf[module->module_index()]);
+        HttpModuleCore::HttpLocConf* loc_conf = location.exact ? location.exact : location.inclusive;
+        module->ctx()->merge_loc_config(srv_loc_conf[module->module_index()],
+                loc_conf->loc_conf[module->module_index()]);
+
+        //TODO
+        //合并location{}内嵌套的location{}
     }
 
     return true;
