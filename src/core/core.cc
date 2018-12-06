@@ -95,7 +95,8 @@ void Core::BindCallback()
 //---------------------------------------------------------------------------
 bool Core::ParseConfigFile()
 {
-    std::string path = "/home/archilleu/workspace/muinx/test/files/nginx.conf";
+    std::string path = "/root/workspace/muinx/test/files/nginx.conf";
+    //std::string path = "/home/archilleu/workspace/muinx/test/files/nginx.conf";
     if(false == g_core_module_conf.Parse(path))
     {
         assert(((void)"config file parse failed", 0));

@@ -321,11 +321,8 @@ bool HttpModuleCore::MergeLocConfig(void* parent, void* child)
     //当前层的配置
     auto conf = reinterpret_cast<HttpLocConf*>(child);
 
-    int t1 = prev->keepalive_timeout;
-    int t2 = conf->keepalive_timeout;
-    (void)t1;
-    (void)t2;
-    conf->keepalive_timeout = t2;
+    conf->keepalive_timeout = prev->keepalive_timeout;
+    conf->sendfile = prev->sendfile;
 
     return true;
 }

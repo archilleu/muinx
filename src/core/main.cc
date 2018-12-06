@@ -70,6 +70,10 @@ void HttpConfig()
                         reinterpret_cast<HttpModuleCore::HttpLocConf*>(srv_loc_conf1->loc_conf[j]);
                     std::cout << "\t\t location: " <<  loc1->name << std::endl;
                     std::cout << "\t\t root: " << loc1->root << std::endl;;
+                    std::cout << "\t\t keepalive_timeout: " << loc1->keepalive_timeout << std::endl;;
+                    std::cout << "\t\t name: " << loc1->name << std::endl;;
+                    std::cout << "\t\t sendfile: " << loc1->sendfile << std::endl;;
+
                 }
             }
         }

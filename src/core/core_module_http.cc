@@ -68,7 +68,7 @@ bool CoreModuleHttp::MergeServers(const HttpModule* module)
              *结构体记录了该server{}下面所有的location{}s
              */
             auto srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
-                    (srv_conf->ctx->loc_conf[this->module_index()]);
+                    (srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
             MergeLocations(srv_loc_conf->locations, srv_conf->ctx->loc_conf, module);
         }
     }
