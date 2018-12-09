@@ -8,6 +8,8 @@
 namespace core
 {
 
+using namespace std::placeholders;
+
 //---------------------------------------------------------------------------
 CoreModuleHttp g_core_module_http;
 //---------------------------------------------------------------------------
@@ -23,8 +25,7 @@ CoreModuleHttp::CoreModuleHttp()
         {
             "http",
             MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
-            std::bind(&CoreModuleHttp::ConfigSetHttpBlock, this, std::placeholders::_1,
-                    std::placeholders::_2, std::placeholders::_3),
+            std::bind(&CoreModuleHttp::ConfigSetHttpBlock, this, _1, _2, _3),
             0,
             0
         }

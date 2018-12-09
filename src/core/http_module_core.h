@@ -3,6 +3,7 @@
 #define HTTP_MODULE_CORE_H_
 //---------------------------------------------------------------------------
 #include <vector>
+#include <unordered_map>
 #include "http_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -69,9 +70,23 @@ public:
         HttpConfigCtxs* ctx;
     };
 
+    struct ConfAddress
+    {
+        std::unordered_map<std::string, HttpSrvConf*> hash; //主机名对应的server{}
+        HttpSrvConf* default_server;    //默认的server{}
+        std::vector<HttpSrvConf*> servers;  //该端口下所有的server{}
+    };
+
+    struct ConfPort
+    {
+        int port;       //监听的端口
+        std::vector<ConfAddress> addrs; //监听端口对应的IP，一个主机可能有多个IP
+    };
+
     struct HttpMainConf
     {
-        std::vector<HttpSrvConf*> servers;
+        std::vector<HttpSrvConf*> servers;  //所有的server{}配置
+        std::vector<ConfPort> ports;    //所有的监听端口
     };
 
 public:

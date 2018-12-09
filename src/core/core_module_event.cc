@@ -6,6 +6,8 @@
 namespace core
 {
 
+using namespace std::placeholders;
+
 //---------------------------------------------------------------------------
 CoreModuleEvent g_core_module_event;
 //---------------------------------------------------------------------------
@@ -22,8 +24,7 @@ CoreModuleEvent::CoreModuleEvent()
         {
             "events",
             MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
-            std::bind(&CoreModuleEvent::ConfigSetEventBlock, this, std::placeholders::_1,
-                    std::placeholders::_2, std::placeholders::_3),
+            std::bind(&CoreModuleEvent::ConfigSetEventBlock, this, _1, _2, _3),
             0,
             0
         }
