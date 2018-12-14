@@ -292,7 +292,9 @@ bool CoreModuleConf::CaseStatusBlockBegin()
     command_config.args.swap(cur_line_params_);
     command_config.module_type = module_type_;
     command_config.conf_type = conf_type_;
-    if(block_begin_cb_) block_begin_cb_(command_config);
+    if(block_begin_cb_)
+        if(false == block_begin_cb_(command_config))
+            return false;
 
     //第一次进入该函数前，module_type_=Module::ModuleType::CORE;
     if(kRESERVED_EVENTS ==reserve) 
@@ -356,7 +358,9 @@ bool CoreModuleConf::CaseStatusBlockEnd()
     CommandConfig command_config;
     command_config.conf_type = conf_type_;
     command_config.module_type = module_type_;
-    if(block_end_cb_) block_end_cb_(command_config);
+    if(block_end_cb_)
+        if(false == block_end_cb_(command_config))
+            return false;
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
         | kEXP_STATUS_END;
@@ -406,7 +410,9 @@ bool CoreModuleConf::CaseStatusSepSemicolon()
     command_config.args.swap(cur_line_params_);
     command_config.conf_type = conf_type_;
     command_config.module_type = module_type_;
-    if(command_cb_) command_cb_(command_config);
+    if(command_cb_)
+        if(false == command_cb_(command_config))
+            return false;
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END;

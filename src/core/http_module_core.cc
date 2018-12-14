@@ -168,9 +168,6 @@ bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandMod
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config, const CommandModule&, void*)
 {
-    if(2 > command_config.args.size())
-        return false;
-
     //遇到了location配置项，就新建立一个HttpConfigCtxs，获取当前server层HttpConfigCtxs结构体
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
     HttpConfigCtxs* srv_ctx = reinterpret_cast<HttpConfigCtxs*>(g_core_module_conf.CurrentCtx());
@@ -233,23 +230,71 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandModule&, void* module_command)
 {
-    if(config.args.size() != 2)
-        return false;
+    (void)module_command;
 
-    HttpSrvConf* srv_conf = reinterpret_cast<HttpSrvConf*>(module_command);
-    const std::string& listen = config.args[1];
-    std::size_t found = listen.find(':');
+    //第一个参数为ip和端口(ip:port) or (port)
+    int port;
+    std::string ip;
+    const std::string& ip_port = config.args[1];
+    auto found = ip_port.find(':');
     if(std::string::npos == found)
     {
-        srv_conf->ip = IPADDR_ALL;
-        srv_conf->port = std::atoi(listen.c_str());
+        ip = IPADDR_ALL;
+        port = std::atoi(ip_port.c_str());
     }
     else
     {
-        srv_conf->ip = listen.substr(0, found);
-        srv_conf->port = std::atoi(listen.substr(found+1).c_str());
+        ip = ip_port.substr(0, found);
+        port = std::atoi(ip_port.substr(found+1).c_str());
     }
 
+    //检擦是否添加过端口了
+    HttpMainConf* main_conf = GetModuleMainConf(this);
+    for(auto& conf_port : main_conf->ports)
+    {
+        if(conf_port.port != port)
+            continue;
+
+        //端口已经存在，添加server
+        return AddConfServer(conf_port, ip);
+    }
+
+    //没有添加过端口，新建端口
+    return AddConfAddress(ip, port);
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::AddConfAddress(const std::string& ip, int port)
+{
+    ConfPort conf_port;
+    conf_port.port = port;
+
+    HttpMainConf* main_conf = GetModuleMainConf(this);
+    main_conf->ports.push_back(conf_port);
+    return AddConfServer(main_conf->ports.back(), ip);
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::AddConfServer(ConfPort& conf_port, const std::string& ip)
+{
+    HttpSrvConf* cur_srv = reinterpret_cast<HttpSrvConf*>(g_core_module_conf.CurrentCtx());
+    for(auto& addr : conf_port.addrs)
+    {
+        if(addr.ip == ip)
+            return false;
+
+        for(auto& conf : addr.servers)
+        {
+            if(conf == cur_srv)
+                return false;
+        }
+    }
+
+    ConfAddress conf_addr;
+    conf_addr.ip = ip;
+    //当前server{}块指针
+    conf_addr.default_server = cur_srv;
+    conf_addr.servers.push_back(conf_addr.default_server);
+    conf_port.addrs.push_back(conf_addr);
+    
     return true;
 }
 //---------------------------------------------------------------------------
@@ -279,8 +324,6 @@ void* HttpModuleCore::CreateSrvConfig()
 {
     HttpSrvConf* conf = new HttpSrvConf();
     conf->ctx = nullptr;
-    conf->port = -1;
-    conf->ip = "unset";
     conf->merge_server = "unset";
     conf->server_name = "unset";
     return conf;

@@ -19,6 +19,17 @@ void MainConfig()
     std::cout << "worker_processes: " << core_config->worker_processes << std::endl;
     std::cout << "error_log: " << core_config->error_log << std::endl;
     std::cout << "pid: " << core_config->pid << std::endl;
+
+    HttpModuleCore::HttpMainConf* main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    for(auto port : main_conf->ports)
+    {
+        std::cout << "port: " << port.port << std::endl;
+        for(auto addr : port.addrs)
+        {
+            std::cout << "\tip: " << addr.ip << std::endl;
+        }
+    }
+    
     std::cout << std::endl;
 }
 //---------------------------------------------------------------------------
@@ -42,8 +53,6 @@ void HttpConfig()
         std::cout << std::endl;
         auto srv_conf = reinterpret_cast<HttpModuleCore::HttpSrvConf*>(ctx->srv_conf[i]);
         std::cout << "server_name: " << srv_conf->server_name << std::endl;
-        std::cout << "ip: " << srv_conf->ip<< std::endl;
-        std::cout << "port: " << srv_conf->port << std::endl;
         std::cout << "merge_server: " << srv_conf->merge_server<< std::endl;
         std::cout << std::endl;
         auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(ctx->loc_conf[i]);
@@ -55,8 +64,6 @@ void HttpConfig()
         for(auto& inner_srv_conf : main_conf->servers)
         {
             std::cout << "\tserver_name: " << inner_srv_conf->server_name << std::endl;
-            std::cout << "\tip: " << inner_srv_conf->ip<< std::endl;
-            std::cout << "\tport: " << inner_srv_conf->port << std::endl;
             std::cout << "\tmerge_server: " << inner_srv_conf->merge_server<< std::endl;
             HttpModuleCore::HttpLocConf* srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
                     inner_srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);

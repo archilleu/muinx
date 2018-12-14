@@ -255,7 +255,8 @@ bool Core::ConfigCallback(const core::CommandConfig& command_config)
                 //TODO 错误的配置项或者文件
             }
 
-            command.Set(command_config, command, ctx);
+            if(false == command.Set(command_config, command, ctx))
+                return false;
         }
     }
 

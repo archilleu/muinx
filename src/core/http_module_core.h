@@ -61,8 +61,6 @@ public:
     struct HttpSrvConf
     {
         std::string server_name;    //域名localhost
-        std::string ip;
-        int port;
 
         std::string merge_server;
 
@@ -72,6 +70,7 @@ public:
 
     struct ConfAddress
     {
+        std::string ip;
         std::unordered_map<std::string, HttpSrvConf*> hash; //主机名对应的server{}
         HttpSrvConf* default_server;    //默认的server{}
         std::vector<HttpSrvConf*> servers;  //该端口下所有的server{}
@@ -100,6 +99,8 @@ private:
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
 
     bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
+    bool AddConfAddress(const std::string& ip, int port);
+    bool AddConfServer(ConfPort& conf_port, const std::string& ip);
 
 private:
     bool PreConfiguration();
