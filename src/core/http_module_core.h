@@ -32,7 +32,14 @@ public:
     struct Location;
     struct HttpLocConf
     {
-        std::string name;
+        std::string name;   //location{} 路径名
+
+        std::string root;   //相对于文件系统的路径
+
+        int keepalive_timeout; //超时(单位s)
+
+        bool sendfile; //发送文件
+
 
         //同一个server块内的location,可能location有嵌套，所以放在该结构体内部
         std::vector<Location> locations;
@@ -43,11 +50,12 @@ public:
          */
         void** loc_conf;
 
-        bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
+        /*
+         * 快速查找路径对应的结构体(name:HttpLocConf)
+         */
+        std::unordered_map<std::string, HttpLocConf*> map_locations;
 
-        int keepalive_timeout; 
-        bool sendfile;
-        std::string root;
+        bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
     };
 
     struct Location

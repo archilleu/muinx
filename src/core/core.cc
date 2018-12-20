@@ -187,6 +187,9 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
             //合并配置项
             g_core_module_http.MergeServers(dynamic_cast<HttpModule*>(module));
         }
+
+        //创建快速搜索location{}树
+        g_core_module_http.InitMapLocations();
     }
 
     //当前{}结束，弹出该上下文栈

@@ -25,11 +25,17 @@ public:
     bool MergeLocations(const std::vector<HttpModuleCore::Location>& locations,
             void** srv_loc_conf, const HttpModule* module);
 
+    bool InitMapLocations();
+
 public:
     static int s_max_http_module;
 
 private:
-    bool ConfigSetHttpBlock(const CommandConfig& config, const CommandModule& module, void* module_command);
+    bool ConfigSetHttpBlock(const CommandConfig& config, const CommandModule& module,
+            void* module_command);
+
+    bool ValidateLocations(HttpModuleCore::HttpLocConf* loc_conf);
+    bool BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf);
 };
 //---------------------------------------------------------------------------
 extern CoreModuleHttp g_core_module_http;

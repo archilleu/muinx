@@ -1,4 +1,5 @@
 //---------------------------------------------------------------------------
+#include <algorithm>
 #include "defines.h"
 #include "core.h"
 #include "http_module.h"
@@ -94,6 +95,23 @@ bool CoreModuleHttp::MergeLocations(const std::vector<HttpModuleCore::Location>&
     return true;
 }
 //---------------------------------------------------------------------------
+bool CoreModuleHttp::InitMapLocations()
+{
+    std::vector<HttpModuleCore::HttpSrvConf*> servers = g_http_module_core.GetModuleMainConf(&g_http_module_core)->servers;
+    for(auto server : servers)
+    {
+        auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
+            server->ctx->loc_conf[g_http_module_core.module_index()]);
+
+        if(false == ValidateLocations(loc_conf))
+            return false;
+
+        BuildMapLocations(loc_conf);
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
 bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
         const CommandModule&, void* module_command)
 {
@@ -135,6 +153,44 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
         {
             ctx->loc_conf[module_index] = module_ctx->create_loc_config();
         }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::ValidateLocations(HttpModuleCore::HttpLocConf* loc_conf)
+{
+    //排序，用以比较是否重复
+    std::sort(loc_conf->locations.begin(), loc_conf->locations.end(),
+            [](const HttpModuleCore::Location& left, const HttpModuleCore::Location& right)-> bool
+            {
+                return left.name > right.name;
+            });
+    
+    //检擦是否有重复的
+    if(2 <= loc_conf->locations.size())
+    {
+        auto prev = loc_conf->locations[0];
+        for(size_t i=1; i<loc_conf->locations.size(); i++)
+        {
+            auto& cur = loc_conf->locations[i];
+            if(prev.name == cur.name)
+                return false;
+
+            prev = cur;
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf)
+{
+    loc_conf->map_locations.reserve(loc_conf->locations.size());
+
+    for(auto& location : loc_conf->locations)
+    {
+        loc_conf->map_locations[location.name] = location.exact ? location.exact : location.inclusive;
     }
 
     return true;
