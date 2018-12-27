@@ -97,6 +97,49 @@ public:
     };
 
 public:
+    //定义HTTP请求的11个阶段
+    enum HTTP_PHASES
+    {
+       //接收到完整HTTP头部后处理的HTTP阶段
+        HTTP_POST_READ_PHASE = 0,
+
+        //在将请求的URI与location表达式匹配前，修改请求的URI（重定向）是一个独立的HTTP阶段
+        HTTP_SERVER_REWRITE_PHASE,
+
+        //根据请求的URI寻找匹配的location表达式，这个阶段只能由http_module_core模块实现，不建议
+        //其他HTTP模块重新定义这一个阶段的行为
+        HTTP_FIND_CONFIG_PHASE, //只能由内部使用
+        //在HTTP_FIND_CONFIG_PHASE阶段寻找到匹配的location之后再修改请求的URI
+        HTTP_REWRITE_PHASE,
+        /*
+         * 这一阶段用于上一个阶段重写URL后，防止错误的nginx.conf错误的配置导致死循环。因此
+         * 这一阶段仅仅由http_module_core处理。目前控制死循环的方式很简单，检擦请求的rewrite
+         * 次数，如果一个请求rewire超过10次则认为进入了rewrite死循环，此时返回500表示。
+         */
+        HTTP_POST_REWRITE_PHASE, //只能由内部使用
+
+        //在进入HTTP_ACCESS_PHASE阶段决定访问权限前，HTTP模块可以介入的处理阶段
+        HTTP_PREACCESS_PHASE,
+
+        //用于HTTP模块判断是否允许这个请求访问nginx服务器
+        HTTP_ACCESS_PHASE,
+        /*在HTTP_ACCESS_PHASE模块中，当HTTP模块的handler函数返回不允许访问的错误码时，如
+         * (HTTP_FORBIDDEN 和 UNAUTHORIZAD),这里将负责向用户发送服务器的错误响应，
+         * 因此这个阶段实际上是HTTP_ACCESS_PHASE收尾
+         */
+        HTTP_POST_ACCESS_PHASE, //只能由内部使用
+
+        //这个阶段完全是为try_files配置项设立的，当访问静态文件时，try_files配置项可以使这个
+        //请求顺序访问多个静态文件资源，如果某个静态资源访问失败，则继续访问try_files下一个静态资源
+        HTTP_TRY_FILES_PHASE, //只能由内部使用
+        //用于处理HTTP内容的阶段，多数HTTP模块介入的阶段
+        HTTP_CONTENT_PHASE,
+
+        //处理完请求后记录日志阶段。
+        HTTP_LOG_PHASE
+    };
+
+public:
     HttpMainConf* GetModuleMainConf(const Module* module);
     HttpSrvConf* GetModuleSrvConf(const Module* module);
     HttpLocConf* GetModuleLocConf(const Module* module);
