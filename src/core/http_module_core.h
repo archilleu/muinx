@@ -150,8 +150,8 @@ private:
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
 
     bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
-    bool AddConfAddress(const std::string& ip, int port);
-    bool AddConfServer(ConfPort& conf_port, const std::string& ip);
+    bool AddConfPort(const std::string& ip, int port);
+    bool AddConfAddress(ConfPort& conf_port, const std::string& ip);
 
 private:
     bool PreConfiguration();
