@@ -151,7 +151,9 @@ private:
 
     bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
     bool AddConfPort(const std::string& ip, int port);
+    bool AddConfAddresses(ConfPort& conf_port, const std::string& ip);
     bool AddConfAddress(ConfPort& conf_port, const std::string& ip);
+    bool AddConfServer(ConfAddress& conf_addr);
 
 private:
     bool PreConfiguration();

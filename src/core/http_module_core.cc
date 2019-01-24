@@ -255,8 +255,8 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
         if(conf_port.port != port)
             continue;
 
-        //端口已经存在，添加server
-        return AddConfAddress(conf_port, ip);
+        //端口已经存在，添加监听地址
+        return AddConfAddresses(conf_port, ip);
     }
 
     //没有添加过端口，新建端口
@@ -270,31 +270,39 @@ bool HttpModuleCore::AddConfPort(const std::string& ip, int port)
 
     HttpMainConf* main_conf = GetModuleMainConf(this);
     main_conf->ports.push_back(conf_port);
-    return AddConfAddress(main_conf->ports.back(), ip);
+    return AddConfAddresses(main_conf->ports.back(), ip);
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip)
+{
+    for(auto& addr : conf_port.addrs)
+    {
+        if(addr.ip != ip)
+            continue;
+
+        //存在ip:port，直接添加server
+        return AddConfServer(addr);
+    }
+
+    //不存在ip:port，添加address
+    return AddConfAddress(conf_port, ip);
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::AddConfAddress(ConfPort& conf_port, const std::string& ip)
 {
-    HttpSrvConf* cur_srv = reinterpret_cast<HttpSrvConf*>(g_core_module_conf.CurrentCtx());
-    for(auto& addr : conf_port.addrs)
-    {
-        if(addr.ip == ip)
-            return false;
-
-        for(auto& conf : addr.servers)
-        {
-            if(conf == cur_srv)
-                return false;
-        }
-    }
-
     ConfAddress conf_addr;
     conf_addr.ip = ip;
-    //当前server{}块指针
-    conf_addr.default_server = cur_srv;
-    conf_addr.servers.push_back(conf_addr.default_server);//目前没什么用
+    conf_addr.default_server = nullptr;
     conf_port.addrs.push_back(conf_addr);
-    
+    return AddConfServer(conf_port.addrs.back());
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr)
+{
+    //当前server{}块指针
+    HttpSrvConf* cur_srv = reinterpret_cast<HttpSrvConf*>(g_core_module_conf.CurrentCtx());
+    //可能存在相同的ip:port/server_name，是错误的配置，这个在后面的optimize阶段检查
+    conf_addr.servers.push_back(cur_srv);
     return true;
 }
 //---------------------------------------------------------------------------
