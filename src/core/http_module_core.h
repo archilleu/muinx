@@ -79,7 +79,10 @@ public:
     struct ConfAddress
     {
         std::string ip;
-        std::unordered_map<std::string, HttpSrvConf*> hash; //主机名对应的server{}
+
+        //该主机名对应的server{},用于对该结构体下的servers的快速查找
+        std::unordered_map<std::string, HttpSrvConf*> hash;
+
         HttpSrvConf* default_server;    //默认的server{}
         std::vector<HttpSrvConf*> servers;  //该端口下所有的server{}
     };
@@ -150,10 +153,10 @@ private:
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
 
     bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
-    bool AddConfPort(const std::string& ip, int port);
-    bool AddConfAddresses(ConfPort& conf_port, const std::string& ip);
-    bool AddConfAddress(ConfPort& conf_port, const std::string& ip);
-    bool AddConfServer(ConfAddress& conf_addr);
+    bool AddConfPort(const std::string& ip, int port, HttpSrvConf* conf);
+    bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf);
+    bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf);
+    bool AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf);
 
 private:
     bool PreConfiguration();

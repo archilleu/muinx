@@ -230,8 +230,6 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandModule&, void* module_command)
 {
-    (void)module_command;
-
     //第一个参数为ip和端口(ip:port) or (port)
     int port;
     std::string ip;
@@ -256,24 +254,24 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
             continue;
 
         //端口已经存在，添加监听地址
-        return AddConfAddresses(conf_port, ip);
+        return AddConfAddresses(conf_port, ip, static_cast<HttpSrvConf*>(module_command));
     }
 
     //没有添加过端口，新建端口
-    return AddConfPort(ip, port);
+    return AddConfPort(ip, port, static_cast<HttpSrvConf*>(module_command));
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfPort(const std::string& ip, int port)
+bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* conf)
 {
     ConfPort conf_port;
     conf_port.port = port;
 
     HttpMainConf* main_conf = GetModuleMainConf(this);
     main_conf->ports.push_back(conf_port);
-    return AddConfAddresses(main_conf->ports.back(), ip);
+    return AddConfAddresses(main_conf->ports.back(), ip, conf);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip)
+bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf)
 {
     for(auto& addr : conf_port.addrs)
     {
@@ -281,28 +279,36 @@ bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip
             continue;
 
         //存在ip:port，直接添加server
-        return AddConfServer(addr);
+        return AddConfServer(addr, conf);
     }
 
     //不存在ip:port，添加address
-    return AddConfAddress(conf_port, ip);
+    return AddConfAddress(conf_port, ip, conf);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfAddress(ConfPort& conf_port, const std::string& ip)
+bool HttpModuleCore::AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf)
 {
     ConfAddress conf_addr;
     conf_addr.ip = ip;
     conf_addr.default_server = nullptr;
     conf_port.addrs.push_back(conf_addr);
-    return AddConfServer(conf_port.addrs.back());
+    return AddConfServer(conf_port.addrs.back(), conf);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr)
+bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf)
 {
     //当前server{}块指针
-    HttpSrvConf* cur_srv = reinterpret_cast<HttpSrvConf*>(g_core_module_conf.CurrentCtx());
-    //可能存在相同的ip:port/server_name，是错误的配置，这个在后面的optimize阶段检查
-    conf_addr.servers.push_back(cur_srv);
+    conf_addr.servers.push_back(conf);
+
+    //构建快速查找hash
+    //可能存在相同的ip:port/server_name，是错误的配置,需要检测,此刻server_name可能还没有值
+    //放在http块结束后在构建
+    /*
+    auto result = conf_addr.hash.insert(std::make_pair(cur_srv->server_name, cur_srv));
+    if(!result.second)
+        return false;
+    */
+
     return true;
 }
 //---------------------------------------------------------------------------

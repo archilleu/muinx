@@ -112,6 +112,21 @@ bool CoreModuleHttp::InitMapLocations()
     return true;
 }
 //---------------------------------------------------------------------------
+bool CoreModuleHttp::OptimizeServers()
+{
+    auto conf_main = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    for(auto& port : conf_main->ports)
+    {
+        if(false == HashAddressServernames(port))
+            return false;
+
+        if(false == AddListening(port))
+            return false;
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
 bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
         const CommandModule&, void* module_command)
 {
@@ -191,6 +206,42 @@ bool CoreModuleHttp::BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf)
     for(auto& location : loc_conf->locations)
     {
         loc_conf->map_locations[location.name] = location.exact ? location.exact : location.inclusive;
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::HashAddressServernames(HttpModuleCore::ConfPort& conf_port)
+{
+    for(auto& address : conf_port.addrs)
+    {
+        for(auto& server : address.servers)
+        {
+            auto result = address.hash.insert(std::make_pair(server->server_name, server));
+            if(!result.second)
+            {
+                //在同一个ip:port存在同名的server_name，引起歧义
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::AddListening(const HttpModuleCore::ConfPort& conf_port)
+{
+    for(auto& address : conf_port.addrs)
+    {
+        if(address.ip == IPADDR_ALL)
+        {
+            //TODO:ipv4还是ipv6, 是否loopback
+            addresses_.push_back(net::InetAddress(static_cast<short>(conf_port.port), true));
+        }
+        else
+        {
+            addresses_.push_back(net::InetAddress(address.ip, static_cast<short>(conf_port.port)));
+        }
     }
 
     return true;

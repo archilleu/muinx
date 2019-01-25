@@ -38,6 +38,9 @@ bool Core::Initialize()
     if(false == ActionCoreModuleInitConfig())
         return false;
 
+    if(false == core_server_.Initialize())
+        return false;
+
     return true;
 }
 //---------------------------------------------------------------------------
@@ -189,7 +192,12 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
         }
 
         //创建快速搜索location{}树
-        g_core_module_http.InitMapLocations();
+        if(false == g_core_module_http.InitMapLocations())
+            return false;
+
+        //构建监听server和hashserver
+        if(false == g_core_module_http.OptimizeServers())
+            return false;
     }
 
     //当前{}结束，弹出该上下文栈

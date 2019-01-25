@@ -8,6 +8,7 @@
 #include <functional>
 #include "defines.h"
 #include "core_module_conf.h"
+#include "core_server.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -37,6 +38,9 @@ private:
     bool ConfigFileBlockEndCallback(const core::CommandConfig& command_config);
 
     bool ConfigCallback(const core::CommandConfig& command_config);
+
+private:
+    CoreServer core_server_;
 };
 //---------------------------------------------------------------------------
 extern core::Core g_core;

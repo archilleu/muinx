@@ -17,8 +17,9 @@ add_executable(${EXENAME} ${DIR_SRC})
 #---------------------------------------------------------------------------
 #add link lib
 set(LIBBASE base)
+set(LIBNET net)
 set(LIBTOOLS tools)
-target_link_libraries(${EXENAME} ${LIBBASE} ${LIBTOOLS}  pthread rt)
+target_link_libraries(${EXENAME} ${LIBNET} ${LIBBASE} ${LIBTOOLS}  pthread rt)
 #---------------------------------------------------------------------------
 #install target 
 #install(TARGETS json_test DESTINATION ${EXECUTABLE_OUTPUT_PATH})

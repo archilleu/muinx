@@ -84,6 +84,22 @@ void HttpConfig()
                 }
             }
         }
+
+        std::cout << "all ports" << std::endl;
+        for(auto& port : main_conf->ports)
+        {
+            std::cout << "\tport:" << port.port << std::endl;
+            for(auto& address : port.addrs)
+            {
+                std::cout << "\t\tip:" << address.ip << std::endl;
+                std::cout << "\t\t";
+                for(auto& server : address.servers)
+                {
+                    std::cout << server->server_name << ":" << server << ",";
+                }
+                std::cout << std::endl;
+            }
+        }
     }
     
 
@@ -92,7 +108,6 @@ void HttpConfig()
 //---------------------------------------------------------------------------
 int main(int, char**)
 {
-
     if(false == g_core.Initialize())
         return -1;
 
