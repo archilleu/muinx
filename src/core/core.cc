@@ -44,6 +44,18 @@ bool Core::Initialize()
     return true;
 }
 //---------------------------------------------------------------------------
+void Core::Start()
+{
+    core_server_.Start();
+    return;
+}
+//---------------------------------------------------------------------------
+void Core::Stop()
+{
+    core_server_.Stop();
+    return;
+}
+//---------------------------------------------------------------------------
 void Core::InitGlobalModules()
 {
     std::vector<Module*> modules = {

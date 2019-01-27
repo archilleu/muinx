@@ -22,6 +22,9 @@ public:
 public:
     bool Initialize();
 
+    void Start();
+    void Stop();
+
     std::vector<class Module*> modules_;
 
 private:

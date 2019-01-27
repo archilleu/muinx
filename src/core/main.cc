@@ -111,6 +111,12 @@ int main(int, char**)
     if(false == g_core.Initialize())
         return -1;
 
+    //启动服务器，进入loop
+    g_core.Start();
+
+    //等待loop结束
+    g_core.Stop();
+
     MainConfig();
     EventConfig();
     HttpConfig();

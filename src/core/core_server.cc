@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
+#include <iostream>
 #include "../net/buffer.h"
-#include "../net/tcp_connector.h"
+#include "../net/tcp_connection.cc"
 #include "core_server.h"
 #include "core_module_http.h"
 //---------------------------------------------------------------------------
@@ -22,7 +23,7 @@ bool CoreServer::Initialize()
     //TODO:日志路径
     net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
     loop_ = std::make_shared<net::EventLoop>();
-    loop_->set_sig_quit_cb(std::bind(&CoreServer::SigQuit, this));
+    loop_->set_sig_quit_cb(std::bind(&CoreServer::EventLoopQuit, this));
     loop_->SetHandleSingnal();
 
     server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.get_addresses());
@@ -37,32 +38,47 @@ bool CoreServer::Initialize()
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreServer::Start()
+void CoreServer::Start()
 {
     server_->Start();
     loop_->Loop();
-    return true;
 }
 //---------------------------------------------------------------------------
-bool CoreServer::Stop()
+void CoreServer::Stop()
 {
     server_->Stop();
-    return true;
+    return;
 }
 //---------------------------------------------------------------------------
 void CoreServer::OnConnection(const net::TCPConnectionPtr& conn_ptr)
 {
-    (void)conn_ptr;
+    std::cout << "OnConnectio name:" << conn_ptr->name()
+        << " local addr:" << conn_ptr->local_addr().IpPort()
+        << " peer addr:" << conn_ptr->peer_addr().IpPort()
+        << std::endl;
 }
 //---------------------------------------------------------------------------
 void CoreServer::OnDisconnection(const net::TCPConnectionPtr& conn_ptr)
 {
-    (void)conn_ptr;
+    std::cout << "OnDisconnectio name:" << conn_ptr->name()
+        << " local addr:" << conn_ptr->local_addr().IpPort()
+        << " peer addr:" << conn_ptr->peer_addr().IpPort()
+        << std::endl;
+
+    return;
 }
 //---------------------------------------------------------------------------
-void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& rbuffer)
+void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer)
 {
-    (void)conn_ptr;
+    std::cout << "read name:" << conn_ptr->name()
+        << " local addr:" << conn_ptr->local_addr().IpPort()
+        << " peer addr:" << conn_ptr->peer_addr().IpPort()
+        << std::endl;
+
+    conn_ptr->Send(buffer.Peek(), buffer.ReadableBytes());
+    buffer.RetrieveAll();
+
+    return;
 }
 //---------------------------------------------------------------------------
 void CoreServer::OnWriteComplete(const net::TCPConnectionPtr& conn_ptr)
@@ -76,8 +92,10 @@ void CoreServer::OnWriteWirteHighWater(const net::TCPConnectionPtr& conn_ptr, si
     (void)size;
 }
 //---------------------------------------------------------------------------
-void CoreServer::SigQuit() 
+void CoreServer::EventLoopQuit() 
 {
+    //退出循环
+    loop_->Quit();
 }
 //---------------------------------------------------------------------------
 

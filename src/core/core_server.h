@@ -20,17 +20,17 @@ public:
 
 public:
     bool Initialize();
-    bool Start();
-    bool Stop();
+    void Start();
+    void Stop();
 
 private:
     void OnConnection(const net::TCPConnectionPtr& conn_ptr);
     void OnDisconnection(const net::TCPConnectionPtr& conn_ptr);
-    void OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& rbuffer);
+    void OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer);
     void OnWriteComplete(const net::TCPConnectionPtr& conn_ptr);
     void OnWriteWirteHighWater(const net::TCPConnectionPtr& conn_ptr, size_t size);
 
-    void SigQuit(); 
+    void EventLoopQuit(); 
 
 private:
     std::shared_ptr<net::EventLoop> loop_;
