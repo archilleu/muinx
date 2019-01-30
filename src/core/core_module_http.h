@@ -6,6 +6,7 @@
 #include "core_module.h"
 #include "http_module_core.h"
 #include "../net/inet_address.h"
+#include "../net/inet_address.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -24,7 +25,7 @@ public:
     {
     };
 
-    const std::vector<net::InetAddress>& get_addresses() { return addresses_; }
+    const std::vector<net::InetAddressData>& get_addresses() const { return addresses_; }
 
     bool MergeServers(const HttpModule* module);
     bool MergeLocations(const std::vector<HttpModuleCore::Location>& locations,
@@ -48,7 +49,7 @@ private:
     bool AddListening(const HttpModuleCore::ConfPort& conf_port);
 
 private:
-    std::vector<net::InetAddress> addresses_;
+    std::vector<net::InetAddressData> addresses_;
 };
 //---------------------------------------------------------------------------
 extern CoreModuleHttp g_core_module_http;

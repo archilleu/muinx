@@ -53,9 +53,6 @@ public:
     void ForceClose();
 
 public:
-    //自定义附加数据
-    std::shared_ptr<void> any_;
-
     const std::string name() const { return name_; }
     const InetAddress& local_addr() const { return local_addr_; }
     const InetAddress& peer_addr() const { return peer_addr_; }
@@ -64,6 +61,9 @@ public:
     const Socket& socket() const { return socket_; }
 
     std::string GetTCPInfo() const;
+
+    void set_data(const std::shared_ptr<void>& data) { data_ = data; }
+    const std::shared_ptr<void>& get_data() const { return data_; }
 
 private:
     //以下方法仅供TCPServer调用
@@ -120,6 +120,9 @@ private:
     WriteHighWaterMarkCallback high_water_mark_cb_;
     RemoveCallback remove_cb_;
     size_t overstock_size_;
+
+    //自定义附加数据
+    std::shared_ptr<void> data_;
 };
 
 }//namespace net

@@ -24,11 +24,11 @@ bool CoreServer::Initialize()
     net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
     loop_ = std::make_shared<net::EventLoop>();
     loop_->set_sig_quit_cb(std::bind(&CoreServer::EventLoopQuit, this));
-    loop_->SetHandleSingnal();
+    //loop_->SetHandleSingnal();
 
     server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.get_addresses());
     //TODO:设置线程数目等参数
-    server_->set_event_loop_nums(8);
+    //server_->set_event_loop_nums(8);
     server_->set_connection_cb(std::bind(&CoreServer::OnConnection, this, _1));
     server_->set_disconnection_cb(std::bind(&CoreServer::OnDisconnection, this, _1));
     server_->set_read_cb(std::bind(&CoreServer::OnRead, this, _1, _2));

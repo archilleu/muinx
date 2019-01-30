@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 #include <netinet/in.h>
+#include <memory>
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -43,6 +44,13 @@ public:
 private:
     struct sockaddr_storage address_;
 };
+
+struct InetAddressData
+{
+    net::InetAddress address;
+    std::shared_ptr<void> data;
+};
+
 //---------------------------------------------------------------------------
 inline bool operator==(const InetAddress& left, const InetAddress& right)
 {

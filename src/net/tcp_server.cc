@@ -13,10 +13,12 @@
 namespace net
 {
 
+using namespace std::placeholders;
+
 //---------------------------------------------------------------------------
 static const size_t kConnSize = 1024 * 1024;
 //---------------------------------------------------------------------------
-TCPServer::TCPServer(EventLoop* owner_loop, const std::vector<InetAddress>& listen_addrs)
+TCPServer::TCPServer(EventLoop* owner_loop, const std::vector<InetAddress>& addresses)
 :   mark_(0),
     owner_loop_(owner_loop),
     next_connect_id_(0),
@@ -24,12 +26,35 @@ TCPServer::TCPServer(EventLoop* owner_loop, const std::vector<InetAddress>& list
     loop_thread_pool_(owner_loop)
 {
     std::string msg = "ctor tcp server, listen address:";
-    for(auto& addr : listen_addrs)
+    for(auto& addr : addresses)
     {
         msg += " " + addr.IpPort();
         acceptors_.push_back(std::make_shared<Acceptor>(owner_loop, addr));
         acceptors_.back()->set_new_conn_cb(std::bind(&TCPServer::OnNewConnection, this, 
-                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+                _1, _2, _3));
+    }
+
+    tcp_conn_list_.resize(kConnSize);
+    NetLogger_trace("%s", msg.c_str());
+
+    return;
+}
+//---------------------------------------------------------------------------
+TCPServer::TCPServer(EventLoop* owner_loop, const std::vector<InetAddressData>& addr_datas)
+:   mark_(0),
+    owner_loop_(owner_loop),
+    next_connect_id_(0),
+    tcp_conn_count_(0),
+    loop_thread_pool_(owner_loop)
+{
+    std::string msg = "ctor tcp server, listen address:";
+    for(auto& addr_data : addr_datas)
+    {
+        msg += " " + addr_data.address.IpPort();
+        acceptors_.push_back(std::make_shared<Acceptor>(owner_loop, addr_data.address));
+        acceptors_.back()->set_new_conn_data_cb(std::bind(&TCPServer::OnNewConnectionData, this, 
+                _1, _2, _3, _4));
+        acceptors_.back()->set_data(addr_data.data);
     }
 
     tcp_conn_list_.resize(kConnSize);
@@ -158,6 +183,46 @@ void TCPServer::OnNewConnection(Socket&& client, InetAddress&& client_addr, uint
     conn_ptr->set_write_complete_cb(write_complete_cb_);
     conn_ptr->set_high_water_mark_cb(high_water_mark_cb_, mark_);
     conn_ptr->set_remove_cb(std::bind(&TCPServer::OnConnectionRemove, this, std::placeholders::_1));
+    
+    //加入到连接list中
+    if(false == AddConnListItem(conn_ptr))
+        return;
+
+    conn_ptr->Initialize();
+    
+    //通知连接已经就绪,监听事件，在conn_ptr中通知,只有在加入到tcp_conn_list_中后才
+    //允许该连接的事件,防止在未加入list前,该连接又close掉导致list里找不到该连接
+    loop->RunInLoop(std::bind(&TCPConnection::ConnectionEstablished, conn_ptr)); 
+
+    return;
+}
+//---------------------------------------------------------------------------
+void TCPServer::OnNewConnectionData(Socket&& client, InetAddress&& client_addr, uint64_t accept_time,
+        const std::shared_ptr<void>& data)
+{
+    owner_loop_->AssertInLoopThread();
+
+    //获取一个event_loop
+    EventLoop* loop = loop_thread_pool_.GetNextEventLoop();
+
+    std::string new_conn_name = base::CombineString("%zu", next_connect_id_++);
+    InetAddress local_addr = Socket::GetLocalAddress(client.fd());
+
+    NetLogger_trace("accept time:%s, new connection server name:[%s], fd:%d, total[%zu]- from :%s to :%s",
+            base::Timestamp(accept_time).Datetime(true).c_str(), new_conn_name.c_str(), client.fd(),
+            tcp_conn_count_, local_addr.IpPort().c_str(), client_addr.IpPort().c_str());
+
+    TCPConnectionPtr conn_ptr = std::make_shared<TCPConnection>(loop, std::move(new_conn_name),
+            std::move(client), std::move(local_addr), std::move(client_addr));
+
+    //初始化连接
+    conn_ptr->set_connection_cb(connection_cb_);
+    conn_ptr->set_disconnection_cb(disconnection_cb_);
+    conn_ptr->set_read_cb(read_cb_);
+    conn_ptr->set_write_complete_cb(write_complete_cb_);
+    conn_ptr->set_high_water_mark_cb(high_water_mark_cb_, mark_);
+    conn_ptr->set_remove_cb(std::bind(&TCPServer::OnConnectionRemove, this, std::placeholders::_1));
+    conn_ptr->set_data(data);
     
     //加入到连接list中
     if(false == AddConnListItem(conn_ptr))

@@ -8,6 +8,7 @@
 #include "callback.h"
 #include "event_loop_thread_pool.h"
 #include "acceptor.h"
+#include "inet_address.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -19,7 +20,8 @@ class InetAddress;
 class TCPServer : public base::Noncopyable
 {
 public:
-    TCPServer(EventLoop* owner_loop, const std::vector<InetAddress>& listen_addrs);
+    TCPServer(EventLoop* owner_loop, const std::vector<InetAddress>& addresses);
+    TCPServer(EventLoop* owner_loop, const std::vector<InetAddressData>& address_datas);
     TCPServer(EventLoop* owner_loop, short port);
     ~TCPServer();
 
@@ -43,6 +45,8 @@ public:
 
 private:
     void OnNewConnection(Socket&& client, InetAddress&& client_addr, uint64_t accept_time);
+    void OnNewConnectionData(Socket&& client, InetAddress&& client_addr, uint64_t accept_time, const std::shared_ptr<void>& data);
+    //TCPConnectionPtr NewConnection(Socket&& client, InetAddress&& client_addr, uint64_t accept_time);
 
     void OnConnectionRemove(const TCPConnectionPtr& conn_ptr);
     void OnConnectionRemoveInLoop(const TCPConnectionPtr& conn_ptr);

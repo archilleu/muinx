@@ -111,7 +111,7 @@ void Acceptor::HandleRead(uint64_t rcv_time)
             }
 
             //如果不处理连接事件则关闭
-            if(!new_conn_cb_)
+            if(!new_conn_cb_ && !new_conn_data_cb_)
             {
                 ::close(client_fd);
                 continue;
@@ -119,7 +119,14 @@ void Acceptor::HandleRead(uint64_t rcv_time)
 
             Socket socket(client_fd);
             socket.SetKeepAlive(30);
-            new_conn_cb_(std::move(socket), std::move(addr_peer), rcv_time);
+            if(new_conn_cb_)
+            {
+                new_conn_cb_(std::move(socket), std::move(addr_peer), rcv_time);
+            }
+            else
+            {
+                new_conn_data_cb_(std::move(socket), std::move(addr_peer), rcv_time, data_);
+            }
         }
         else
         {

@@ -213,6 +213,7 @@ bool CoreModuleHttp::BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf)
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::HashAddressServernames(HttpModuleCore::ConfPort& conf_port)
 {
+    //TODO:判断是否只有一个虚拟主机，是的话就不需要hash了
     for(auto& address : conf_port.addrs)
     {
         for(auto& server : address.servers)
@@ -236,11 +237,18 @@ bool CoreModuleHttp::AddListening(const HttpModuleCore::ConfPort& conf_port)
         if(address.ip == IPADDR_ALL)
         {
             //TODO:ipv4还是ipv6, 是否loopback
-            addresses_.push_back(net::InetAddress(static_cast<short>(conf_port.port), true));
+
+            net::InetAddressData addr_data = net::InetAddressData();
+            addr_data.address = net::InetAddress(static_cast<short>(conf_port.port), true);
+            addr_data.data.reset(new HttpModuleCore::ConfAddress(address));
+            addresses_.push_back(addr_data);
         }
         else
         {
-            addresses_.push_back(net::InetAddress(address.ip, static_cast<short>(conf_port.port)));
+            net::InetAddressData addr_data = net::InetAddressData();
+            addr_data.address = net::InetAddress(address.ip, static_cast<short>(conf_port.port));
+            addr_data.data.reset(new HttpModuleCore::ConfAddress(address));
+            addresses_.push_back(addr_data);
         }
     }
 
