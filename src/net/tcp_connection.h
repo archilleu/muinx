@@ -9,6 +9,7 @@
 #include "socket.h"
 #include "channel.h"
 #include "../base/noncopyable.h"
+#include "../base/any.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -23,6 +24,8 @@ public:
 
     TCPConnection(EventLoop* owner_loop, std::string&& name, Socket&& socket,
             InetAddress&& local_addr, InetAddress&& peer_addr);
+    TCPConnection(EventLoop* owner_loop, std::string&& name, Socket&& socket,
+            InetAddress&& local_addr, InetAddress&& peer_addr, const base::any& config_data);
     ~TCPConnection();
 
     //注意:connection回调不能在回调里面发送数据
@@ -57,13 +60,19 @@ public:
     const InetAddress& local_addr() const { return local_addr_; }
     const InetAddress& peer_addr() const { return peer_addr_; }
 
+    void AddRequests() { requests_++; }
+    int get_requests() const { return requests_; }
+
     EventLoop* owner_loop() const { return owner_loop_; }
     const Socket& socket() const { return socket_; }
 
     std::string GetTCPInfo() const;
 
-    void set_data(const std::shared_ptr<void>& data) { data_ = data; }
-    const std::shared_ptr<void>& get_data() const { return data_; }
+    const base::any& get_config_data() const { return config_data_; }
+
+    void set_context(const base::any& context) { context_ = context; }
+    const base::any& get_context() const { return context_; }
+    base::any* getContext() { return &context_; }
 
 private:
     //以下方法仅供TCPServer调用
@@ -107,6 +116,9 @@ private:
     };
     std::atomic<int> state_;
 
+    //完成请求次数
+    std::atomic<int> requests_;
+
     Buffer buffer_input_;
     Buffer buffer_output_;
 
@@ -121,8 +133,11 @@ private:
     RemoveCallback remove_cb_;
     size_t overstock_size_;
 
-    //自定义附加数据
-    std::shared_ptr<void> data_;
+    //配置文件数据
+    base::any config_data_;
+
+    //该连接上下文数据
+    base::any context_;
 };
 
 }//namespace net

@@ -7,6 +7,7 @@
 #include <cstring>
 #include <netinet/in.h>
 #include <memory>
+#include "../base/any.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -48,7 +49,7 @@ private:
 struct InetAddressData
 {
     net::InetAddress address;
-    std::shared_ptr<void> data;
+    base::any data;
 };
 
 //---------------------------------------------------------------------------

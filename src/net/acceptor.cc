@@ -125,7 +125,7 @@ void Acceptor::HandleRead(uint64_t rcv_time)
             }
             else
             {
-                new_conn_data_cb_(std::move(socket), std::move(addr_peer), rcv_time, data_);
+                new_conn_data_cb_(std::move(socket), std::move(addr_peer), rcv_time, config_data_);
             }
         }
         else

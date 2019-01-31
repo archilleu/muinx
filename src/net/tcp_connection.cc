@@ -17,6 +17,7 @@ TCPConnection::TCPConnection(EventLoop* ownerloop, std::string&& tcpname, Socket
     local_addr_(localaddr),
     peer_addr_(peeraddr),
     state_(CONNECTING),
+    requests_(0),
     socket_(std::move(socket)),
     channel_(owner_loop_, socket_.fd()),
     overstock_size_(0)
@@ -26,6 +27,14 @@ TCPConnection::TCPConnection(EventLoop* ownerloop, std::string&& tcpname, Socket
 
     assert(0 != owner_loop_);
     assert(0 < socket_.fd());
+    return;
+}
+//---------------------------------------------------------------------------
+TCPConnection::TCPConnection(EventLoop* owner_loop, std::string&& name, Socket&& socket,
+        InetAddress&& local_addr, InetAddress&& peer_addr, const base::any& config_data)
+:   TCPConnection(owner_loop, std::move(name), std::move(socket), std::move(local_addr), std::move(peer_addr))
+{
+    config_data_ = config_data;
     return;
 }
 //---------------------------------------------------------------------------

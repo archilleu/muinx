@@ -9,6 +9,7 @@
 #include "event_loop_thread_pool.h"
 #include "acceptor.h"
 #include "inet_address.h"
+#include "../base/any.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -45,7 +46,7 @@ public:
 
 private:
     void OnNewConnection(Socket&& client, InetAddress&& client_addr, uint64_t accept_time);
-    void OnNewConnectionData(Socket&& client, InetAddress&& client_addr, uint64_t accept_time, const std::shared_ptr<void>& data);
+    void OnNewConnectionData(Socket&& client, InetAddress&& client_addr, uint64_t accept_time, const base::any& config_data);
     //TCPConnectionPtr NewConnection(Socket&& client, InetAddress&& client_addr, uint64_t accept_time);
 
     void OnConnectionRemove(const TCPConnectionPtr& conn_ptr);

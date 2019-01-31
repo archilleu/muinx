@@ -240,14 +240,14 @@ bool CoreModuleHttp::AddListening(const HttpModuleCore::ConfPort& conf_port)
 
             net::InetAddressData addr_data = net::InetAddressData();
             addr_data.address = net::InetAddress(static_cast<short>(conf_port.port), true);
-            addr_data.data.reset(new HttpModuleCore::ConfAddress(address));
+            addr_data.data = address;
             addresses_.push_back(addr_data);
         }
         else
         {
             net::InetAddressData addr_data = net::InetAddressData();
             addr_data.address = net::InetAddress(address.ip, static_cast<short>(conf_port.port));
-            addr_data.data.reset(new HttpModuleCore::ConfAddress(address));
+            addr_data.data = address;
             addresses_.push_back(addr_data);
         }
     }

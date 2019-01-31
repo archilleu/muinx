@@ -4,6 +4,7 @@
 #include "../net/tcp_connection.cc"
 #include "core_server.h"
 #include "core_module_http.h"
+#include "http_context.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -56,6 +57,10 @@ void CoreServer::OnConnection(const net::TCPConnectionPtr& conn_ptr)
         << " local addr:" << conn_ptr->local_addr().IpPort()
         << " peer addr:" << conn_ptr->peer_addr().IpPort()
         << std::endl;
+
+    //设置该connection上下文，解析http协议
+    conn_ptr->set_context(HttpContext(conn_ptr));
+    return;
 }
 //---------------------------------------------------------------------------
 void CoreServer::OnDisconnection(const net::TCPConnectionPtr& conn_ptr)
@@ -75,8 +80,15 @@ void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buff
         << " peer addr:" << conn_ptr->peer_addr().IpPort()
         << std::endl;
 
-    conn_ptr->Send(buffer.Peek(), buffer.ReadableBytes());
-    buffer.RetrieveAll();
+    //该connection的上下文
+    HttpContext* context = base::any_cast<HttpContext>(conn_ptr->getContext());
+    if(false == context->parseRequest(buffer, base::Timestamp::Now()))
+    {
+        //TODO 处理错误
+        std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
+        conn_ptr->Send(error.c_str(), error.length());
+        conn_ptr->ForceClose();
+    }
 
     return;
 }

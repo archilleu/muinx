@@ -5,6 +5,7 @@
 #include <memory>
 #include <functional>
 #include "../base/noncopyable.h"
+#include "../base/any.h"
 //---------------------------------------------------------------------------
 namespace net
 {
@@ -22,7 +23,7 @@ public:
 
     //附带额外的自定义数据
     using NewConnectionDataCallback = 
-        std::function<void (Socket&& client, InetAddress&&, uint64_t, const std::shared_ptr<void>&)>;
+        std::function<void (Socket&& client, InetAddress&&, uint64_t, const base::any&)>;
 
     Acceptor(EventLoop* event_loop, const InetAddress& addr_listen);
     ~Acceptor();
@@ -31,8 +32,8 @@ public:
     void set_new_conn_cb(const NewConnectionCallback&& cb) { new_conn_cb_ = cb; }
     void set_new_conn_data_cb(const NewConnectionDataCallback&& cb) { new_conn_data_cb_ = cb; }
 
-    void set_data(const std::shared_ptr<void>& data) { data_ = data; }
-    const std::shared_ptr<void>& get_data() const { return data_; }
+    void set_config_data(const base::any& config_data) { config_data_ = config_data; }
+    const base::any& get_config_data() const { return config_data_; }
 
     void Listen();
 
@@ -50,7 +51,8 @@ private:
     NewConnectionCallback new_conn_cb_;
     NewConnectionDataCallback new_conn_data_cb_;
 
-    std::shared_ptr<void> data_;
+    //配置文件
+    base::any config_data_;
 
     //fd打开过多
     int idle_fd_;

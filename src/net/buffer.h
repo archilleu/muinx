@@ -104,6 +104,15 @@ public:
         return;
     }
 
+    void RetrieveUntil(const char* end)
+    {
+        assert(Peek() <= end);
+        assert(end <= BeginWrite());
+
+        Retrieve(end - Peek());
+        return;
+    }
+
     std::string RetrieveAsString(size_t len)
     {
         assert(len <= ReadableBytes());

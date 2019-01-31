@@ -54,7 +54,7 @@ TCPServer::TCPServer(EventLoop* owner_loop, const std::vector<InetAddressData>& 
         acceptors_.push_back(std::make_shared<Acceptor>(owner_loop, addr_data.address));
         acceptors_.back()->set_new_conn_data_cb(std::bind(&TCPServer::OnNewConnectionData, this, 
                 _1, _2, _3, _4));
-        acceptors_.back()->set_data(addr_data.data);
+        acceptors_.back()->set_config_data(addr_data.data);
     }
 
     tcp_conn_list_.resize(kConnSize);
@@ -198,7 +198,7 @@ void TCPServer::OnNewConnection(Socket&& client, InetAddress&& client_addr, uint
 }
 //---------------------------------------------------------------------------
 void TCPServer::OnNewConnectionData(Socket&& client, InetAddress&& client_addr, uint64_t accept_time,
-        const std::shared_ptr<void>& data)
+        const base::any& config_data)
 {
     owner_loop_->AssertInLoopThread();
 
@@ -213,7 +213,7 @@ void TCPServer::OnNewConnectionData(Socket&& client, InetAddress&& client_addr, 
             tcp_conn_count_, local_addr.IpPort().c_str(), client_addr.IpPort().c_str());
 
     TCPConnectionPtr conn_ptr = std::make_shared<TCPConnection>(loop, std::move(new_conn_name),
-            std::move(client), std::move(local_addr), std::move(client_addr));
+            std::move(client), std::move(local_addr), std::move(client_addr), config_data);
 
     //初始化连接
     conn_ptr->set_connection_cb(connection_cb_);
@@ -222,7 +222,6 @@ void TCPServer::OnNewConnectionData(Socket&& client, InetAddress&& client_addr, 
     conn_ptr->set_write_complete_cb(write_complete_cb_);
     conn_ptr->set_high_water_mark_cb(high_water_mark_cb_, mark_);
     conn_ptr->set_remove_cb(std::bind(&TCPServer::OnConnectionRemove, this, std::placeholders::_1));
-    conn_ptr->set_data(data);
     
     //加入到连接list中
     if(false == AddConnListItem(conn_ptr))
