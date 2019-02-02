@@ -59,7 +59,8 @@ void CoreServer::OnConnection(const net::TCPConnectionPtr& conn_ptr)
         << std::endl;
 
     //设置该connection上下文，解析http协议
-    conn_ptr->set_context(HttpContext(conn_ptr));
+    base::any context = HttpContext(conn_ptr);
+    conn_ptr->set_context(context);
     return;
 }
 //---------------------------------------------------------------------------

@@ -6,57 +6,22 @@ namespace core
 {
 
 //---------------------------------------------------------------------------
-static char* trim_left(char* ptr, char* end)
+void HttpHeaders::AddHeader(std::string&& field, std::string&& value)
 {
-    assert(ptr <= end);
-
-    while(*ptr == ' ')
-    {
-        ++ptr;
-
-        //ptr==end一开始就成立
-        if(ptr >= end)
-            return nullptr;
-    }
-
-    return ptr;
+    headers_.insert(std::make_pair(std::move(field), std::move(value)));
 }
 //---------------------------------------------------------------------------
-static char* trim_right(char* ptr, char* begin)
+std::string HttpHeaders::ToString()
 {
-    assert(ptr >= begin);
-
-    while(*ptr == ' ')
+    std::string str;
+    for(auto& item : headers_)
     {
-        --ptr;
-
-        //ptr==begin一开始就成立
-        if(ptr <= begin)
-            return nullptr;
+        str += item.first + ":" + item.second + "\n";
     }
 
-    return ptr;
-}
+    return str;
+};
 //---------------------------------------------------------------------------
-
-void HttpHeaders::AddHeader(const char* start, const char* colon, const char* end)
-{
-    //去掉空格
-    char* trim_begin = const_cast<char*>(start);
-    char* trim_end = const_cast<char*>(colon);
-    trim_begin = trim_left(trim_begin, trim_end);
-    trim_end = trim_right(trim_end, trim_begin);
-    std::string field = std::string(trim_begin, trim_end);
-
-    trim_begin = const_cast<char*>(++colon);
-    trim_end = const_cast<char*>(end);
-    trim_begin = trim_left(trim_begin, trim_end);
-    trim_end = trim_right(trim_end, trim_begin);
-    std::string value = std::string(trim_begin, trim_end);
-    headers_.insert(std::make_pair(field, value));
-
-    return;
-}
 
 }//namespace core
 //---------------------------------------------------------------------------

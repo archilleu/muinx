@@ -12,9 +12,11 @@ namespace core
 class HttpHeaders
 {
 public:
-    void AddHeader(const char* start, const char* colon, const char* end);
+    void AddHeader(std::string&& filed, std::string&& value);
 
     const std::string& GetHeader(const std::string& header);
+
+    std::string ToString();
 
 public:
     using Header = std::tuple<std::string, std::string>;

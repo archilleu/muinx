@@ -24,6 +24,10 @@ public:
 
 private:
     bool parseRequestLine(const char* begin, const char* end);
+    char* parseRequestLineMethod(char* begin, char* end);
+    char* parseRequestLineURL(char* begin, char* end);
+    bool parseRequestLineVersion(char* begin, char* end);
+
     bool parseRequestHeader(const char* begin, const char* end);
 
 private:
@@ -37,6 +41,9 @@ private:
 
     HttpRequest request_;
     net::TCPConnectionPtr connection_;
+
+    static const char kCRLF[];
+    static const int kCRLF_SIZE = 2;
 };
 
 }//namespace core

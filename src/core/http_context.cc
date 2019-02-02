@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 #include <algorithm>
+#include <cctype>
+#include <iostream>
 #include "../net/tcp_connection.h"
 #include "../base/any.h"
 #include "http_context.h"
@@ -7,44 +9,35 @@
 //---------------------------------------------------------------------------
 namespace core
 {
-
 //---------------------------------------------------------------------------
-static char* trim_left(char* ptr, char* end)
+static void TrimBlank(char*& begin, char*& end)
 {
-    assert(ptr <= end);
-
-    while(*ptr == ' ')
+    while(begin <= end)
     {
-        ++ptr;
+        if(std::isblank(*begin))
+            begin++;
 
-        //ptr==end一开始就成立
-        if(ptr >= end)
-            return nullptr;
+        break;
     }
 
-    return ptr;
-}
-//---------------------------------------------------------------------------
-static char* trim_right(char* ptr, char* begin)
-{
-    assert(ptr >= begin);
-
-    while(*ptr == ' ')
+    while(end >= begin)
     {
-        --ptr;
+        if(std::isblank(*end))
+            end--;
 
-        //ptr==begin一开始就成立
-        if(ptr <= begin)
-            return nullptr;
+        break;
     }
 
-    return ptr;
+    return;
 }
+//---------------------------------------------------------------------------
+const char HttpContext::kCRLF[] = "\r\n";
 //---------------------------------------------------------------------------
 HttpContext::HttpContext(const net::TCPConnectionPtr& conn_ptr)
-:   parse_state_(ExpectRequestLine),
-    connection_(conn_ptr)
 {
+    parse_state_ = ExpectRequestLine;
+    connection_ = conn_ptr;
+
     return;
 }
 //---------------------------------------------------------------------------
@@ -74,6 +67,9 @@ bool HttpContext::parseRequest(net::Buffer& buffer, base::Timestamp recv_time)
             break;
         }
 
+        //kCRLF占用2个字节
+        crlf += kCRLF_SIZE;
+
         switch(parse_state_)
         {
             case ExpectRequestLine:
@@ -82,7 +78,6 @@ bool HttpContext::parseRequest(net::Buffer& buffer, base::Timestamp recv_time)
                 {
                     request_.set_recv_time(recv_time);
                     buffer.RetrieveUntil(crlf);
-                    parse_state_ = ExpectRequestHeaders;
                 }
                 else
                 {
@@ -94,21 +89,14 @@ bool HttpContext::parseRequest(net::Buffer& buffer, base::Timestamp recv_time)
                 success = parseRequestHeader(buffer.Peek(), crlf);
                 if(success)
                 {
-                    const char* colon = std::find(buffer.Peek(), crlf, ':');
-                    if(colon != crlf)
-                    {
-                        request_.get_headers().AddHeader(buffer.Peek(),colon, crlf);
-                    }
-                    else
-                    {
-                        //空行，代表HTTP头部结束
-                        //判断是否有body，没有则表示HTTP已经解析完毕
-                        
-                        parse_state_ = ExpectRequestBody;
-                        
-                    }
+                    buffer.RetrieveUntil(crlf);
+                }
+                else
+                {
+                    has_more = false;
                 }
                 break;
+
             case ExpectRequestBody:
                 break;
             case Done:
@@ -118,72 +106,98 @@ bool HttpContext::parseRequest(net::Buffer& buffer, base::Timestamp recv_time)
         }
 
     }
-    
 
-    return false;
+    std::cout << request_.get_headers().ToString() << std::endl;
+
+    return success;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::parseRequestLine(const char* begin, const char* end)
 {
-    char* start = const_cast<char*>(begin);
+    char* first = const_cast<char*>(begin);
     char* last = const_cast<char*>(end);
-    start = trim_left(start, last);
-    last = trim_right(last, start);
 
-    char* space = std::find(start, last, ' ');
-    if(space != last)
+    first = parseRequestLineMethod(first, last);
+    if(nullptr == first)
+        return false;
+
+    first = parseRequestLineURL(first, last);
+    if(nullptr == first)
+        return false;
+
+    if(false == parseRequestLineVersion(first, last))
+        return false;
+
+    parse_state_ = ExpectRequestHeaders;
+    return true;;
+}
+//---------------------------------------------------------------------------
+char* HttpContext::parseRequestLineMethod(char* begin, char* end)
+{
+    char* space = std::find(begin, end, ' ');
+    HttpRequest::Method method;
+    if(space != end)
     {
-        std::string method = std::string(start, space);
-        if(HttpRequest::kGET == method)
+        std::string m = std::string(begin, space);
+        if(HttpRequest::kGET == m)
         {
-            request_.set_method(HttpRequest::Method::GET);
+            method = HttpRequest::Method::GET;
         }
-        else if(HttpRequest::kPOST == method)
+        else if(HttpRequest::kPOST == m)
         {
-            request_.set_method(HttpRequest::Method::POST);
+            method = HttpRequest::Method::POST;
         }
-        else if(HttpRequest::kPUT == method)
+        else if(HttpRequest::kPUT == m)
         {
-            request_.set_method(HttpRequest::Method::PUT);
+            method = HttpRequest::Method::PUT;
         }
-        else if(HttpRequest::kHEAD == method)
+        else if(HttpRequest::kHEAD == m)
         {
-            request_.set_method(HttpRequest::Method::HEAD);
+            method = HttpRequest::Method::HEAD;
         }
-        else if(HttpRequest::kDELETE == method)
+        else if(HttpRequest::kDELETE == m)
         {
-            request_.set_method(HttpRequest::Method::DELETE);
+            method = HttpRequest::Method::DELETE;
         }
         else
         {
-            request_.set_method(HttpRequest::INVALID);
-            return false;
+            method = HttpRequest::INVALID;
+            return nullptr;
         }
+
+        request_.set_method(method);
     }
     else
     {
         request_.set_method(HttpRequest::INVALID);
-        return false;
+        return nullptr;
     }
 
-    start = trim_left(++space, last);
-    space = std::find(start, last, ' ');
-    if(space != last)
+    return space;
+}
+//---------------------------------------------------------------------------
+char* HttpContext::parseRequestLineURL(char* begin, char* end)
+{
+    ++begin;
+    char* space = std::find(begin, end, ' ');
+    if(space != end)
     {
-        request_.set_url(std::string(start, space));
+        request_.set_url(std::string(begin, space));
+        return space;
     }
     else
     {
-        return false;
+        return nullptr;
     }
-
-    /*
-    start = trim_left(++space, last);
-    space = std::find(start, last, "\r\n");
-    if(space != last)
+}
+//---------------------------------------------------------------------------
+bool HttpContext::parseRequestLineVersion(char* begin, char* end)
+{
+    ++begin;
+    char* crlf = std::search(begin, end, kCRLF, kCRLF+kCRLF_SIZE);
+    if(crlf != end)
     {
-        space = trim_right(space, start);
-        std::string version(start, space);
+        std::string version(begin, crlf);
         if(HttpRequest::kHTTP10 == version)
         {
             request_.set_version(HttpRequest::Version::HTTP10);
@@ -202,13 +216,37 @@ bool HttpContext::parseRequestLine(const char* begin, const char* end)
     {
         return false;
     }
-    */
 
-    return true;;
+    return true;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::parseRequestHeader(const char* begin, const char* end)
 {
+    //空行，代表HTTP头部结束
+    if((end-begin) == kCRLF_SIZE)
+    {
+        parse_state_ = ExpectRequestBody;
+        return true;
+    }
+
+    char* first = const_cast<char*>(begin);
+    char* last = const_cast<char*>(end-kCRLF_SIZE);
+
+    char* colon = std::find(first, last, ':');
+    if(colon != last)
+    {
+        TrimBlank(first, colon);
+        std::string filed(first, colon);
+        TrimBlank(++colon, last);
+        std::string value(colon, last);
+        request_.get_headers().AddHeader(std::move(filed), std::move(value));
+    }
+    else
+    {
+        //协议出错
+        return false;
+    }
+
     return true;
 }
 //---------------------------------------------------------------------------
