@@ -153,10 +153,10 @@ private:
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
 
     bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
-    bool AddConfPort(const std::string& ip, int port, HttpSrvConf* conf);
-    bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf);
-    bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf);
-    bool AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf);
+    bool AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default);
+    bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
+    bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
+    bool AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bool is_default);
 
 private:
     bool PreConfiguration();

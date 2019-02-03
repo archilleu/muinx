@@ -4,6 +4,7 @@
 #include <iostream>
 #include "../net/tcp_connection.h"
 #include "../base/any.h"
+#include "../base/function.h"
 #include "http_context.h"
 #include "http_module_core.h"
 //---------------------------------------------------------------------------
@@ -34,10 +35,10 @@ static void TrimBlank(char*& begin, char*& end)
 const char HttpContext::kCRLF[] = "\r\n";
 //---------------------------------------------------------------------------
 HttpContext::HttpContext(const net::TCPConnectionPtr& conn_ptr)
+:   parse_state_(ExpectRequestLine),
+    request_(HttpRequest(conn_ptr)),
+    connection_(conn_ptr)
 {
-    parse_state_ = ExpectRequestLine;
-    connection_ = conn_ptr;
-
     return;
 }
 //---------------------------------------------------------------------------
@@ -139,38 +140,45 @@ char* HttpContext::parseRequestLineMethod(char* begin, char* end)
     if(space != end)
     {
         std::string m = std::string(begin, space);
-        if(HttpRequest::kGET == m)
+        HttpRequest::MethodTypeConstIter iter = HttpRequest::kMethodType.find(m);
+        if(HttpRequest::kMethodType.end() != iter)
         {
-            method = HttpRequest::Method::GET;
-        }
-        else if(HttpRequest::kPOST == m)
-        {
-            method = HttpRequest::Method::POST;
-        }
-        else if(HttpRequest::kPUT == m)
-        {
-            method = HttpRequest::Method::PUT;
-        }
-        else if(HttpRequest::kHEAD == m)
-        {
-            method = HttpRequest::Method::HEAD;
-        }
-        else if(HttpRequest::kDELETE == m)
-        {
-            method = HttpRequest::Method::DELETE;
+            switch(iter->second)
+            {
+                case HttpRequest::GET:
+                    method = HttpRequest::Method::GET;
+                    break;
+
+                case HttpRequest::POST:
+                    method = HttpRequest::Method::POST;
+                    break;
+
+                case HttpRequest::PUT:
+                    method = HttpRequest::Method::PUT;
+                    break;
+
+                case HttpRequest::DELETE:
+                    method = HttpRequest::Method::DELETE;
+                    break;
+
+                default:
+                    space = nullptr;
+                    method = HttpRequest::INVALID;
+                    break;
+            }
         }
         else
         {
+            space = nullptr;
             method = HttpRequest::INVALID;
-            return nullptr;
         }
 
         request_.set_method(method);
+        return space;
     }
     else
     {
-        request_.set_method(HttpRequest::INVALID);
-        return nullptr;
+        space = nullptr;
     }
 
     return space;
@@ -235,11 +243,77 @@ bool HttpContext::parseRequestHeader(const char* begin, const char* end)
     char* colon = std::find(first, last, ':');
     if(colon != last)
     {
+        HttpHeaders& headers = request_.get_headers();
+
         TrimBlank(first, colon);
         std::string filed(first, colon);
+        //转换为小写
+        filed = base::ToLower(filed);
         TrimBlank(++colon, last);
         std::string value(colon, last);
-        request_.get_headers().AddHeader(std::move(filed), std::move(value));
+
+        //填充常用的字段
+        HttpHeaders::HeaderTypeMapConstIter iter = HttpHeaders::kHeaderTypeMap.find(filed);
+        if(HttpHeaders::kHeaderTypeMap.end() != iter)
+        {
+            switch(iter->second)
+            {
+                case HttpHeaders::HOST:
+                    //TODO:校验
+                    {
+                        //是否带端口
+                        size_t found = value.find(':');
+                        if(std::string::npos != found)
+                        {
+                            std::string port = value.substr((found+1));
+                            value = value.substr(0, found);
+                        }
+                        headers.set_host(value);
+
+                        //寻找对应的server{}
+                        HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
+                        auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(connection_->get_config_data());
+                        if(conf_address.servers.size() == 1)
+                        {
+                            //一个server就不需要hash表了
+                            if(conf_address.servers[0]->server_name == value)
+                            {
+                                srv_conf = conf_address.servers[0];
+                            }
+                        }
+                        else
+                        {
+                            auto iter_srv = conf_address.hash.find(value);
+                            if(conf_address.hash.end() != iter_srv)
+                            {
+                                srv_conf = iter_srv->second;
+                            }
+                        }
+                        if(nullptr == srv_conf)
+                        {
+                            srv_conf = conf_address.default_server;
+                        }
+
+                        if(nullptr != srv_conf)
+                        {
+                            request_.main_conf_ = srv_conf->ctx->main_conf;
+                            request_.srv_conf_ = srv_conf->ctx->srv_conf;
+                            request_.loc_conf_ = srv_conf->ctx->loc_conf;
+                        }
+                    }
+                    break;
+            
+                case HttpHeaders::CONTENT_LENGTH:
+                    //TODO:校验
+                    headers.set_content_length(value);
+                    break;
+            
+                default:
+                    break;
+            }
+        }
+
+        headers.AddHeader(std::move(filed), std::move(value));
     }
     else
     {

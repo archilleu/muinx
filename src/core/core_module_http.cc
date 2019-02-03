@@ -213,9 +213,12 @@ bool CoreModuleHttp::BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf)
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::HashAddressServernames(HttpModuleCore::ConfPort& conf_port)
 {
-    //TODO:判断是否只有一个虚拟主机，是的话就不需要hash了
     for(auto& address : conf_port.addrs)
     {
+        //判断是否只有一个虚拟主机，是的话就不需要hash了
+        if(address.servers.size() == 1)
+            return true;
+
         for(auto& server : address.servers)
         {
             auto result = address.hash.insert(std::make_pair(server->server_name, server));

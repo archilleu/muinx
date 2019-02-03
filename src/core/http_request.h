@@ -15,6 +15,8 @@ namespace core
 class HttpRequest
 {
 public:
+    HttpRequest(const net::TCPConnectionPtr& conn_ptr);
+
     enum Method
     {
         INVALID,
@@ -49,7 +51,18 @@ public:
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
     base::Timestamp get_recv_time() { return recv_time_; }
 
+    //main{}结构体指针数组
+    void** main_conf_;
+    //server{}结构体指针数组
+    void** srv_conf_;
+    //location{}结构体指针数组
+    void** loc_conf_;
+
 public:
+    using MethodType = std::map<std::string, Method>;
+    using MethodTypeConstIter = MethodType::const_iterator;
+    static const MethodType kMethodType;
+
     static const char* kGET;
     static const char* kPOST;
     static const char* kHEAD;
@@ -65,13 +78,6 @@ private:
 
     //指向存放所有HTTP模块的上下文结构体指针
     std::vector<std::shared_ptr<void>> ctx_;
-
-    //main{}结构体指针数组
-    void** main_conf_;
-    //server{}结构体指针数组
-    void** srv_conf_;
-    //location{}结构体指针数组
-    void** loc_conf_;
 
     Method method_;     //HTTP方法
     Version version_;   //HTTP版本

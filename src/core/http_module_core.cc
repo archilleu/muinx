@@ -246,6 +246,14 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
         port = std::atoi(ip_port.substr(found+1).c_str());
     }
 
+    //是否是默认的server{}
+    bool is_default = false;
+    if(config.args.size() == 3)
+    {
+        if("default" == config.args[2])
+            is_default = true;
+    }
+
     //检擦是否添加过端口了
     HttpMainConf* main_conf = GetModuleMainConf(this);
     for(auto& conf_port : main_conf->ports)
@@ -254,24 +262,24 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
             continue;
 
         //端口已经存在，添加监听地址
-        return AddConfAddresses(conf_port, ip, static_cast<HttpSrvConf*>(module_command));
+        return AddConfAddresses(conf_port, ip, static_cast<HttpSrvConf*>(module_command), is_default);
     }
 
     //没有添加过端口，新建端口
-    return AddConfPort(ip, port, static_cast<HttpSrvConf*>(module_command));
+    return AddConfPort(ip, port, static_cast<HttpSrvConf*>(module_command), is_default);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* conf)
+bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default)
 {
     ConfPort conf_port;
     conf_port.port = port;
 
     HttpMainConf* main_conf = GetModuleMainConf(this);
     main_conf->ports.push_back(conf_port);
-    return AddConfAddresses(main_conf->ports.back(), ip, conf);
+    return AddConfAddresses(main_conf->ports.back(), ip, conf, is_default);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf)
+bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default)
 {
     for(auto& addr : conf_port.addrs)
     {
@@ -279,26 +287,28 @@ bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip
             continue;
 
         //存在ip:port，直接添加server
-        return AddConfServer(addr, conf);
+        return AddConfServer(addr, conf, is_default);
     }
 
     //不存在ip:port，添加address
-    return AddConfAddress(conf_port, ip, conf);
+    return AddConfAddress(conf_port, ip, conf, is_default);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf)
+bool HttpModuleCore::AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default)
 {
     ConfAddress conf_addr;
     conf_addr.ip = ip;
     conf_addr.default_server = nullptr;
     conf_port.addrs.push_back(conf_addr);
-    return AddConfServer(conf_port.addrs.back(), conf);
+    return AddConfServer(conf_port.addrs.back(), conf, is_default);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf)
+bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bool is_default)
 {
     //当前server{}块指针
     conf_addr.servers.push_back(conf);
+    if(true == is_default)
+        conf_addr.default_server = conf;
 
     //构建快速查找hash
     //可能存在相同的ip:port/server_name，是错误的配置,需要检测,此刻server_name可能还没有值

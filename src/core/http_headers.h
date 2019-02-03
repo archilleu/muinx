@@ -4,7 +4,6 @@
 //---------------------------------------------------------------------------
 #include <string>
 #include <map>
-#include <tuple>
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -12,18 +11,39 @@ namespace core
 class HttpHeaders
 {
 public:
-    void AddHeader(std::string&& filed, std::string&& value);
+    HttpHeaders();
 
+public:
+    void AddHeader(std::string&& filed, std::string&& value);
     const std::string& GetHeader(const std::string& header);
 
+public:
+    void set_host(const std::string& host) { host_ = host; }
+    const std::string& get_host() const { return host_; }
+
+    void set_content_length(const std::string& content_length) { content_length_ = content_length; }
+    const std::string& get_content_length() const { return content_length_; }
+
+public:
     std::string ToString();
 
 public:
-    using Header = std::tuple<std::string, std::string>;
+    enum HeaderType
+    {
+        HOST,
+        CONTENT_LENGTH
+    };
+    using HeaderTypeMap = std::map<std::string, HeaderType>;
+    using HeaderTypeMapConstIter = HeaderTypeMap::const_iterator;
+    static const HeaderTypeMap kHeaderTypeMap;
 
-    Header host;
+    static const char* kHost;
+    static const char* kContentLength;
 
 private:
+    std::string host_;
+    std::string content_length_;
+
     std::map<std::string, std::string> headers_;
 };
 
