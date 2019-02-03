@@ -1,4 +1,5 @@
 //---------------------------------------------------------------------------
+#include <algorithm> 
 #include <cstring>
 #include <unistd.h>
 #include <limits.h>
@@ -111,7 +112,22 @@ MemoryBlock StringToBin(const unsigned char* buffer, size_t len)
     return mb;//RVO
 }
 //---------------------------------------------------------------------------
-//二进制数据转换为等值的字符(1byte<==>1byte)
+std::string ToUpper(const std::string& str)
+{
+    std::string result;
+    result.resize(str.size());
+    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
+    return result;
+}
+//---------------------------------------------------------------------------
+std::string ToLower(const std::string& str)
+{
+    std::string result;
+    result.resize(str.size());
+    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
+    return result;
+}
+//---------------------------------------------------------------------------
 std::string BinToChars(const unsigned char* buffer, size_t len)
 {
     std::string str;

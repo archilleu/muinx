@@ -19,6 +19,10 @@ std::string BinToString(const unsigned char* buffer, size_t len);
 MemoryBlock StringToBin(const std::string& buffer);
 MemoryBlock StringToBin(const unsigned char* buffer, size_t len);
 //---------------------------------------------------------------------------
+//大小写转换
+std::string ToUpper(const std::string& str);
+std::string ToLower(const std::string& str);
+//---------------------------------------------------------------------------
 //二进制数据转换为等值的字符(1byte<==>1byte)
 std::string BinToChars(const unsigned char* buffer, size_t len);
 MemoryBlock CharsToBin(const std::string& buffer);
