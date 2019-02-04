@@ -342,6 +342,22 @@ std::string RunPathFolder()
     return path;
 }
 //---------------------------------------------------------------------------
+std::vector<std::string> split(const std::string& str, char delim)
+{
+    size_t pos = 0;
+    size_t found = str.find(delim);
+    std::vector<std::string> elems;
+    while(std::string::npos != found)
+    {
+        elems.push_back(str.substr(pos, found-pos));
+        pos = found + 1;
+        found = str.find(delim, pos);
+    }
+    elems.push_back(str.substr(pos));
+
+    return elems;
+}
+//---------------------------------------------------------------------------
 std::string RunExeName()
 {
     char path[PATH_MAX] = {0};

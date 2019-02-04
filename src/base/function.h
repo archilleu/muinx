@@ -35,6 +35,8 @@ std::string Base64_encode(const MemoryBlock& dat);
 MemoryBlock Base64_decode(const std::string& dat);
 MemoryBlock Base64_decode(const char* dat);
 //---------------------------------------------------------------------------
+std::vector<std::string> split(const std::string& str, char delim);
+//---------------------------------------------------------------------------
 //获取程序运行的路径
 std::string RunPathFolder();
 //获取程序运行的名字
