@@ -83,7 +83,7 @@ void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buff
 
     //该connection的上下文
     HttpContext* context = base::any_cast<HttpContext>(conn_ptr->getContext());
-    if(false == context->parseRequest(buffer, base::Timestamp::Now()))
+    if(false == context->ParseRequest(buffer, base::Timestamp::Now()))
     {
         //TODO 处理错误
         std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";

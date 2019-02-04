@@ -20,15 +20,16 @@ public:
     const HttpRequest& get_request() const { return request_; }
     const net::TCPConnectionPtr& get_connection() const { return connection_; }
 
-    bool parseRequest(net::Buffer& buffer, base::Timestamp recv_time);
+    bool ParseRequest(net::Buffer& buffer, base::Timestamp recv_time);
 
 private:
-    bool parseRequestLine(const char* begin, const char* end);
-    char* parseRequestLineMethod(char* begin, char* end);
-    char* parseRequestLineURL(char* begin, char* end);
-    bool parseRequestLineVersion(char* begin, char* end);
+    bool ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_time);
+    char* ParseRequestLineMethod(char* begin, char* end);
+    char* ParseRequestLineURL(char* begin, char* end);
+    bool ParseRequestLineVersion(char* begin, char* end);
 
-    bool parseRequestHeader(const char* begin, const char* end);
+    bool ParseRequestHeader(net::Buffer& buffer);
+    bool ParseRequestBody(net::Buffer& buffer);
 
 private:
     enum
@@ -36,7 +37,7 @@ private:
         ExpectRequestLine,
         ExpectRequestHeaders,
         ExpectRequestBody,
-        Done
+        ParseRequestDone
     }parse_state_;
 
     HttpRequest request_;

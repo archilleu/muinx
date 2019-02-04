@@ -47,93 +47,79 @@ HttpContext::~HttpContext()
     return;
 }
 //---------------------------------------------------------------------------
-bool HttpContext::parseRequest(net::Buffer& buffer, base::Timestamp recv_time)
+bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 {
     //该connection的所在server{}的配置结构体
     const auto& conf_addr = base::any_cast<HttpModuleCore::ConfAddress>(connection_->get_config_data());
     (void)conf_addr;
 
     //解析状态机
-    bool has_more = true;
     bool success = true;
-    while(has_more)
+    while(success)
     {
-        //查找CFLR
-        const char* crlf = buffer.FindCRLF();
-        if(!crlf)
-        {
-            //FIXME 过长的http头部
-
-            has_more = false;
-            break;
-        }
-
-        //kCRLF占用2个字节
-        crlf += kCRLF_SIZE;
-
         switch(parse_state_)
         {
             case ExpectRequestLine:
-                success = parseRequestLine(buffer.Peek(), crlf);
-                if(success)
-                {
-                    request_.set_recv_time(recv_time);
-                    buffer.RetrieveUntil(crlf);
-                }
-                else
-                {
-                    has_more = false;
-                }
+                success = ParseRequestLine(buffer, recv_time);
                 break;
 
             case ExpectRequestHeaders:
-                success = parseRequestHeader(buffer.Peek(), crlf);
-                if(success)
-                {
-                    buffer.RetrieveUntil(crlf);
-                }
-                else
-                {
-                    has_more = false;
-                }
+                success = ParseRequestHeader(buffer);
                 break;
 
             case ExpectRequestBody:
+                success = ParseRequestBody(buffer);
                 break;
-            case Done:
-                break;
+
+            case ParseRequestDone:
+                return true;
+
             default:
-                break;
+                return false;
         }
 
     }
 
-    std::cout << request_.get_headers().ToString() << std::endl;
+    std::cout << request_.ToString() << std::endl;
 
     return success;
 }
 //---------------------------------------------------------------------------
-bool HttpContext::parseRequestLine(const char* begin, const char* end)
+bool HttpContext::ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_time)
 {
-    char* first = const_cast<char*>(begin);
-    char* last = const_cast<char*>(end);
+    //查找CFLR
+    const char* crlf = buffer.FindCRLF();
+    if(!crlf)
+    {
+        //FIXME 过长的http头部
 
-    first = parseRequestLineMethod(first, last);
+        return true;
+    }
+
+    //kCRLF占用2个字节
+    crlf += kCRLF_SIZE;
+
+    char* first = const_cast<char*>(buffer.Peek());
+    char* last = const_cast<char*>(crlf);
+
+    first = ParseRequestLineMethod(first, last);
     if(nullptr == first)
         return false;
 
-    first = parseRequestLineURL(first, last);
+    first = ParseRequestLineURL(first, last);
     if(nullptr == first)
         return false;
 
-    if(false == parseRequestLineVersion(first, last))
+    if(false == ParseRequestLineVersion(first, last))
         return false;
 
     parse_state_ = ExpectRequestHeaders;
+    request_.set_recv_time(recv_time);
+    buffer.RetrieveUntil(crlf);
     return true;;
 }
 //---------------------------------------------------------------------------
-char* HttpContext::parseRequestLineMethod(char* begin, char* end)
+char* HttpContext::ParseRequestLineMethod(char* begin, char* end)
 {
     char* space = std::find(begin, end, ' ');
     HttpRequest::Method method;
@@ -184,12 +170,32 @@ char* HttpContext::parseRequestLineMethod(char* begin, char* end)
     return space;
 }
 //---------------------------------------------------------------------------
-char* HttpContext::parseRequestLineURL(char* begin, char* end)
+char* HttpContext::ParseRequestLineURL(char* begin, char* end)
 {
     ++begin;
     char* space = std::find(begin, end, ' ');
     if(space != end)
     {
+        //参数
+        char* question_mark = std::find(begin, space, '?');
+        if(question_mark != space)
+        {
+            std::map<std::string, std::string> parameters;
+            std::vector<std::string> params = base::split(std::string(question_mark+1, space), '&');
+            for(const auto& param : params)
+            {
+                size_t equal = param.find('=');
+                if(equal == std::string::npos)
+                    continue;
+
+                parameters.insert(std::make_pair(std::string(param.substr(0, equal)),
+                                std::string(param.substr(equal+1))));
+            }
+
+            request_.set_parameters(parameters);
+        }
+        //TODO:扩展名
+        //TODO:锚
         request_.set_url(std::string(begin, space));
         return space;
     }
@@ -199,7 +205,7 @@ char* HttpContext::parseRequestLineURL(char* begin, char* end)
     }
 }
 //---------------------------------------------------------------------------
-bool HttpContext::parseRequestLineVersion(char* begin, char* end)
+bool HttpContext::ParseRequestLineVersion(char* begin, char* end)
 {
     ++begin;
     char* crlf = std::search(begin, end, kCRLF, kCRLF+kCRLF_SIZE);
@@ -228,99 +234,71 @@ bool HttpContext::parseRequestLineVersion(char* begin, char* end)
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpContext::parseRequestHeader(const char* begin, const char* end)
+bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
 {
-    //空行，代表HTTP头部结束
-    if((end-begin) == kCRLF_SIZE)
+    //查找CFLR
+    const char* crlf = buffer.FindCRLF();
+    if(!crlf)
     {
-        parse_state_ = ExpectRequestBody;
+        //FIXME 过长的http头部
+
         return true;
     }
 
-    char* first = const_cast<char*>(begin);
-    char* last = const_cast<char*>(end-kCRLF_SIZE);
+    //kCRLF占用2个字节
+    crlf += kCRLF_SIZE;
+
+    char* first = const_cast<char*>(buffer.Peek());
+    char* last = const_cast<char*>(crlf) - kCRLF_SIZE;
+
+    //空行，代表HTTP头部结束
+    if((last-first) == kCRLF_SIZE)
+    {
+        parse_state_ = ExpectRequestBody;
+        buffer.Retrieve(kCRLF_SIZE);
+        return true;
+    }
 
     char* colon = std::find(first, last, ':');
-    if(colon != last)
-    {
-        HttpHeaders& headers = request_.get_headers();
-
-        TrimBlank(first, colon);
-        std::string filed(first, colon);
-        //转换为小写
-        filed = base::ToLower(filed);
-        TrimBlank(++colon, last);
-        std::string value(colon, last);
-
-        //填充常用的字段
-        HttpHeaders::HeaderTypeMapConstIter iter = HttpHeaders::kHeaderTypeMap.find(filed);
-        if(HttpHeaders::kHeaderTypeMap.end() != iter)
-        {
-            switch(iter->second)
-            {
-                case HttpHeaders::HOST:
-                    //TODO:校验
-                    {
-                        //是否带端口
-                        size_t found = value.find(':');
-                        if(std::string::npos != found)
-                        {
-                            std::string port = value.substr((found+1));
-                            value = value.substr(0, found);
-                        }
-                        headers.set_host(value);
-
-                        //寻找对应的server{}
-                        HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
-                        auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(connection_->get_config_data());
-                        if(conf_address.servers.size() == 1)
-                        {
-                            //一个server就不需要hash表了
-                            if(conf_address.servers[0]->server_name == value)
-                            {
-                                srv_conf = conf_address.servers[0];
-                            }
-                        }
-                        else
-                        {
-                            auto iter_srv = conf_address.hash.find(value);
-                            if(conf_address.hash.end() != iter_srv)
-                            {
-                                srv_conf = iter_srv->second;
-                            }
-                        }
-                        if(nullptr == srv_conf)
-                        {
-                            srv_conf = conf_address.default_server;
-                        }
-
-                        if(nullptr != srv_conf)
-                        {
-                            request_.main_conf_ = srv_conf->ctx->main_conf;
-                            request_.srv_conf_ = srv_conf->ctx->srv_conf;
-                            request_.loc_conf_ = srv_conf->ctx->loc_conf;
-                        }
-                    }
-                    break;
-            
-                case HttpHeaders::CONTENT_LENGTH:
-                    //TODO:校验
-                    headers.set_content_length(value);
-                    break;
-            
-                default:
-                    break;
-            }
-        }
-
-        headers.AddHeader(std::move(filed), std::move(value));
-    }
-    else
-    {
-        //协议出错
+    if(colon == last)
         return false;
+
+    HttpHeaders& headers = request_.get_headers();
+
+    TrimBlank(first, colon);
+    std::string filed(first, colon);
+    //转换为小写
+    filed = base::ToLower(filed);
+    TrimBlank(++colon, last);
+    std::string value(colon, last);
+
+    //填充常用的字段
+    HttpHeaders::HeaderTypeMapConstIter iter = HttpHeaders::kHeaderTypeMap.find(filed);
+    if(HttpHeaders::kHeaderTypeMap.end() != iter)
+    {
+        if(false == iter->second(request_.get_headers(), value))
+            return false;
+    }
+    headers.AddHeader(std::move(filed), std::move(value));
+
+    buffer.RetrieveUntil(crlf);
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpContext::ParseRequestBody(net::Buffer& buffer)
+{
+    size_t content_length = request_.get_headers().get_content_length();
+    if(0 == content_length)
+    {
+        parse_state_ = ParseRequestDone;
+        return true;
     }
 
+    if(content_length > buffer.ReadableBytes())
+        return true;
+
+    buffer.Retrieve(content_length);
+    parse_state_ = ParseRequestDone;
     return true;
 }
 //---------------------------------------------------------------------------
