@@ -30,6 +30,7 @@ private:
 
     bool ParseRequestHeader(net::Buffer& buffer);
     bool ParseRequestBody(net::Buffer& buffer);
+    bool FindVirtualServer();
 
 private:
     enum

@@ -38,6 +38,9 @@ public:
     void set_method(Method method) { method_ = method; }
     Method get_method() const { return method_; }
 
+    void set_method_str(const std::string& method) { method_str_ = method; }
+    const std::string& get_method_str() const { return method_str_; }
+
     void set_version(Version version) { version_ = version; }
     Version get_version() const { return version_; }
 
@@ -89,6 +92,7 @@ private:
     std::vector<base::any> ctx_;
 
     Method method_;         //HTTP方法
+    std::string method_str_;
     Version version_;       //HTTP版本
     std::string url_;       //资源路径
     std::string exten_;     //扩展名

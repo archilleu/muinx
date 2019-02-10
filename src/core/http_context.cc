@@ -72,7 +72,8 @@ bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
                 break;
 
             case ParseRequestDone:
-                return true;
+                success = FindVirtualServer();
+                return success;
 
             default:
                 return false;
@@ -121,8 +122,9 @@ bool HttpContext::ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_tim
 //---------------------------------------------------------------------------
 char* HttpContext::ParseRequestLineMethod(char* begin, char* end)
 {
-    char* space = std::find(begin, end, ' ');
+    std::string method_str;
     HttpRequest::Method method;
+    char* space = std::find(begin, end, ' ');
     if(space != end)
     {
         std::string m = std::string(begin, space);
@@ -133,23 +135,28 @@ char* HttpContext::ParseRequestLineMethod(char* begin, char* end)
             {
                 case HttpRequest::GET:
                     method = HttpRequest::Method::GET;
+                    method_str = HttpRequest::kGET;
                     break;
 
                 case HttpRequest::POST:
                     method = HttpRequest::Method::POST;
+                    method_str = HttpRequest::kPOST;
                     break;
 
                 case HttpRequest::PUT:
                     method = HttpRequest::Method::PUT;
+                    method_str = HttpRequest::kPUT;
                     break;
 
                 case HttpRequest::DELETE:
                     method = HttpRequest::Method::DELETE;
+                    method_str = HttpRequest::kDELETE;
                     break;
 
                 default:
                     space = nullptr;
                     method = HttpRequest::INVALID;
+                    method_str = "INVALID";
                     break;
             }
         }
@@ -157,9 +164,11 @@ char* HttpContext::ParseRequestLineMethod(char* begin, char* end)
         {
             space = nullptr;
             method = HttpRequest::INVALID;
+            method_str = "INVALID";
         }
 
         request_.set_method(method);
+        request_.set_method_str(method_str);
         return space;
     }
     else
@@ -252,7 +261,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
     char* last = const_cast<char*>(crlf) - kCRLF_SIZE;
 
     //空行，代表HTTP头部结束
-    if((last-first) == kCRLF_SIZE)
+    if(last == first)
     {
         parse_state_ = ExpectRequestBody;
         buffer.Retrieve(kCRLF_SIZE);
@@ -300,6 +309,46 @@ bool HttpContext::ParseRequestBody(net::Buffer& buffer)
     buffer.Retrieve(content_length);
     parse_state_ = ParseRequestDone;
     return true;
+}
+//---------------------------------------------------------------------------
+bool HttpContext::FindVirtualServer()
+{
+    //寻找对应的server{}
+    HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
+    const std::string& host = request_.get_headers().get_host();
+    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(connection_->get_config_data());
+    if(conf_address.servers.size() == 1)
+    {
+        //一个server就不需要hash表了
+        if(conf_address.servers[0]->server_name == host)
+        {
+            srv_conf = conf_address.servers[0];
+        }
+    }
+    else
+    {
+        auto iter_srv = conf_address.hash.find(host);
+        if(conf_address.hash.end() != iter_srv)
+        {
+            srv_conf = iter_srv->second;
+        }
+    }
+    if(nullptr == srv_conf)
+    {
+        srv_conf = conf_address.default_server;
+    }
+
+    if(nullptr != srv_conf)
+    {
+        request_.main_conf_ = srv_conf->ctx->main_conf;
+        request_.srv_conf_ = srv_conf->ctx->srv_conf;
+        request_.loc_conf_ = srv_conf->ctx->loc_conf;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 //---------------------------------------------------------------------------
 }//namespace core

@@ -29,6 +29,7 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
     loc_conf_(nullptr),
     connection_(conn_ptr),
     method_(INVALID),
+    method_str_("INVALID"),
     version_(NOTSUPPORT)
 {
     //每一个http模块都有存放上下文的对象
