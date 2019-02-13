@@ -9,6 +9,7 @@ using namespace std::placeholders;
 //---------------------------------------------------------------------------
 const char* HttpHeaders::kHost          = "host";
 const char* HttpHeaders::kContentLength = "content-length";
+const char* HttpHeaders::kKeepAlive     = "keep-alive";
 //---------------------------------------------------------------------------
 bool HeaderActionHost(HttpHeaders& http_header, const std::string& host)
 {
@@ -41,7 +42,8 @@ const HttpHeaders::HeaderTypeMap HttpHeaders::kHeaderTypeMap =
 };
 //---------------------------------------------------------------------------
 HttpHeaders::HttpHeaders()
-:   content_length_(0)
+:   content_length_(0),
+    keep_alive_(false)
 {
     return;
 }

@@ -29,6 +29,9 @@ public:
     void set_content_length( size_t content_length) { content_length_ = content_length; }
     size_t get_content_length() const { return content_length_; }
 
+    void set_keep_alive(bool keep_alive) { keep_alive_ = keep_alive; }
+    bool get_keep_alive() { return keep_alive_; }
+
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;
     using HeaderTypeMap = std::map<std::string, HeaderAction>;
@@ -39,10 +42,12 @@ public:
 
     static const char* kHost;
     static const char* kContentLength;
+    static const char* kKeepAlive;
 
 private:
     std::string host_;
     size_t content_length_;
+    bool keep_alive_;
 
     HeaderMap headers_;
 };

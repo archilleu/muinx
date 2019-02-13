@@ -37,6 +37,7 @@ const char HttpContext::kCRLF[] = "\r\n";
 //---------------------------------------------------------------------------
 HttpContext::HttpContext(const net::TCPConnectionPtr& conn_ptr)
 :   parse_state_(ExpectRequestLine),
+    done_(false),
     request_(HttpRequest(conn_ptr)),
     connection_(conn_ptr)
 {
@@ -50,16 +51,6 @@ HttpContext::~HttpContext()
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 {
-    //该connection的所在server{}的配置结构体
-    net::TCPConnectionPtr conn_ptr = connection_.lock();
-    if(!conn_ptr)
-    {
-        Logger_error("connection has been destroy");
-        return false;
-    }
-    const auto& conf_addr = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->get_config_data());
-    (void)conf_addr;
-
     //解析状态机
     bool success = true;
     while(success)
@@ -80,15 +71,22 @@ bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 
             case ParseRequestDone:
                 success = FindVirtualServer();
+                if(success)
+                {
+                    success = HandleHeader();
+                }
+
+                std::cout << request_.ToString() << std::endl;
                 return success;
+
+            case ParseRequestOk:
+                return true;
 
             default:
                 return false;
         }
 
     }
-
-    std::cout << request_.ToString() << std::endl;
 
     return success;
 }
@@ -362,6 +360,24 @@ bool HttpContext::FindVirtualServer()
     {
         return false;
     }
+}
+//---------------------------------------------------------------------------
+bool HttpContext::HandleHeader()
+{
+    if(false == request_.get_headers().get_keep_alive())
+    {
+        if(request_.get_version() == HttpRequest::Version::HTTP10)
+        {
+            request_.get_headers().set_keep_alive(false);
+        }
+        else
+        {
+            request_.get_headers().set_keep_alive(true);
+        }
+    }
+
+    parse_state_ = ParseRequestOk;
+    return true;
 }
 //---------------------------------------------------------------------------
 }//namespace core

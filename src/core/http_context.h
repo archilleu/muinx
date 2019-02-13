@@ -17,6 +17,8 @@ public:
     ~HttpContext();
 
 public:
+    bool get_done() { return done_; }
+
     const HttpRequest& get_request() const { return request_; }
     const net::TCPConnectionWeakPtr& get_connection() const { return connection_; }
 
@@ -31,6 +33,7 @@ private:
     bool ParseRequestHeader(net::Buffer& buffer);
     bool ParseRequestBody(net::Buffer& buffer);
     bool FindVirtualServer();
+    bool HandleHeader();
 
 private:
     enum
@@ -38,8 +41,12 @@ private:
         ExpectRequestLine,
         ExpectRequestHeaders,
         ExpectRequestBody,
-        ParseRequestDone
+        ParseRequestDone,
+        ParseRequestOk
     }parse_state_;
+
+    //解析是否完成
+    bool done_;
 
     HttpRequest request_;
     net::TCPConnectionWeakPtr connection_;
