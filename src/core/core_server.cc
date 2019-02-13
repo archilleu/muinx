@@ -55,8 +55,8 @@ void CoreServer::OnConnection(const net::TCPConnectionPtr& conn_ptr)
 {
     (void)conn_ptr;
     //设置该connection上下文，解析http协议
- //   base::any context = HttpContext(conn_ptr);
- //   conn_ptr->set_context(context);
+    base::any context = HttpContext(conn_ptr);
+    conn_ptr->set_context(context);
     return;
 }
 //---------------------------------------------------------------------------
@@ -71,7 +71,6 @@ void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buff
     (void)conn_ptr;
     (void)buffer;
     //该connection的上下文
-    /*
     HttpContext* context = base::any_cast<HttpContext>(conn_ptr->getContext());
     if(false == context->ParseRequest(buffer, base::Timestamp::Now()))
     {
@@ -80,7 +79,6 @@ void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buff
         conn_ptr->Send(error.c_str(), error.length());
         conn_ptr->ForceClose();
     }
-    */
 
     return;
 }

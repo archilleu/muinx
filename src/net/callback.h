@@ -16,6 +16,7 @@ class Buffer;
 using MemoryBlock = std::vector<char>;
 
 using TCPConnectionPtr = std::shared_ptr<TCPConnection>;
+using TCPConnectionWeakPtr = std::weak_ptr<TCPConnection>;
 
 using ConnectionCallback = std::function<void (const TCPConnectionPtr&)>;
 using DisconnectionCallback = std::function<void (const TCPConnectionPtr&)>;

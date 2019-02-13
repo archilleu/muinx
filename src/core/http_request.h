@@ -86,7 +86,8 @@ public:
 
 private:
     //该请求对应的链接
-    net::TCPConnectionPtr connection_;
+    //FIXME:不需要这个对象
+    net::TCPConnectionWeakPtr connection_;
 
     //指向存放所有HTTP模块的上下文结构体指针
     std::vector<base::any> ctx_;

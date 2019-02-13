@@ -40,6 +40,7 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
 std::string HttpRequest::ToString()
 {
     std::string result;
+    result += "method:" + method_str_ + "\r\n";
     result += "url:" + url_ + "\r\n";
     result += "param:";
     for(const auto& param : parameters_)

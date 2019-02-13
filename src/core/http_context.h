@@ -18,7 +18,7 @@ public:
 
 public:
     const HttpRequest& get_request() const { return request_; }
-    const net::TCPConnectionPtr& get_connection() const { return connection_; }
+    const net::TCPConnectionWeakPtr& get_connection() const { return connection_; }
 
     bool ParseRequest(net::Buffer& buffer, base::Timestamp recv_time);
 
@@ -42,7 +42,7 @@ private:
     }parse_state_;
 
     HttpRequest request_;
-    net::TCPConnectionPtr connection_;
+    net::TCPConnectionWeakPtr connection_;
 
     static const char kCRLF[];
     static const int kCRLF_SIZE = 2;

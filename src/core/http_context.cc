@@ -5,6 +5,7 @@
 #include "../net/tcp_connection.h"
 #include "../base/any.h"
 #include "../base/function.h"
+#include "../tools/muinx_logger.h"
 #include "http_context.h"
 #include "http_module_core.h"
 //---------------------------------------------------------------------------
@@ -50,7 +51,13 @@ HttpContext::~HttpContext()
 bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 {
     //该connection的所在server{}的配置结构体
-    const auto& conf_addr = base::any_cast<HttpModuleCore::ConfAddress>(connection_->get_config_data());
+    net::TCPConnectionPtr conn_ptr = connection_.lock();
+    if(!conn_ptr)
+    {
+        Logger_error("connection has been destroy");
+        return false;
+    }
+    const auto& conf_addr = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->get_config_data());
     (void)conf_addr;
 
     //解析状态机
@@ -316,7 +323,13 @@ bool HttpContext::FindVirtualServer()
     //寻找对应的server{}
     HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
     const std::string& host = request_.get_headers().get_host();
-    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(connection_->get_config_data());
+    net::TCPConnectionPtr conn_ptr = connection_.lock();
+    if(!conn_ptr)
+    {
+        Logger_error("connection has been destroy");
+        return false;
+    }
+    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->get_config_data());
     if(conf_address.servers.size() == 1)
     {
         //一个server就不需要hash表了
