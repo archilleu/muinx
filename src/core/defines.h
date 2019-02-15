@@ -71,5 +71,12 @@
 
 #define IPADDR_ALL "ALL"
 
+#define MUINX_OK        0
+#define MUINX_ERROR     -1 
+#define MUINX_AGAIN     -2
+#define MUINX_BUSY      -3
+#define MUINX_DONE      -4
+#define MUINX_ABORT     -5
+
 //---------------------------------------------------------------------------
 #endif //CORE_DEFINES_H_

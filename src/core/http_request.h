@@ -15,6 +15,9 @@ namespace core
 class HttpRequest
 {
 public:
+    //当前HTTP模块处理方法
+    using HttpHandler = std::function<int (HttpRequest&)>;
+
     HttpRequest(const net::TCPConnectionPtr& conn_ptr);
 
     enum Method

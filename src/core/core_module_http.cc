@@ -127,6 +127,140 @@ bool CoreModuleHttp::OptimizeServers()
     return true;
 }
 //---------------------------------------------------------------------------
+bool CoreModuleHttp::InitPostConfiguration()
+{
+    for(auto& module : g_core.modules_)
+    {
+        if(HttpModule::ModuleType::HTTP != module->type())
+            continue;
+
+        auto http_module = dynamic_cast<HttpModule*>(module);
+        if(http_module->ctx()->postconfiguration)
+        {
+            if(false == http_module->ctx()->postconfiguration())
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleHttp::InitPhaseHandlers()
+{
+    HttpModuleCore::HttpMainConf* main_conf =
+        g_http_module_core.GetModuleMainConf(&g_http_module_core);
+
+    main_conf->phase_engine.server_rewrite_phase = -1;
+    main_conf->phase_engine.location_rewrite_phase = -1;
+
+    int find_config_index = 0;
+    int use_rewrite = (main_conf->phases[HttpModuleCore::HTTP_REWRITE_PHASE]).handlers.size() ? 1 : 0;
+    int use_access = (main_conf->phases[HttpModuleCore::HTTP_ACCESS_PHASE]).handlers.size() ? 1 : 0;
+
+    size_t count = use_rewrite  /*如果有HTTP_REWRITE_PHASE阶段则框架增加一个流程*/
+        + use_access            /*如果有HTTP_ACCESSE_PHASE阶段则框架增加一个流程*/
+        + 1;                    /*HTTP_FIND_CONFIG_PHASE阶段是框架必须有的*/
+
+    //统计有多少个HTTP模块参与HTTP流程
+    for(int i=0; i<HttpModuleCore::HTTP_LOG_PHASE; i++)
+    {
+        count += main_conf->phases[i].handlers.size();
+    }
+    main_conf->phase_engine.handlers.reserve(count);
+
+    int next = 0;
+    HttpModuleCore::PhaseHandler phase_handler;
+    for(int i=0; i<HttpModuleCore::HTTP_LOG_PHASE; i++)
+    {
+        HttpModuleCore::HttpChecker checker;
+        std::vector<HttpRequest::HttpHandler>& handlers = main_conf->phases[i].handlers;
+        switch(i)
+        {
+            /*
+             * default 处理
+             *
+            case HTTP_POST_READ_PHASE:
+                break;
+            */
+
+            case HttpModuleCore::HTTP_SERVER_REWRITE_PHASE:
+                if(-1 == main_conf->phase_engine.server_rewrite_phase)
+                {
+                    main_conf->phase_engine.server_rewrite_phase = next;
+                }
+                checker = std::bind(HttpModuleCore::RewritePhase, _1, _2);
+                break;
+
+            case HttpModuleCore::HTTP_FIND_CONFIG_PHASE:
+                find_config_index = next++;
+                phase_handler.checker = std::bind(HttpModuleCore::FindConfigPhase, _1, _2);
+                //phase_handler.handler = null;
+                phase_handler.next = -1;
+                main_conf->phase_engine.handlers.push_back(phase_handler);
+                
+                //不允许其他模块参与HTTP流程
+                continue;
+
+            case HttpModuleCore::HTTP_REWRITE_PHASE:
+                if(-1 == main_conf->phase_engine.location_rewrite_phase)
+                {
+                    main_conf->phase_engine.location_rewrite_phase = next;
+                }
+                checker = std::bind(HttpModuleCore::RewritePhase, _1, _2);
+                break;
+
+            case HttpModuleCore::HTTP_POST_REWRITE_PHASE:
+                if(use_rewrite)
+                {
+                    phase_handler.checker = std::bind(HttpModuleCore::PostRewritePhase, _1, _2);
+                    //phase_handler.handler = null;
+                    phase_handler.next = find_config_index;
+                    next++;
+                main_conf->phase_engine.handlers.push_back(phase_handler);
+                }
+                break;
+
+            case HttpModuleCore::HTTP_PREACCESS_PHASE:
+                break;
+
+            case HttpModuleCore::HTTP_ACCESS_PHASE:
+                break;
+
+            case HttpModuleCore::HTTP_POST_ACCESS_PHASE:
+                break;
+
+            case HttpModuleCore::HTTP_TRY_FILES_PHASE:
+                break;
+
+            case HttpModuleCore::HTTP_CONTENT_PHASE:
+                break;
+
+            case HttpModuleCore::HTTP_LOG_PHASE:
+                break;
+
+            default:
+                checker = std::bind(HttpModuleCore::GenericPhase, _1, _2);
+                break;
+        }
+
+        //下一个阶段起始位置
+        next += static_cast<int>(main_conf->phases[i].handlers.size());
+
+        //添加到phase_engine，每一个阶段都有可能有多个处理器
+        for(ssize_t j=main_conf->phases[i].handlers.size()-1; j>=0; j--)
+        {
+            phase_handler.checker = checker;
+            phase_handler.handler = handlers[j];
+            phase_handler.next = next;
+            main_conf->phase_engine.handlers.push_back(phase_handler);
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
 bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
         const CommandModule&, void* module_command)
 {

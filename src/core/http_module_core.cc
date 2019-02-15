@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------
 #include <cstring>
+#include <iostream>
 #include "core.h"
 #include "defines.h"
 #include "core_module_conf.h"
@@ -124,6 +125,46 @@ HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module* modu
 //---------------------------------------------------------------------------
 HttpModuleCore::~HttpModuleCore()
 {
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::GenericPhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::RewritePhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::FindConfigPhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::PostRewritePhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::AccessPhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::PostAccessPhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::TryFilesPhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::ContentPhase(HttpRequest&, PhaseHandler&)
+{
+    return MUINX_OK;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*)
@@ -329,6 +370,7 @@ bool HttpModuleCore::PreConfiguration()
 //---------------------------------------------------------------------------
 bool HttpModuleCore::PostConfiguration()
 {
+    std::cout << "index:" << this->index() << " HttpModuleCore::PostConfiguration" << std::endl;
     return true;
 }
 //---------------------------------------------------------------------------

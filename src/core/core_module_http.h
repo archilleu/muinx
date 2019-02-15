@@ -35,6 +35,10 @@ public:
 
     bool OptimizeServers();
 
+    bool InitPostConfiguration();
+
+    bool InitPhaseHandlers();
+
 public:
     static int s_max_http_module;
 

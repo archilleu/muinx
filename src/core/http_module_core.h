@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include "http_module.h"
+#include "http_request.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -65,7 +66,6 @@ public:
         std::string name;
     };
 
-
     struct HttpSrvConf
     {
         std::string server_name;    //域名localhost
@@ -93,15 +93,9 @@ public:
         std::vector<ConfAddress> addrs; //监听端口对应的IP，一个主机可能有多个IP
     };
 
-    struct HttpMainConf
-    {
-        std::vector<HttpSrvConf*> servers;  //所有的server{}配置
-        std::vector<ConfPort> ports;    //所有的监听端口
-    };
-
 public:
     //定义HTTP请求的11个阶段
-    enum HTTP_PHASES
+    enum
     {
        //接收到完整HTTP头部后处理的HTTP阶段
         HTTP_POST_READ_PHASE = 0,
@@ -142,11 +136,54 @@ public:
         HTTP_LOG_PHASE
     };
 
+    struct PhaseHandler;
+    //checker方法，用于管理HTTP模块处理流程
+    using HttpChecker = std::function<int (HttpRequest&, PhaseHandler&)>;
+    struct PhaseHandler
+    {
+        HttpChecker checker;
+        HttpRequest::HttpHandler handler;
+        int next;
+    };
+    struct PhaseEngine
+    {
+        std::vector<PhaseHandler> handlers;
+        int server_rewrite_phase;
+        int location_rewrite_phase;
+    };
+
+    //HTTP模块初始化时候通过 HttpModule的postconfiguration添加进来的handler
+    struct PhaseTemp
+    {
+        std::vector<HttpRequest::HttpHandler> handlers;
+    };
+
+    struct HttpMainConf
+    {
+        std::vector<HttpSrvConf*> servers;  //所有的server{}配置
+        std::vector<ConfPort> ports;    //所有的监听端口
+
+        //流式处理HTTP请求结构
+        PhaseEngine phase_engine;
+        //初始化phase_engine，运行过程无用
+        PhaseTemp phases[HTTP_LOG_PHASE + 1];
+    };
+
 public:
     HttpMainConf* GetModuleMainConf(const Module* module);
     HttpSrvConf* GetModuleSrvConf(const Module* module);
     HttpLocConf* GetModuleLocConf(const Module* module);
 
+//checker方法
+public:
+    static int GenericPhase(HttpRequest&, PhaseHandler&);
+    static int RewritePhase(HttpRequest&, PhaseHandler&);
+    static int FindConfigPhase(HttpRequest&, PhaseHandler&);
+    static int PostRewritePhase(HttpRequest&, PhaseHandler&);
+    static int AccessPhase(HttpRequest&, PhaseHandler&);
+    static int PostAccessPhase(HttpRequest&, PhaseHandler&);
+    static int TryFilesPhase(HttpRequest&, PhaseHandler&);
+    static int ContentPhase(HttpRequest&, PhaseHandler&);
 
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);

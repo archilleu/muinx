@@ -210,6 +210,14 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
         //构建监听server和hashserver
         if(false == g_core_module_http.OptimizeServers())
             return false;
+
+        //构建流式HTTP处理Handlers所需要的postconfiguration
+        if(false == g_core_module_http.InitPostConfiguration())
+            return false;
+
+        //构建流式HTTP处理Handlers
+        if(false == g_core_module_http.InitPhaseHandlers())
+            return false;
     }
 
     //当前{}结束，弹出该上下文栈
