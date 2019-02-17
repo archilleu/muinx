@@ -35,7 +35,7 @@ public:
     void set_write_complete_cb(const WriteCompleteCallback& cb) { write_complete_cb_ = cb; }
     void set_high_water_mark_cb(const WriteHighWaterMarkCallback& cb, size_t overstock_size)
     {
-        high_water_mark_cb_ = cb; 
+        high_water_mark_cb_ = cb;
         overstock_size_ = overstock_size;
     }
 
@@ -61,17 +61,17 @@ public:
     const InetAddress& peer_addr() const { return peer_addr_; }
 
     void AddRequests() { requests_++; }
-    int get_requests() const { return requests_; }
+    int requests() const { return requests_; }
 
     EventLoop* owner_loop() const { return owner_loop_; }
     const Socket& socket() const { return socket_; }
 
     std::string GetTCPInfo() const;
 
-    const base::any& get_config_data() const { return config_data_; }
+    const base::any& config_data() const { return config_data_; }
 
     void set_context(const base::any& context) { context_ = context; }
-    const base::any& get_context() const { return context_; }
+    const base::any& context() const { return context_; }
     base::any* getContext() { return &context_; }
 
 private:

@@ -39,27 +39,27 @@ public:
 
 public:
     void set_method(Method method) { method_ = method; }
-    Method get_method() const { return method_; }
+    Method method() const { return method_; }
 
     void set_method_str(const std::string& method) { method_str_ = method; }
-    const std::string& get_method_str() const { return method_str_; }
+    const std::string& method_str() const { return method_str_; }
 
     void set_version(Version version) { version_ = version; }
-    Version get_version() const { return version_; }
+    Version version() const { return version_; }
 
     void set_url(const std::string& url) { url_ = url; }
-    const std::string& get_url() const { return url_; }
+    const std::string& url() const { return url_; }
 
     void set_exten(const std::string& exten) { exten_ = exten; }
-    const std::string& get_exten() { return exten_; }
+    const std::string& exten() { return exten_; }
 
     void set_archor(const std::string& archor) { archor_ = archor; }
-    const std::string& get_archor() { return archor_; }
+    const std::string& archor() { return archor_; }
 
     void set_parameters(const std::map<std::string, std::string>& params) { parameters_ = params; }
-    const std::map<std::string, std::string>& get_parameters() const { return parameters_; }
+    const std::map<std::string, std::string>& parameters() const { return parameters_; }
 
-    HttpHeaders& get_headers() { return headers_; }
+    HttpHeaders& headers() { return headers_; }
 
     void set_phase_handler(int phase_handler) { phase_handler_ = phase_handler; }
     int phase_handler() { return phase_handler_; }
@@ -68,7 +68,7 @@ public:
     bool internal() { return internal_; }
 
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
-    base::Timestamp get_recv_time() { return recv_time_; }
+    base::Timestamp recv_time() { return recv_time_; }
 
     std::string ToString();
 

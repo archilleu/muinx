@@ -133,7 +133,7 @@ public:
     void set_block_end_callback(const BlockEndCallback& cb) { block_end_cb_ = cb; }
 
     void set_conf_ctx(void* ctx) { conf_ctx_ = ctx; }
-    void* get_conf_ctx() const { return conf_ctx_; }
+    void* conf_ctx() const { return conf_ctx_; }
 
     bool Parse(const std::string& path);
 

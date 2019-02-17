@@ -17,10 +17,10 @@ public:
     ~HttpContext();
 
 public:
-    bool get_done() { return done_; }
+    bool done() { return done_; }
 
-    const HttpRequest& get_request() const { return request_; }
-    const net::TCPConnectionWeakPtr& get_connection() const { return connection_; }
+    const HttpRequest& request() const { return request_; }
+    const net::TCPConnectionWeakPtr& connection() const { return connection_; }
 
     bool ParseRequest(net::Buffer& buffer, base::Timestamp recv_time);
 

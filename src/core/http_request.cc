@@ -51,7 +51,7 @@ std::string HttpRequest::ToString()
     }
     result += "\r\n";
     result += "header:";
-    for(const auto& header : headers_.get_headers())
+    for(const auto& header : headers_.headers())
     {
         result += header.first + ":" + header.second + "\r\n";
     }

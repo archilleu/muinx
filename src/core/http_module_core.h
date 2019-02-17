@@ -16,12 +16,6 @@ public:
     HttpModuleCore();
     virtual ~HttpModuleCore();
 
-    //event 模块的配置项,只是用于引导event模块启动，不需要配置项
-    struct HttpCoreConfig
-    {
-        int worker_connections;
-    };
-
 public:
     struct HttpConfigCtxs
     {

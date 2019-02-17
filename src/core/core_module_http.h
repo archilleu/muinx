@@ -25,7 +25,7 @@ public:
     {
     };
 
-    const std::vector<net::InetAddressData>& get_addresses() const { return addresses_; }
+    const std::vector<net::InetAddressData>& addresses() const { return addresses_; }
 
     bool MergeServers(const HttpModule* module);
     bool MergeLocations(const std::vector<HttpModuleCore::Location>& locations,

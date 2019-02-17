@@ -28,7 +28,7 @@ bool CoreServer::Initialize()
     loop_->set_sig_quit_cb(std::bind(&CoreServer::EventLoopQuit, this));
     //loop_->SetHandleSingnal();
 
-    server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.get_addresses());
+    server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
     //TODO:设置线程数目等参数
     //server_->set_event_loop_nums(8);
     server_->set_connection_cb(std::bind(&CoreServer::OnConnection, this, _1));
@@ -79,7 +79,7 @@ void CoreServer::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buffer& b
     }
 
     //如果HTTP头部尚未处理完毕，返回等待接受下一次检查
-    if(false == context->get_done())
+    if(false == context->done())
         return;
 
     //开始处理HTTP请求
@@ -102,7 +102,7 @@ void CoreServer::OnWriteWirteHighWater(const net::TCPConnectionPtr& conn_ptr, si
     (void)size;
 }
 //---------------------------------------------------------------------------
-void CoreServer::EventLoopQuit() 
+void CoreServer::EventLoopQuit()
 {
     //退出循环
     loop_->Quit();

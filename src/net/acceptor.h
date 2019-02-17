@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
-#ifndef NET_ACCEPTOR_H_ 
-#define NET_ACCEPTOR_H_ 
+#ifndef NET_ACCEPTOR_H_
+#define NET_ACCEPTOR_H_
 //---------------------------------------------------------------------------
 #include <memory>
 #include <functional>
@@ -18,11 +18,11 @@ class Socket;
 class Acceptor : public base::Noncopyable
 {
 public:
-    using NewConnectionCallback = 
+    using NewConnectionCallback =
         std::function<void (Socket&& client, InetAddress&&, uint64_t)>;
 
     //附带额外的自定义数据
-    using NewConnectionDataCallback = 
+    using NewConnectionDataCallback =
         std::function<void (Socket&& client, InetAddress&&, uint64_t, const base::any&)>;
 
     Acceptor(EventLoop* event_loop, const InetAddress& addr_listen);
@@ -33,7 +33,7 @@ public:
     void set_new_conn_data_cb(const NewConnectionDataCallback&& cb) { new_conn_data_cb_ = cb; }
 
     void set_config_data(const base::any& config_data) { config_data_ = config_data; }
-    const base::any& get_config_data() const { return config_data_; }
+    const base::any& config_data() const { return config_data_; }
 
     void Listen();
 

@@ -283,7 +283,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
     if(colon == last)
         return false;
 
-    HttpHeaders& headers = request_.get_headers();
+    HttpHeaders& headers = request_.headers();
 
     TrimBlank(first, colon);
     std::string filed(first, colon);
@@ -296,7 +296,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
     HttpHeaders::HeaderTypeMapConstIter iter = HttpHeaders::kHeaderTypeMap.find(filed);
     if(HttpHeaders::kHeaderTypeMap.end() != iter)
     {
-        if(false == iter->second(request_.get_headers(), value))
+        if(false == iter->second(request_.headers(), value))
             return false;
     }
     headers.AddHeader(std::move(filed), std::move(value));
@@ -307,7 +307,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequestBody(net::Buffer& buffer)
 {
-    size_t content_length = request_.get_headers().get_content_length();
+    size_t content_length = request_.headers().content_length();
     if(0 == content_length)
     {
         parse_state_ = ParseRequestDone;
@@ -326,14 +326,14 @@ bool HttpContext::FindVirtualServer()
 {
     //寻找对应的server{}
     HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
-    const std::string& host = request_.get_headers().get_host();
+    const std::string& host = request_.headers().host();
     net::TCPConnectionPtr conn_ptr = connection_.lock();
     if(!conn_ptr)
     {
         Logger_error("connection has been destroy");
         return false;
     }
-    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->get_config_data());
+    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->config_data());
     if(conf_address.servers.size() == 1)
     {
         //一个server就不需要hash表了
@@ -370,15 +370,15 @@ bool HttpContext::FindVirtualServer()
 //---------------------------------------------------------------------------
 bool HttpContext::HandleHeader()
 {
-    if(false == request_.get_headers().get_keep_alive())
+    if(false == request_.headers().keep_alive())
     {
-        if(request_.get_version() == HttpRequest::Version::HTTP10)
+        if(request_.version() == HttpRequest::Version::HTTP10)
         {
-            request_.get_headers().set_keep_alive(false);
+            request_.headers().set_keep_alive(false);
         }
         else
         {
-            request_.get_headers().set_keep_alive(true);
+            request_.headers().set_keep_alive(true);
         }
     }
 
