@@ -6,6 +6,7 @@
 #include "../base/any.h"
 #include "../base/function.h"
 #include "../tools/muinx_logger.h"
+#include "defines.h"
 #include "http_context.h"
 #include "http_module_core.h"
 //---------------------------------------------------------------------------
@@ -89,6 +90,11 @@ bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
     }
 
     return success;
+}
+//---------------------------------------------------------------------------
+int HttpContext::ProcessRequest()
+{
+    return HttpHandler();
 }
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_time)
@@ -377,6 +383,26 @@ bool HttpContext::HandleHeader()
     }
 
     parse_state_ = ParseRequestOk;
+    return true;
+}
+    bool RunPhases();
+//---------------------------------------------------------------------------
+int HttpContext::HttpHandler()
+{
+    return RunPhases();
+}
+//---------------------------------------------------------------------------
+int HttpContext::RunPhases()
+{
+    auto main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    auto& handlers = main_conf->phase_engine.handlers;
+    while(handlers[request_.phase_handler()].checker)
+    {
+        int rc = handlers[request_.phase_handler()].checker(request_, handlers[request_.phase_handler()]);
+        if(MUINX_OK != rc)
+            return false;
+    }
+
     return true;
 }
 //---------------------------------------------------------------------------

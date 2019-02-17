@@ -30,7 +30,9 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
     connection_(conn_ptr),
     method_(INVALID),
     method_str_("INVALID"),
-    version_(NOTSUPPORT)
+    version_(NOTSUPPORT),
+    phase_handler_(HttpModuleCore::HTTP_POST_READ_PHASE ),
+    internal_(false)
 {
     //每一个http模块都有存放上下文的对象
     ctx_.resize(HttpModuleCore::s_max_module);

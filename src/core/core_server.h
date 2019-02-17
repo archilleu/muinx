@@ -26,7 +26,7 @@ public:
 private:
     void OnConnection(const net::TCPConnectionPtr& conn_ptr);
     void OnDisconnection(const net::TCPConnectionPtr& conn_ptr);
-    void OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer);
+    void OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer);
     void OnWriteComplete(const net::TCPConnectionPtr& conn_ptr);
     void OnWriteWirteHighWater(const net::TCPConnectionPtr& conn_ptr, size_t size);
 

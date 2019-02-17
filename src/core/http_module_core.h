@@ -120,7 +120,7 @@ public:
 
         //用于HTTP模块判断是否允许这个请求访问nginx服务器
         HTTP_ACCESS_PHASE,
-        /*在HTTP_ACCESS_PHASE模块中，当HTTP模块的handler函数返回不允许访问的错误码时，如
+        /* 在HTTP_ACCESS_PHASE模块中，当HTTP模块的handler函数返回不允许访问的错误码时，如
          * (HTTP_FORBIDDEN 和 UNAUTHORIZAD),这里将负责向用户发送服务器的错误响应，
          * 因此这个阶段实际上是HTTP_ACCESS_PHASE收尾
          */
@@ -137,14 +137,16 @@ public:
     };
 
     struct PhaseHandler;
-    //checker方法，用于管理HTTP模块处理流程
+    //checker方法定义
     using HttpChecker = std::function<int (HttpRequest&, PhaseHandler&)>;
+    //参与HTTP处理流程的结构体
     struct PhaseHandler
     {
-        HttpChecker checker;
-        HttpRequest::HttpHandler handler;
-        int next;
+        HttpChecker checker;                //checker定义
+        HttpRequest::HttpHandler handler;   //各个HTTP模块处理流程
+        int next;                           //该HTTP阶段的下一个HTTP阶段下标
     };
+    //HTTP流程定义
     struct PhaseEngine
     {
         std::vector<PhaseHandler> handlers;
@@ -176,14 +178,14 @@ public:
 
 //checker方法
 public:
-    static int GenericPhase(HttpRequest&, PhaseHandler&);
-    static int RewritePhase(HttpRequest&, PhaseHandler&);
-    static int FindConfigPhase(HttpRequest&, PhaseHandler&);
-    static int PostRewritePhase(HttpRequest&, PhaseHandler&);
-    static int AccessPhase(HttpRequest&, PhaseHandler&);
-    static int PostAccessPhase(HttpRequest&, PhaseHandler&);
-    static int TryFilesPhase(HttpRequest&, PhaseHandler&);
-    static int ContentPhase(HttpRequest&, PhaseHandler&);
+    static int GenericPhase(HttpRequest& request, PhaseHandler& handler);
+    static int RewritePhase(HttpRequest& request, PhaseHandler& handler);
+    static int FindConfigPhase(HttpRequest& request, PhaseHandler& handler);
+    static int PostRewritePhase(HttpRequest& request, PhaseHandler& handler);
+    static int AccessPhase(HttpRequest& request, PhaseHandler& handler);
+    static int PostAccessPhase(HttpRequest& request, PhaseHandler& handler);
+    static int TryFilesPhase(HttpRequest& request, PhaseHandler& handler);
+    static int ContentPhase(HttpRequest& request, PhaseHandler& handler);
 
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);

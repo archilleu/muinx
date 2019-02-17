@@ -191,14 +191,17 @@ bool CoreModuleHttp::InitPhaseHandlers()
                     main_conf->phase_engine.server_rewrite_phase = next;
                 }
                 checker = std::bind(HttpModuleCore::RewritePhase, _1, _2);
+
                 break;
 
             case HttpModuleCore::HTTP_FIND_CONFIG_PHASE:
-                find_config_index = next++;
+                find_config_index = next;
+
                 phase_handler.checker = std::bind(HttpModuleCore::FindConfigPhase, _1, _2);
                 //phase_handler.handler = null;
                 phase_handler.next = -1;
                 main_conf->phase_engine.handlers.push_back(phase_handler);
+                next++;
                 
                 //不允许其他模块参与HTTP流程
                 continue;
@@ -218,27 +221,53 @@ bool CoreModuleHttp::InitPhaseHandlers()
                     //phase_handler.handler = null;
                     phase_handler.next = find_config_index;
                     next++;
-                main_conf->phase_engine.handlers.push_back(phase_handler);
+                    main_conf->phase_engine.handlers.push_back(phase_handler);
                 }
-                break;
+                //不允许其他模块参与HTTP流程
+                continue;
 
+            /*
+             * default 处理
             case HttpModuleCore::HTTP_PREACCESS_PHASE:
                 break;
+            */
 
             case HttpModuleCore::HTTP_ACCESS_PHASE:
+                checker = std::bind(HttpModuleCore::AccessPhase, _1, _2);
+                //FIXME:为什么要++？
+                next++;
                 break;
 
             case HttpModuleCore::HTTP_POST_ACCESS_PHASE:
-                break;
+                //如果有任何的HTTP_ACCESS_PHASE，则由该阶段处理HTTP_ACCESS_PHASE返回
+                //失败的情况
+                if(use_access)
+                {
+                    phase_handler.checker = std::bind(HttpModuleCore::PostAccessPhase, _1, _2);
+                    //phase_handler.handler = null;
+                    phase_handler.next = next;
+                    //FIXME:为什么不++？
+                    //next++;
+                    main_conf->phase_engine.handlers.push_back(phase_handler);
+                }
+                //不允许其他模块参与HTTP流程
+                continue;
 
             case HttpModuleCore::HTTP_TRY_FILES_PHASE:
-                break;
+                //TODO: tryfiles
+
+                //不允许其他模块参与HTTP流程
+                continue;
 
             case HttpModuleCore::HTTP_CONTENT_PHASE:
+                checker = std::bind(HttpModuleCore::ContentPhase, _1, _2);
                 break;
 
+            /*
+             * default 处理
             case HttpModuleCore::HTTP_LOG_PHASE:
                 break;
+            */
 
             default:
                 checker = std::bind(HttpModuleCore::GenericPhase, _1, _2);

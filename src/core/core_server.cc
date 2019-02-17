@@ -2,6 +2,7 @@
 #include <iostream>
 #include "../net/buffer.h"
 #include "../net/tcp_connection.cc"
+#include "defines.h"
 #include "core_server.h"
 #include "core_module_http.h"
 #include "http_context.h"
@@ -32,7 +33,7 @@ bool CoreServer::Initialize()
     //server_->set_event_loop_nums(8);
     server_->set_connection_cb(std::bind(&CoreServer::OnConnection, this, _1));
     server_->set_disconnection_cb(std::bind(&CoreServer::OnDisconnection, this, _1));
-    server_->set_read_cb(std::bind(&CoreServer::OnRead, this, _1, _2));
+    server_->set_read_cb(std::bind(&CoreServer::OnMessage, this, _1, _2));
     server_->set_write_complete_cb(std::bind(&CoreServer::OnWriteComplete, this, _1));
     server_->set_high_water_mark_cb(std::bind(&CoreServer::OnWriteWirteHighWater, this, _1, _2), 100);
 
@@ -65,7 +66,7 @@ void CoreServer::OnDisconnection(const net::TCPConnectionPtr& conn_ptr)
     return;
 }
 //---------------------------------------------------------------------------
-void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer)
+void CoreServer::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer)
 {
     //该connection的上下文
     HttpContext* context = base::any_cast<HttpContext>(conn_ptr->getContext());
@@ -77,8 +78,15 @@ void CoreServer::OnRead(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buff
         conn_ptr->ForceClose();
     }
 
+    //如果HTTP头部尚未处理完毕，返回等待接受下一次检查
     if(false == context->get_done())
         return;
+
+    //开始处理HTTP请求
+    if(MUINX_OK != context->ProcessRequest())
+    {
+        //TODO 处理错误
+    }
 
     return;
 }

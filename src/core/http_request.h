@@ -61,6 +61,12 @@ public:
 
     HttpHeaders& get_headers() { return headers_; }
 
+    void set_phase_handler(int phase_handler) { phase_handler_ = phase_handler; }
+    int phase_handler() { return phase_handler_; }
+
+    void set_internal(bool internal) { internal_ = internal; }
+    bool internal() { return internal_; }
+
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
     base::Timestamp get_recv_time() { return recv_time_; }
 
@@ -101,11 +107,12 @@ private:
     std::string url_;       //资源路径
     std::string exten_;     //扩展名
     std::string archor_;    //锚
-
     std::map<std::string, std::string> parameters_; //url参数
+    HttpHeaders headers_;   //请求头
 
-    //请求头
-    HttpHeaders headers_;
+    int phase_handler_;  //处于哪一个HTTP阶段
+
+    bool internal_; //
 
     base::Timestamp recv_time_;
 };

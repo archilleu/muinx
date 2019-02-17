@@ -24,6 +24,8 @@ public:
 
     bool ParseRequest(net::Buffer& buffer, base::Timestamp recv_time);
 
+    int ProcessRequest();
+
 private:
     bool ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_time);
     char* ParseRequestLineMethod(char* begin, char* end);
@@ -34,6 +36,9 @@ private:
     bool ParseRequestBody(net::Buffer& buffer);
     bool FindVirtualServer();
     bool HandleHeader();
+
+    int HttpHandler();
+    int RunPhases();
 
 private:
     enum

@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 #include <cstring>
 #include <iostream>
+#include "../tools/muinx_logger.h"
 #include "core.h"
 #include "defines.h"
 #include "core_module_conf.h"
@@ -127,43 +128,77 @@ HttpModuleCore::~HttpModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::GenericPhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::GenericPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
+    int rc = phase_handler.handler(request);
+    //该HTTP阶段处理完毕，下一个阶段
+    if(MUINX_OK == rc)
+    {
+        request.set_phase_handler(phase_handler.next);
+        return MUINX_AGAIN;
+    }
+    //该HTTP阶段未完成，该阶段的下一个处理模块
+    if(MUINX_DECLINED == rc)
+    {
+        request.set_phase_handler(request.phase_handler()+1);
+        return MUINX_AGAIN;
+    }
+    //该HTTP阶段已经完成了，不需要下一个阶段处理
+    if(MUINX_DONE==rc || MUINX_AGAIN==rc)
+    {
+        return MUINX_OK;
+    }
+
+    //其他表示出错
+    return rc;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::RewritePhase(HttpRequest& request, PhaseHandler& phase_handler)
+{
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::RewritePhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::FindConfigPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::FindConfigPhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::PostRewritePhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::PostRewritePhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::AccessPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::AccessPhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::PostAccessPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::PostAccessPhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::TryFilesPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::TryFilesPhase(HttpRequest&, PhaseHandler&)
+int HttpModuleCore::ContentPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
-    return MUINX_OK;
-}
-//---------------------------------------------------------------------------
-int HttpModuleCore::ContentPhase(HttpRequest&, PhaseHandler&)
-{
+    (void) request;
+    (void) phase_handler;
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
@@ -370,7 +405,7 @@ bool HttpModuleCore::PreConfiguration()
 //---------------------------------------------------------------------------
 bool HttpModuleCore::PostConfiguration()
 {
-    std::cout << "index:" << this->index() << " HttpModuleCore::PostConfiguration" << std::endl;
+    Logger_debug("index:%d, PostConfiguration", this->index()); 
     return true;
 }
 //---------------------------------------------------------------------------
