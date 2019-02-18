@@ -349,9 +349,12 @@ std::vector<std::string> split(const std::string& str, char delim)
     std::vector<std::string> elems;
     while(std::string::npos != found)
     {
-        elems.push_back(str.substr(pos, found-pos));
+        std::string item = str.substr(pos, found-pos);
         pos = found + 1;
         found = str.find(delim, pos);
+        if(item.empty())
+            continue;
+        elems.push_back(std::move(item));
     }
     elems.push_back(str.substr(pos));
 

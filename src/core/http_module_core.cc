@@ -171,17 +171,21 @@ int HttpModuleCore::RewritePhase(HttpRequest& request, PhaseHandler& phase_handl
 //---------------------------------------------------------------------------
 int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& phase_handler)
 {
-    //查找正确的loc_conf
-    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
+    (void)phase_handler;
 
+    //查找正确的loc_conf
+    int rc = MUINX_DECLINED;
+    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
     const std::string& url = http_request.url();
     if(1 == url.length())
     {
         auto iter = loc_conf->map_locations.find("/");
         if(iter != loc_conf->map_locations.end())
-            return MUINX_OK;
+        {
+            rc = MUINX_OK;
+        }
 
-        return MUINX_DECLINED;
+        rc = MUINX_DECLINED;
     }
     else
     {
@@ -195,11 +199,12 @@ int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& pha
             if(iter == loc_conf->map_locations.end())
                 continue;
 
-            return MUINX_OK;
+            rc = MUINX_OK;
         }
     }
 
-    return MUINX_DECLINED;
+    http_request.set_phase_handler(http_request.phase_handler() + 1);
+    return rc;
 }
 //---------------------------------------------------------------------------
 int HttpModuleCore::PostRewritePhase(HttpRequest& request, PhaseHandler& phase_handler)
@@ -230,9 +235,9 @@ int HttpModuleCore::TryFilesPhase(HttpRequest& request, PhaseHandler& phase_hand
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::ContentPhase(HttpRequest& request, PhaseHandler& phase_handler)
+int HttpModuleCore::ContentPhase(HttpRequest& http_request, PhaseHandler& phase_handler)
 {
-    (void) request;
+    http_request.set_phase_handler(http_request.phase_handler() + 1);
     (void) phase_handler;
     return MUINX_OK;
 }
