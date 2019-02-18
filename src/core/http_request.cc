@@ -1,9 +1,12 @@
 //---------------------------------------------------------------------------
+#include <memory>
 #include "http_request.h"
 #include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
+
+using namespace std::placeholders;
 
 //---------------------------------------------------------------------------
 const char* HttpRequest::kGET       = "GET";
@@ -33,6 +36,12 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
 {
     //每一个http模块都有存放上下文的对象
     ctx_.resize(HttpModuleCore::s_max_module);
+    return;
+}
+//---------------------------------------------------------------------------
+void HttpRequest::set_content_handler(HttpHandler http_handler)
+{
+    content_handler_ = std::bind(http_handler, _1);
     return;
 }
 //---------------------------------------------------------------------------

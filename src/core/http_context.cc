@@ -72,21 +72,17 @@ bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 
             case ParseRequestDone:
                 success = FindVirtualServer();
-                if(success)
-                {
-                    success = HandleHeader();
-                }
+                if(!success)
+                    return false;
+
+                HandleHeader();
 
                 std::cout << request_.ToString() << std::endl;
                 return success;
 
-            case ParseRequestOk:
-                return true;
-
             default:
                 return false;
         }
-
     }
 
     return success;
@@ -357,6 +353,7 @@ bool HttpContext::FindVirtualServer()
 
     if(nullptr != srv_conf)
     {
+        //此时获取的是server{}的ctx，其中的loc_conf还要再下一步的checker中重新赋值
         request_.set_ctxs(srv_conf->ctx);
         return true;
     }
@@ -380,7 +377,7 @@ bool HttpContext::HandleHeader()
         }
     }
 
-    parse_state_ = ParseRequestOk;
+    done_ = true;
     return true;
 }
     bool RunPhases();

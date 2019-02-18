@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 #include <cstring>
 #include <iostream>
+#include "../base/function.h"
 #include "../tools/muinx_logger.h"
 #include "core.h"
 #include "defines.h"
@@ -168,11 +169,37 @@ int HttpModuleCore::RewritePhase(HttpRequest& request, PhaseHandler& phase_handl
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-int HttpModuleCore::FindConfigPhase(HttpRequest& request, PhaseHandler& phase_handler)
+int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& phase_handler)
 {
-    (void) request;
-    (void) phase_handler;
-    return MUINX_OK;
+    //查找正确的loc_conf
+    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
+
+    const std::string& url = http_request.url();
+    if(1 == url.length())
+    {
+        auto iter = loc_conf->map_locations.find("/");
+        if(iter != loc_conf->map_locations.end())
+            return MUINX_OK;
+
+        return MUINX_DECLINED;
+    }
+    else
+    {
+        //按照url分割url，做最前匹配
+        std::string prefix_url = "/";
+        auto path_items = base::split(url, '/');
+        for(auto& item : path_items)
+        {
+            prefix_url += item;
+            auto iter = loc_conf->map_locations.find(prefix_url);
+            if(iter == loc_conf->map_locations.end())
+                continue;
+
+            return MUINX_OK;
+        }
+    }
+
+    return MUINX_DECLINED;
 }
 //---------------------------------------------------------------------------
 int HttpModuleCore::PostRewritePhase(HttpRequest& request, PhaseHandler& phase_handler)

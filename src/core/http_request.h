@@ -18,6 +18,8 @@ class HttpRequest
 public:
     HttpRequest(const net::TCPConnectionPtr& conn_ptr);
 
+    using HttpRequestHandler = std::function<int (HttpRequest&)>;
+
     enum Method
     {
         INVALID     = 0x0001,
@@ -139,6 +141,10 @@ public:
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
     base::Timestamp recv_time() { return recv_time_; }
 
+    typedef int (*HttpHandler)(HttpRequest&);
+    void set_content_handler(HttpHandler http_handler);
+    HttpRequestHandler& content_handler() { return content_handler_; }
+
     std::string ToString();
 
 public:
@@ -183,6 +189,9 @@ private:
     bool internal_; //
 
     base::Timestamp recv_time_;
+
+    //当前模块处理方法
+    HttpRequestHandler content_handler_;
 };
 
 }//namespace core

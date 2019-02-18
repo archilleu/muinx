@@ -46,8 +46,7 @@ private:
         ExpectRequestLine,
         ExpectRequestHeaders,
         ExpectRequestBody,
-        ParseRequestDone,
-        ParseRequestOk
+        ParseRequestDone
     }parse_state_;
 
     //解析是否完成

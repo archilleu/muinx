@@ -25,6 +25,7 @@ public:
         void** loc_conf;
     };
 
+    typedef int (*HttpHandler)(HttpRequest&);
     struct Location;
     struct HttpLocConf
     {
@@ -52,6 +53,14 @@ public:
         std::unordered_map<std::string, HttpLocConf*> map_locations;
 
         bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
+
+        /*
+         * 在HTTP_CONTENT_PHASE阶段loc{}专用的处理函数
+         * invalid-offsetof(offsetoff警告，std::function实现不是non-POD
+         * 所以用HttpHandler代替HttpRequestHandler handler
+         */
+
+        HttpHandler handler;
     };
 
     struct Location
