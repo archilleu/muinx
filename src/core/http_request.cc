@@ -24,10 +24,7 @@ const HttpRequest::MethodType HttpRequest::kMethodType =
 };
 //---------------------------------------------------------------------------
 HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
-:   main_conf_(nullptr),
-    srv_conf_(nullptr),
-    loc_conf_(nullptr),
-    connection_(conn_ptr),
+:   connection_(conn_ptr),
     method_(INVALID),
     method_str_("INVALID"),
     version_(NOTSUPPORT),
@@ -57,6 +54,13 @@ std::string HttpRequest::ToString()
     }
     result += "\r\n";
     return result;
+}
+//---------------------------------------------------------------------------
+HttpModuleCore::HttpLocConf* HttpRequest::GetModuleLocConf(const Module* module) const
+{
+    auto conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+        (ctxs_->loc_conf[module->module_index()]);
+    return conf;
 }
 //---------------------------------------------------------------------------
 

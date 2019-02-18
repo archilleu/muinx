@@ -4,6 +4,7 @@
 #include "../tools/muinx_logger.h"
 #include "core.h"
 #include "defines.h"
+#include "http_request.h"
 #include "core_module_conf.h"
 #include "http_module_core.h"
 #include "core_module_http.h"
@@ -94,6 +95,10 @@ HttpModuleCore::HttpModuleCore()
     };
 }
 //---------------------------------------------------------------------------
+HttpModuleCore::~HttpModuleCore()
+{
+}
+//---------------------------------------------------------------------------
 HttpModuleCore::HttpMainConf* HttpModuleCore::GetModuleMainConf(const Module* module)
 {
     auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
@@ -124,8 +129,11 @@ HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module* modu
     return loc;
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::~HttpModuleCore()
+std::string HttpModuleCore::HttpMapUriToPath(const HttpRequest& http_request)
 {
+    HttpModuleCore::HttpLocConf* loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
+    std::string path = loc_conf->root + http_request.url();
+    return path;
 }
 //---------------------------------------------------------------------------
 int HttpModuleCore::GenericPhase(HttpRequest& request, PhaseHandler& phase_handler)

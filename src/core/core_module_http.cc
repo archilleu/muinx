@@ -175,7 +175,7 @@ bool CoreModuleHttp::InitPhaseHandlers()
     for(int i=0; i<HttpModuleCore::HTTP_LOG_PHASE; i++)
     {
         HttpModuleCore::HttpChecker checker;
-        std::vector<HttpRequest::HttpHandler>& handlers = main_conf->phases[i].handlers;
+        auto& handlers = main_conf->phases[i].handlers;
         switch(i)
         {
             /*

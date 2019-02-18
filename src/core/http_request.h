@@ -8,6 +8,7 @@
 #include "../base/timestamp.h"
 #include "../base/any.h"
 #include "http_headers.h"
+#include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -15,19 +16,84 @@ namespace core
 class HttpRequest
 {
 public:
-    //当前HTTP模块处理方法
-    using HttpHandler = std::function<int (HttpRequest&)>;
-
     HttpRequest(const net::TCPConnectionPtr& conn_ptr);
 
     enum Method
     {
-        INVALID,
-        GET,
-        POST,
-        HEAD,
-        PUT,
-        DELETE
+        INVALID     = 0x0001,
+        GET         = 0x0002,
+        POST        = 0x0004,
+        HEAD        = 0x0008,
+        PUT         = 0x0010,
+        DELETE      = 0x0020
+    };
+
+    enum StatusCode
+    {
+        CONTINUE                    = 100,
+        SWITCHING_PROTOCOLS         = 101,
+        PROCESSING                  = 102,
+        
+        OK                          = 200,
+        CREATED                     = 201,
+        ACCEPTED                    = 202,
+        NO_CONTENT                  = 204,
+        PARTIAL_CONTENT             = 206,
+        
+        SPECIAL_RESPONSE            = 300,
+        MOVED_PERMANENTLY           = 301,
+        MOVED_TEMPORARILY           = 302,
+        SEE_OTHER                   = 303,
+        NOT_MODIFIED                = 304,
+        TEMPORARY_REDIRECT          = 307,
+
+        BAD_REQUEST                 = 400,
+        UNAUTHORIZED                = 401,
+        FORBIDDEN                   = 403,
+        NOT_FOUND                   = 404,
+        NOT_ALLOWED                 = 405,
+        REQUEST_TIME_OUT            = 408,
+        CONFLICT                    = 409,
+        LENGTH_REQUIRED             = 411,
+        PRECONDITION_FAILED         = 412,
+        REQUEST_ENTITY_TOO_LARGE    = 413,
+        REQUEST_URI_TOO_LARGE       = 414,
+        UNSUPPORTED_MEDIA_TYPE      = 415,
+        RANGE_NOT_SATISFIABLE       = 416,
+
+        /* Our own HTTP codes */
+        /* The special code to close connection without any response */
+        CLOSE                       = 444,
+
+        NGINX_CODES                 = 494,
+
+        REQUEST_HEADER_TOO_LARGE    = 494,
+
+        HTTPS_CERT_ERROR            = 495,
+        HTTPS_NO_CERT               = 496,
+
+        /*
+         * We use the special code for the plain HTTP requests that are sent to
+         * HTTPS port to distinguish it from 4XX in an error page redirection
+         */
+        HTTP_TO_HTTPS               = 497,
+
+        /* 498 is the canceled code for the requests with invalid host name */
+
+        /*
+         * HTTP does not define the code for the case when a client closed
+         * the connection while we are processing its request so we introduce
+         * own code to log such situation when a client has closed the connection
+         * before we even try to send the HTTP header to it
+         */
+        CLIENT_CLOSED_REQUEST     = 499, 
+
+        INTERNAL_SERVER_ERROR     = 500,
+        NOT_IMPLEMENTED           = 501,
+        BAD_GATEWAY               = 502,
+        SERVICE_UNAVAILABLE       = 503,
+        GATEWAY_TIME_OUT          = 504,
+        INSUFFICIENT_STORAGE      = 507
     };
 
     enum Version
@@ -38,6 +104,9 @@ public:
     };
 
 public:
+    void set_ctxs(HttpModuleCore::HttpConfigCtxs* ctxs) { ctxs_ = ctxs; }
+    HttpModuleCore::HttpConfigCtxs* ctxs() { return ctxs_; }
+
     void set_method(Method method) { method_ = method; }
     Method method() const { return method_; }
 
@@ -72,12 +141,8 @@ public:
 
     std::string ToString();
 
-    //main{}结构体指针数组
-    void** main_conf_;
-    //server{}结构体指针数组
-    void** srv_conf_;
-    //location{}结构体指针数组
-    void** loc_conf_;
+public:
+    HttpModuleCore::HttpLocConf* GetModuleLocConf(const Module* module) const;
 
 public:
     using MethodType = std::map<std::string, Method>;
@@ -94,6 +159,9 @@ public:
     static const char* kHTTP10;
 
 private:
+    //当前LOC{}的配置项
+    HttpModuleCore::HttpConfigCtxs* ctxs_;
+
     //该请求对应的链接
     //FIXME:不需要这个对象
     net::TCPConnectionWeakPtr connection_;

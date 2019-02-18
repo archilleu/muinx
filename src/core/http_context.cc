@@ -357,9 +357,7 @@ bool HttpContext::FindVirtualServer()
 
     if(nullptr != srv_conf)
     {
-        request_.main_conf_ = srv_conf->ctx->main_conf;
-        request_.srv_conf_ = srv_conf->ctx->srv_conf;
-        request_.loc_conf_ = srv_conf->ctx->loc_conf;
+        request_.set_ctxs(srv_conf->ctx);
         return true;
     }
     else

@@ -5,10 +5,11 @@
 #include <vector>
 #include <unordered_map>
 #include "http_module.h"
-#include "http_request.h"
 //---------------------------------------------------------------------------
 namespace core
 {
+
+class HttpRequest;
 
 class HttpModuleCore : public HttpModule
 {
@@ -133,12 +134,15 @@ public:
     struct PhaseHandler;
     //checker方法定义
     using HttpChecker = std::function<int (HttpRequest&, PhaseHandler&)>;
+    //当前HTTP模块处理方法
+    using HttpRequestHandler = std::function<int (HttpRequest&)>;
+
     //参与HTTP处理流程的结构体
     struct PhaseHandler
     {
-        HttpChecker checker;                //checker定义
-        HttpRequest::HttpHandler handler;   //各个HTTP模块处理流程
-        int next;                           //该HTTP阶段的下一个HTTP阶段下标
+        HttpChecker checker;            //checker定义
+        HttpRequestHandler handler;     //各个HTTP模块处理流程
+        int next;                       //该HTTP阶段的下一个HTTP阶段下标
     };
     //HTTP流程定义
     struct PhaseEngine
@@ -151,7 +155,7 @@ public:
     //HTTP模块初始化时候通过 HttpModule的postconfiguration添加进来的handler
     struct PhaseTemp
     {
-        std::vector<HttpRequest::HttpHandler> handlers;
+        std::vector<HttpRequestHandler> handlers;
     };
 
     struct HttpMainConf
@@ -165,21 +169,24 @@ public:
         PhaseTemp phases[HTTP_LOG_PHASE + 1];
     };
 
+//工具方法
 public:
     HttpMainConf* GetModuleMainConf(const Module* module);
     HttpSrvConf* GetModuleSrvConf(const Module* module);
     HttpLocConf* GetModuleLocConf(const Module* module);
 
+    static std::string HttpMapUriToPath(const HttpRequest& http_request);
+
 //checker方法
 public:
-    static int GenericPhase(HttpRequest& request, PhaseHandler& handler);
-    static int RewritePhase(HttpRequest& request, PhaseHandler& handler);
-    static int FindConfigPhase(HttpRequest& request, PhaseHandler& handler);
-    static int PostRewritePhase(HttpRequest& request, PhaseHandler& handler);
-    static int AccessPhase(HttpRequest& request, PhaseHandler& handler);
-    static int PostAccessPhase(HttpRequest& request, PhaseHandler& handler);
-    static int TryFilesPhase(HttpRequest& request, PhaseHandler& handler);
-    static int ContentPhase(HttpRequest& request, PhaseHandler& handler);
+    static int GenericPhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int RewritePhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int FindConfigPhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int PostRewritePhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int AccessPhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int PostAccessPhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int TryFilesPhase(HttpRequest& http_request, PhaseHandler& handler);
+    static int ContentPhase(HttpRequest& http_request, PhaseHandler& handler);
 
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
