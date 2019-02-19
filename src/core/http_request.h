@@ -151,6 +151,7 @@ public:
     std::string ToString();
 
 public:
+    //获取srv{}下面的loc结构体,并不是该请求所在的loc{}，是该请求所在的srv{}的loc
     HttpModuleCore::HttpLocConf* GetModuleLocConf(const Module* module) const;
 
 public:
@@ -168,7 +169,7 @@ public:
     static const char* kHTTP10;
 
 private:
-    //当前请求的配置项
+    //当前请求的srv{}配置项，和loc_conf_不一样，ctxs_包含了该请求所在的虚拟主机的所有配置
     HttpModuleCore::HttpConfigCtxs* ctxs_;
     //当前请求匹配的loc{}
     HttpModuleCore::HttpLocConf* loc_conf_;

@@ -173,35 +173,9 @@ int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& pha
 {
     (void)phase_handler;
 
-    //查找准确的loc_conf
-    int rc = MUINX_DECLINED;
-    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
-    const std::string& url = http_request.url();
-    if(1 == url.length())
-    {
-        auto iter = loc_conf->map_locations.find("/");
-        if(iter != loc_conf->map_locations.end())
-            rc = MUINX_DECLINED;
+    int rc = FindRequestLocation(http_request);
 
-        //http_request.set_loc_conf(iter->second);
-        rc = MUINX_OK;
-    }
-    else
-    {
-        //按照url分割url，做最前匹配
-        std::string prefix_url = "/";
-        auto path_items = base::split(url, '/');
-        for(auto& item : path_items)
-        {
-            prefix_url += item;
-            auto iter = loc_conf->map_locations.find(prefix_url);
-            if(iter == loc_conf->map_locations.end())
-                continue;
-
-            //http_request.set_loc_conf(iter->second);
-            rc = MUINX_OK;
-        }
-    }
+    UpdateRequestLocationConfig(http_request);
 
     http_request.set_phase_handler(http_request.phase_handler() + 1);
     return rc;
@@ -240,6 +214,67 @@ int HttpModuleCore::ContentPhase(HttpRequest& http_request, PhaseHandler& phase_
     http_request.set_phase_handler(http_request.phase_handler() + 1);
     (void) phase_handler;
     return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
+{
+    //查找准确的loc_conf
+    int rc = MUINX_DECLINED;
+    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
+    const std::string& url = http_request.url();
+    if(1 == url.length())
+    {
+        auto iter = loc_conf->map_locations.find("/");
+        if(iter == loc_conf->map_locations.end())
+        {
+            rc = MUINX_DECLINED;
+        }
+        else
+        {
+            http_request.set_loc_conf(iter->second);
+            rc = MUINX_OK;
+        }
+    }
+    else
+    {
+        //按照url分割url，做最长匹配
+        std::string prefix_url;
+        auto path_items = base::split(url, '/');
+        int index = 0;
+        for(; static_cast<int>(path_items.size())>index; index++)
+        {
+            prefix_url += "/" + path_items[index];
+            if(static_cast<int>(prefix_url.size()) >= loc_conf->location_name_max_length)
+                break;
+        }
+
+        if(index == static_cast<int>(path_items.size()))
+            index--;
+
+        do
+        {
+            auto iter = loc_conf->map_locations.find(prefix_url);
+            if(iter == loc_conf->map_locations.end())
+            {
+                prefix_url.resize(prefix_url.size()-(path_items[index].size()+1));
+
+                index--;
+                continue;
+            }
+
+            http_request.set_loc_conf(iter->second);
+            rc = MUINX_OK;
+            break;
+        }while(index >= 0);
+    }
+
+    return rc;
+}
+//---------------------------------------------------------------------------
+void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
+{
+    (void)http_request;
+    return;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*)
@@ -489,12 +524,17 @@ bool HttpModuleCore::MergeSrvConfig(void* parent, void* child)
 void* HttpModuleCore::CreateLocConfig()
 {
     HttpLocConf* conf = new HttpLocConf();
-    conf->exact_match = false;
-    conf->keepalive_timeout = -1;
-    conf->loc_conf = nullptr;
     conf->name = "unset";
     conf->root = "unset";
+    conf->exact_match = false;
+    conf->keepalive_timeout = -1;
+    conf->keepalive = true;
+    conf->tcp_nopush = -1;
+    conf->limit_rate = -1;
     conf->sendfile = false;
+    conf->loc_conf = nullptr;
+    conf->location_name_max_length = 0;
+
     return conf;
 }
 //---------------------------------------------------------------------------

@@ -371,6 +371,9 @@ bool CoreModuleHttp::BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf)
 
     for(auto& location : loc_conf->locations)
     {
+        if(loc_conf->location_name_max_length < static_cast<int>(location.name.size()))
+            loc_conf->location_name_max_length = static_cast<int>(location.name.size());
+
         loc_conf->map_locations[location.name] = location.exact ? location.exact : location.inclusive;
     }
 

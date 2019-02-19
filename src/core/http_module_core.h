@@ -35,8 +35,13 @@ public:
 
         int keepalive_timeout; //超时(单位s)
 
-        bool sendfile; //发送文件
+        bool keepalive; //维持长连接
 
+        int tcp_nopush; //TCP_NOPUSH/TCP_CORK选项
+
+        int limit_rate; //连接速率限制
+
+        bool sendfile; //发送文件
 
         //同一个server块内的location,可能location有嵌套，所以放在该结构体内部
         std::vector<Location> locations;
@@ -51,6 +56,8 @@ public:
          * 快速查找路径对应的结构体(name:HttpLocConf)
          */
         std::unordered_map<std::string, HttpLocConf*> map_locations;
+        //最长的loc{} 名字，用来加速匹配map_locations
+        int location_name_max_length;
 
         bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
 
@@ -197,6 +204,9 @@ public:
     static int TryFilesPhase(HttpRequest& http_request, PhaseHandler& handler);
     static int ContentPhase(HttpRequest& http_request, PhaseHandler& handler);
 
+    static int FindRequestLocation(HttpRequest& http_request);
+    static void UpdateRequestLocationConfig(HttpRequest& http_request);
+
 private:
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
@@ -206,6 +216,7 @@ private:
     bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
     bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
     bool AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bool is_default);
+
 
 private:
     bool PreConfiguration();

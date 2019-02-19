@@ -394,8 +394,10 @@ int HttpContext::RunPhases()
     while(handlers[request_.phase_handler()].checker)
     {
         int rc = handlers[request_.phase_handler()].checker(request_, handlers[request_.phase_handler()]);
-        if(MUINX_OK != rc)
-            return false;
+
+        //返回成功不继续处理HTTP流程
+        if(MUINX_OK == rc)
+            return true;
     }
 
     return true;
