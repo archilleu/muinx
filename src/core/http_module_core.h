@@ -176,6 +176,8 @@ public:
 
     struct HttpMainConf
     {
+        std::string www;    //根路径
+
         std::vector<HttpSrvConf*> servers;  //所有的server{}配置
         std::vector<ConfPort> ports;    //所有的监听端口
 

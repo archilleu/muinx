@@ -34,11 +34,18 @@ HttpModuleCore::HttpModuleCore()
     this->commands_ =
     {
         {
-            "sendfile",
+            "www",
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, sendfile)
+            offsetof(HttpMainConf, www)
+        },
+        {
+            "root",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET,
+            offsetof(HttpLocConf, root)
         },
         {
             "keepalive_timeout",
@@ -46,6 +53,34 @@ HttpModuleCore::HttpModuleCore()
             std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET,
             offsetof(HttpLocConf, keepalive_timeout)
+        },
+        {
+            "keepalive",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET,
+            offsetof(HttpLocConf, keepalive)
+        },
+        {
+            "tcp_nopush",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET,
+            offsetof(HttpLocConf, tcp_nopush)
+        },
+        {
+            "limit_rate",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET,
+            offsetof(HttpLocConf, limit_rate)
+        },
+        {
+            "sendfile",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
+            std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET,
+            offsetof(HttpLocConf, sendfile)
         },
         {
             "merge_server",
@@ -85,13 +120,6 @@ HttpModuleCore::HttpModuleCore()
             std::bind(&HttpModuleCore::ConfigSetLocationBlock, this, _1, _2, _3),
             0,
             0
-        },
-        {
-            "root",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, root)
         }
     };
 }
@@ -132,8 +160,10 @@ HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module* modu
 //---------------------------------------------------------------------------
 std::string HttpModuleCore::HttpMapUriToPath(const HttpRequest& http_request)
 {
-    HttpModuleCore::HttpLocConf* loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
-    std::string path = loc_conf->root + http_request.url();
+    auto loc_conf_main = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    
+    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
+    std::string path = loc_conf_main->www + loc_conf->root + "/" + http_request.url();
     return path;
 }
 //---------------------------------------------------------------------------
@@ -542,11 +572,13 @@ bool HttpModuleCore::MergeLocConfig(void* parent, void* child)
 {
     //父亲层的配置
     auto prev = reinterpret_cast<HttpLocConf*>(parent);
+    (void)prev;
     //当前层的配置
     auto conf = reinterpret_cast<HttpLocConf*>(child);
+    (void)conf;
 
-    conf->keepalive_timeout = prev->keepalive_timeout;
-    conf->sendfile = prev->sendfile;
+    //conf->keepalive_timeout = prev->keepalive_timeout;
+    //conf->sendfile = prev->sendfile;
 
     return true;
 }
