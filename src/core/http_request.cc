@@ -27,7 +27,9 @@ const HttpRequest::MethodType HttpRequest::kMethodType =
 };
 //---------------------------------------------------------------------------
 HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
-:   connection_(conn_ptr),
+:   ctxs_(nullptr),
+    loc_conf_(nullptr),
+    connection_(conn_ptr),
     method_(INVALID),
     method_str_("INVALID"),
     version_(NOTSUPPORT),

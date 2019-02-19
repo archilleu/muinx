@@ -173,7 +173,7 @@ int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& pha
 {
     (void)phase_handler;
 
-    //查找正确的loc_conf
+    //查找准确的loc_conf
     int rc = MUINX_DECLINED;
     auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
     const std::string& url = http_request.url();
@@ -181,11 +181,10 @@ int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& pha
     {
         auto iter = loc_conf->map_locations.find("/");
         if(iter != loc_conf->map_locations.end())
-        {
-            rc = MUINX_OK;
-        }
+            rc = MUINX_DECLINED;
 
-        rc = MUINX_DECLINED;
+        //http_request.set_loc_conf(iter->second);
+        rc = MUINX_OK;
     }
     else
     {
@@ -199,6 +198,7 @@ int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& pha
             if(iter == loc_conf->map_locations.end())
                 continue;
 
+            //http_request.set_loc_conf(iter->second);
             rc = MUINX_OK;
         }
     }

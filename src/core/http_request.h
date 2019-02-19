@@ -109,6 +109,9 @@ public:
     void set_ctxs(HttpModuleCore::HttpConfigCtxs* ctxs) { ctxs_ = ctxs; }
     HttpModuleCore::HttpConfigCtxs* ctxs() { return ctxs_; }
 
+    void set_loc_conf(HttpModuleCore::HttpLocConf* loc_conf) { loc_conf_ = loc_conf; }
+    HttpModuleCore::HttpLocConf* loc_conf() { return loc_conf_; }
+
     void set_method(Method method) { method_ = method; }
     Method method() const { return method_; }
 
@@ -165,8 +168,10 @@ public:
     static const char* kHTTP10;
 
 private:
-    //当前LOC{}的配置项
+    //当前请求的配置项
     HttpModuleCore::HttpConfigCtxs* ctxs_;
+    //当前请求匹配的loc{}
+    HttpModuleCore::HttpLocConf* loc_conf_;
 
     //该请求对应的链接
     //FIXME:不需要这个对象

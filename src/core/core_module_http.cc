@@ -168,7 +168,7 @@ bool CoreModuleHttp::InitPhaseHandlers()
     {
         count += main_conf->phases[i].handlers.size();
     }
-    main_conf->phase_engine.handlers.reserve(count);
+    main_conf->phase_engine.handlers.reserve(count+1);
 
     int next = 0;
     HttpModuleCore::PhaseHandler phase_handler;
@@ -286,6 +286,9 @@ bool CoreModuleHttp::InitPhaseHandlers()
             main_conf->phase_engine.handlers.push_back(phase_handler);
         }
     }
+
+    //哨兵流程，用来判断流程是否结束
+    main_conf->phase_engine.handlers.push_back(HttpModuleCore::PhaseHandler());
 
     return true;
 }
