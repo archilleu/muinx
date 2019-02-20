@@ -66,7 +66,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     std::vector<char> data;
     if(false == base::LoadFile(http_request.path(), &data))
     {
-        return HttpRequest::NOT_FOUND;
+        return MUINX_DECLINED;
     }
 
     return MUINX_OK;

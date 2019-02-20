@@ -166,11 +166,14 @@ int HttpModuleCore::FindConfigPhase(HttpRequest& http_request, PhaseHandler& pha
     (void)phase_handler;
 
     int rc = FindRequestLocation(http_request);
+    if(MUINX_OK != rc)
+    {
+        return MUINX_ERROR;
+    }
 
     UpdateRequestLocationConfig(http_request);
-
     http_request.set_phase_handler(http_request.phase_handler() + 1);
-    return rc;
+    return MUINX_AGAIN;
 }
 //---------------------------------------------------------------------------
 int HttpModuleCore::PostRewritePhase(HttpRequest& request, PhaseHandler& phase_handler)
@@ -218,13 +221,25 @@ int HttpModuleCore::ContentPhase(HttpRequest& http_request, PhaseHandler& phase_
     }
 
     //继续HTTP流程处理
-    http_request.set_phase_handler(http_request.phase_handler() + 1);
     //判断是否还有下一个handler，有则继续处理，否则返回失败
+    if(g_http_module_core.core_main_conf()->phase_engine.handlers
+            [http_request.phase_handler() + 1].checker)
+    {
+        http_request.set_phase_handler(http_request.phase_handler() + 1);
+        return MUINX_AGAIN;
+    }
+
+    //没有找到合适的content handler
+    if('/' == http_request.url().back())
+    {
+        http_request.set_status_code(HttpRequest::StatusCode::FORBIDDEN);
+    }
+    else
+    {
+        http_request.set_status_code(HttpRequest::StatusCode::NOT_FOUND);
+    }
     
-    //auto main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
-    //auto& handlers = main_conf->phase_engine.handlers;
-    
-    return MUINX_AGAIN;
+    return MUINX_ERROR;
 }
 //---------------------------------------------------------------------------
 int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)

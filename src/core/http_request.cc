@@ -52,7 +52,7 @@ void HttpRequest::UriToPath()
 {
     //获取全局的根路径
     const auto& www = g_http_module_core.core_main_conf()->www;
-    path_ = www + loc_conf()->root + "/" + url();
+    path_ = www + "/" + loc_conf()->root + url();
 
     return;
 }
