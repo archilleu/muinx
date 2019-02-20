@@ -250,6 +250,36 @@ bool CoreModuleConf::Parse(const std::string& path)
     return true;
 }
 //---------------------------------------------------------------------------
+HttpModuleCore::HttpMainConf* CoreModuleConf::GetModuleMainConf(const Module* module)
+{
+    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (block_config_ctxs_[g_core_module_http.index()]);
+    auto main = reinterpret_cast<HttpModuleCore::HttpMainConf*>
+        (ctx->main_conf[module->module_index()]);
+
+    return main;
+}
+//---------------------------------------------------------------------------
+HttpModuleCore::HttpSrvConf* CoreModuleConf::GetModuleSrvConf(const Module* module)
+{
+    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (block_config_ctxs_[g_core_module_http.index()]);
+    auto srv = reinterpret_cast<HttpModuleCore::HttpSrvConf*>
+        (ctx->srv_conf[module->module_index()]);
+
+    return srv;
+}
+//---------------------------------------------------------------------------
+HttpModuleCore::HttpLocConf* CoreModuleConf::GetModuleLocConf(const Module* module)
+{
+    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+        (block_config_ctxs_[g_core_module_http.index()]);
+    auto loc = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+        (ctx->loc_conf[module->module_index()]);
+
+    return loc;
+}
+//---------------------------------------------------------------------------
 bool CoreModuleConf::GetConfigFileData()
 {
     return base::LoadFile(config_path_, &config_dat_);

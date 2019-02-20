@@ -107,10 +107,10 @@ public:
 
 public:
     void set_ctxs(HttpModuleCore::HttpConfigCtxs* ctxs) { ctxs_ = ctxs; }
-    HttpModuleCore::HttpConfigCtxs* ctxs() { return ctxs_; }
+    HttpModuleCore::HttpConfigCtxs* ctxs() const { return ctxs_; }
 
     void set_loc_conf(HttpModuleCore::HttpLocConf* loc_conf) { loc_conf_ = loc_conf; }
-    HttpModuleCore::HttpLocConf* loc_conf() { return loc_conf_; }
+    const HttpModuleCore::HttpLocConf* loc_conf() const { return loc_conf_; }
 
     void set_method(Method method) { method_ = method; }
     Method method() const { return method_; }
@@ -124,29 +124,39 @@ public:
     void set_url(const std::string& url) { url_ = url; }
     const std::string& url() const { return url_; }
 
+    const std::string& path() const { return path_; }
+
     void set_exten(const std::string& exten) { exten_ = exten; }
-    const std::string& exten() { return exten_; }
+    const std::string& exten() const { return exten_; }
 
     void set_archor(const std::string& archor) { archor_ = archor; }
-    const std::string& archor() { return archor_; }
+    const std::string& archor() const { return archor_; }
 
-    void set_parameters(const std::map<std::string, std::string>& params) { parameters_ = params; }
-    const std::map<std::string, std::string>& parameters() const { return parameters_; }
+    using Parameters = std::map<std::string, std::string>;
+    using ParametersIter = Parameters::iterator;
+    void set_parameters(const Parameters& params) { parameters_ = params; }
+    const Parameters& parameters() const { return parameters_; }
 
     HttpHeaders& headers() { return headers_; }
 
+    void set_status_code(StatusCode  status_code) { status_code_ = status_code; }
+    StatusCode status_code() const { return status_code_; }
+
     void set_phase_handler(int phase_handler) { phase_handler_ = phase_handler; }
-    int phase_handler() { return phase_handler_; }
+    int phase_handler() const { return phase_handler_; }
 
     void set_internal(bool internal) { internal_ = internal; }
-    bool internal() { return internal_; }
+    bool internal() const { return internal_; }
 
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
-    base::Timestamp recv_time() { return recv_time_; }
+    base::Timestamp recv_time() const { return recv_time_; }
 
     typedef int (*HttpHandler)(HttpRequest&);
     void set_content_handler(HttpHandler http_handler);
     HttpRequestHandler& content_handler() { return content_handler_; }
+
+    //转换uri到文件系统的path
+    void UriToPath();
 
     std::string ToString();
 
@@ -185,10 +195,12 @@ private:
     std::string method_str_;
     Version version_;       //HTTP版本
     std::string url_;       //资源路径
+    std::string path_;      //文件系统路径
     std::string exten_;     //扩展名
     std::string archor_;    //锚
-    std::map<std::string, std::string> parameters_; //url参数
+    Parameters parameters_; //url参数
     HttpHeaders headers_;   //请求头
+    StatusCode status_code_;   //HTTP状态码
 
     int phase_handler_;  //处于哪一个HTTP阶段
 

@@ -19,6 +19,7 @@ using namespace std::placeholders;
 HttpModuleCore g_http_module_core;
 //---------------------------------------------------------------------------
 HttpModuleCore::HttpModuleCore()
+:   core_main_conf_(nullptr)
 {
     HttpModuleCtx* ctx = new HttpModuleCtx();
     ctx->preconfiguration = std::bind(&HttpModuleCore::PreConfiguration, this);
@@ -37,7 +38,7 @@ HttpModuleCore::HttpModuleCore()
             "www",
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
+            HTTP_MAIN_CONF_OFFSET,
             offsetof(HttpMainConf, www)
         },
         {
@@ -128,45 +129,6 @@ HttpModuleCore::~HttpModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpMainConf* HttpModuleCore::GetModuleMainConf(const Module* module)
-{
-    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
-        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
-    auto main = reinterpret_cast<HttpModuleCore::HttpMainConf*>
-        (ctx->main_conf[module->module_index()]);
-
-    return main;
-}
-//---------------------------------------------------------------------------
-HttpModuleCore::HttpSrvConf* HttpModuleCore::GetModuleSrvConf(const Module* module)
-{
-    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
-        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
-    auto srv = reinterpret_cast<HttpModuleCore::HttpSrvConf*>
-        (ctx->srv_conf[module->module_index()]);
-
-    return srv;
-}
-//---------------------------------------------------------------------------
-HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf(const Module* module)
-{
-    auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
-        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
-    auto loc = reinterpret_cast<HttpModuleCore::HttpLocConf*>
-        (ctx->loc_conf[module->module_index()]);
-
-    return loc;
-}
-//---------------------------------------------------------------------------
-std::string HttpModuleCore::HttpMapUriToPath(const HttpRequest& http_request)
-{
-    auto loc_conf_main = g_http_module_core.GetModuleMainConf(&g_http_module_core);
-    
-    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
-    std::string path = loc_conf_main->www + loc_conf->root + "/" + http_request.url();
-    return path;
-}
-//---------------------------------------------------------------------------
 int HttpModuleCore::GenericPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
     int rc = phase_handler.handler(request);
@@ -241,15 +203,34 @@ int HttpModuleCore::TryFilesPhase(HttpRequest& request, PhaseHandler& phase_hand
 //---------------------------------------------------------------------------
 int HttpModuleCore::ContentPhase(HttpRequest& http_request, PhaseHandler& phase_handler)
 {
+    //如果定义了特有的处理HTTP_CONTENT_PHASE函数，该函数处理完成后直接跳过剩余HTTP阶段
+    if(http_request.content_handler())
+    {
+        http_request.content_handler()(http_request);
+        return MUINX_OK;
+    }
+
+    //非DECLINED返回值结束HTTP流程
+    int rc = phase_handler.handler(http_request);
+    if(MUINX_DECLINED != rc)
+    {
+        return rc;
+    }
+
+    //继续HTTP流程处理
     http_request.set_phase_handler(http_request.phase_handler() + 1);
-    (void) phase_handler;
-    return MUINX_OK;
+    //判断是否还有下一个handler，有则继续处理，否则返回失败
+    
+    //auto main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    //auto& handlers = main_conf->phase_engine.handlers;
+    
+    return MUINX_AGAIN;
 }
 //---------------------------------------------------------------------------
 int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
 {
     //查找准确的loc_conf
-    int rc = MUINX_DECLINED;
+    int rc = MUINX_ERROR;
     auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
     const std::string& url = http_request.url();
     if(1 == url.length())
@@ -257,7 +238,7 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
         auto iter = loc_conf->map_locations.find("/");
         if(iter == loc_conf->map_locations.end())
         {
-            rc = MUINX_DECLINED;
+            rc = MUINX_ERROR;
         }
         else
         {
@@ -298,12 +279,47 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
         }while(index >= 0);
     }
 
+    if(MUINX_ERROR == rc)
+    {
+        http_request.set_status_code(HttpRequest::StatusCode::NOT_FOUND);
+    }
+
     return rc;
 }
 //---------------------------------------------------------------------------
 void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
 {
-    (void)http_request;
+    auto loc_conf = http_request.loc_conf();
+
+    if(loc_conf->sendfile)
+    {
+        //TODO:支持sendfile
+    }
+
+    if(loc_conf->keepalive)
+    {
+        //TODO:支持keepalive
+    }
+
+    if(loc_conf->tcp_nopush)
+    {
+        //TODO:支持nopush
+    }
+
+    if(loc_conf->limit_rate)
+    {
+        //TODO:支持限速
+    }
+
+    //设置该loc特有的HTTP_CONTENT_PHASE过程，覆盖全局
+    if(loc_conf->handler)
+    {
+        http_request.set_content_handler(loc_conf->handler);
+    }
+
+    //转换为文件系统路径
+    http_request.UriToPath();
+
     return;
 }
 //---------------------------------------------------------------------------
@@ -436,8 +452,7 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
     }
 
     //检擦是否添加过端口了
-    HttpMainConf* main_conf = GetModuleMainConf(this);
-    for(auto& conf_port : main_conf->ports)
+    for(auto& conf_port : core_main_conf_->ports)
     {
         if(conf_port.port != port)
             continue;
@@ -455,7 +470,7 @@ bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* c
     ConfPort conf_port;
     conf_port.port = port;
 
-    HttpMainConf* main_conf = GetModuleMainConf(this);
+    HttpMainConf* main_conf = core_main_conf_;
     main_conf->ports.push_back(conf_port);
     return AddConfAddresses(main_conf->ports.back(), ip, conf, is_default);
 }
@@ -505,19 +520,30 @@ bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bo
 //---------------------------------------------------------------------------
 bool HttpModuleCore::PreConfiguration()
 {
+    Logger_debug("index:%d, PreConfiguration", this->index()); 
     return true;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::PostConfiguration()
 {
+    //获取该模块的配置
+    if(!core_main_conf_)
+    {
+        auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
+            (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
+        core_main_conf_ = reinterpret_cast<HttpModuleCore::HttpMainConf*>
+            (ctx->main_conf[this->module_index()]);
+    }
+
     Logger_debug("index:%d, PostConfiguration", this->index()); 
     return true;
 }
 //---------------------------------------------------------------------------
 void* HttpModuleCore::CreateMainConfig()
 {
-    HttpMainConf* conf = new HttpMainConf();
-    return conf;
+    core_main_conf_ = new HttpMainConf();
+    core_main_conf_->www = "../www";
+    return core_main_conf_;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::InitMainConfig(void* conf)

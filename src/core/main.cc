@@ -20,7 +20,7 @@ void MainConfig()
     std::cout << "error_log: " << core_config->error_log << std::endl;
     std::cout << "pid: " << core_config->pid << std::endl;
 
-    HttpModuleCore::HttpMainConf* main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    HttpModuleCore::HttpMainConf* main_conf = g_core_module_conf.GetModuleMainConf(&g_http_module_core);
     for(auto port : main_conf->ports)
     {
         std::cout << "port: " << port.port << std::endl;

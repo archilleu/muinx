@@ -30,7 +30,7 @@ public:
     size_t content_length() const { return content_length_; }
 
     void set_keep_alive(bool keep_alive) { keep_alive_ = keep_alive; }
-    bool keep_alive() { return keep_alive_; }
+    bool keep_alive() const { return keep_alive_; }
 
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;

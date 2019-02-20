@@ -380,7 +380,6 @@ bool HttpContext::HandleHeader()
     done_ = true;
     return true;
 }
-    bool RunPhases();
 //---------------------------------------------------------------------------
 int HttpContext::HttpHandler()
 {
@@ -389,18 +388,30 @@ int HttpContext::HttpHandler()
 //---------------------------------------------------------------------------
 int HttpContext::RunPhases()
 {
-    auto main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
-    auto& handlers = main_conf->phase_engine.handlers;
+    auto& handlers = g_http_module_core.core_main_conf()->phase_engine.handlers;
     while(handlers[request_.phase_handler()].checker)
     {
         int rc = handlers[request_.phase_handler()].checker(request_, handlers[request_.phase_handler()]);
 
-        //返回成功不继续处理HTTP流程
-        if(MUINX_OK == rc)
-            return true;
+        switch(rc)
+        {
+            case MUINX_DECLINED:
+            case MUINX_AGAIN:
+                continue;
+
+            //返回成功不继续处理剩余HTTP流程
+            case MUINX_OK:
+                return MUINX_OK;
+
+            case MUINX_ERROR:
+                return MUINX_ERROR;
+
+            default:
+                continue;
+        }
     }
 
-    return true;
+    return MUINX_OK;
 }
 //---------------------------------------------------------------------------
 }//namespace core

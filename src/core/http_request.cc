@@ -33,6 +33,7 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
     method_(INVALID),
     method_str_("INVALID"),
     version_(NOTSUPPORT),
+    status_code_(StatusCode::OK),
     phase_handler_(HttpModuleCore::HTTP_POST_READ_PHASE ),
     internal_(false)
 {
@@ -44,6 +45,15 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
 void HttpRequest::set_content_handler(HttpHandler http_handler)
 {
     content_handler_ = std::bind(http_handler, _1);
+    return;
+}
+//---------------------------------------------------------------------------
+void HttpRequest::UriToPath()
+{
+    //获取全局的根路径
+    const auto& www = g_http_module_core.core_main_conf()->www;
+    path_ = www + loc_conf()->root + "/" + url();
+
     return;
 }
 //---------------------------------------------------------------------------

@@ -45,8 +45,7 @@ int HttpModuleIndex::IndexHandler(HttpRequest& http_request)
 //---------------------------------------------------------------------------
 bool HttpModuleIndex::Initialize()
 {
-    auto main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
-    main_conf->phases[HttpModuleCore::HTTP_CONTENT_PHASE]
+    g_http_module_core.core_main_conf()->phases[HttpModuleCore::HTTP_CONTENT_PHASE]
         .handlers.push_back(std::bind(IndexHandler, _1));
 
     return true;

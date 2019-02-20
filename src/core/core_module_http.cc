@@ -46,8 +46,7 @@ bool CoreModuleHttp::MergeServers(const HttpModule* module)
     HttpModuleCore::HttpConfigCtxs saved = *ctx;
 
     //server结构体在main_conf中记录
-    HttpModuleCore::HttpMainConf* main_conf =
-        g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    HttpModuleCore::HttpMainConf* main_conf = g_http_module_core.core_main_conf();
     for(HttpModuleCore::HttpSrvConf* srv_conf : main_conf->servers)
     {
         const HttpModule::HttpModuleCtx* http_module_ctx = module->ctx();
@@ -97,7 +96,7 @@ bool CoreModuleHttp::MergeLocations(const std::vector<HttpModuleCore::Location>&
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::InitMapLocations()
 {
-    std::vector<HttpModuleCore::HttpSrvConf*> servers = g_http_module_core.GetModuleMainConf(&g_http_module_core)->servers;
+    std::vector<HttpModuleCore::HttpSrvConf*> servers = g_http_module_core.core_main_conf()->servers;
     for(auto server : servers)
     {
         auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>(
@@ -114,7 +113,7 @@ bool CoreModuleHttp::InitMapLocations()
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::OptimizeServers()
 {
-    auto conf_main = g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    auto conf_main = g_http_module_core.core_main_conf();
     for(auto& port : conf_main->ports)
     {
         if(false == HashAddressServernames(port))
@@ -149,8 +148,7 @@ bool CoreModuleHttp::InitPostConfiguration()
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::InitPhaseHandlers()
 {
-    HttpModuleCore::HttpMainConf* main_conf =
-        g_http_module_core.GetModuleMainConf(&g_http_module_core);
+    HttpModuleCore::HttpMainConf* main_conf = g_http_module_core.core_main_conf();
 
     main_conf->phase_engine.server_rewrite_phase = -1;
     main_conf->phase_engine.location_rewrite_phase = -1;

@@ -189,11 +189,7 @@ public:
 
 //工具方法
 public:
-    HttpMainConf* GetModuleMainConf(const Module* module);
-    HttpSrvConf* GetModuleSrvConf(const Module* module);
-    HttpLocConf* GetModuleLocConf(const Module* module);
-
-    static std::string HttpMapUriToPath(const HttpRequest& http_request);
+    HttpMainConf* core_main_conf() const { return core_main_conf_; }
 
 //checker方法
 public:
@@ -219,7 +215,6 @@ private:
     bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
     bool AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bool is_default);
 
-
 private:
     bool PreConfiguration();
     bool PostConfiguration();
@@ -230,6 +225,9 @@ private:
     bool MergeSrvConfig(void* parent, void* child);
     void* CreateLocConfig();
     bool MergeLocConfig(void* parent, void* child);
+
+    //该模块的main_conf配置结构体
+    HttpMainConf* core_main_conf_;
 };
 //---------------------------------------------------------------------------
 extern HttpModuleCore g_http_module_core;

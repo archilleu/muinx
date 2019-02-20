@@ -134,7 +134,7 @@ public:
     void set_block_end_callback(const BlockEndCallback& cb) { block_end_cb_ = cb; }
 
     void PushCtx(void* ctx) { stack_ctx_.push(ctx); }
-    void* CurrentCtx() { return stack_ctx_.top(); }
+    void* CurrentCtx() const { return stack_ctx_.top(); }
     void PopCtx()
     {
         if(!stack_ctx_.empty())
@@ -142,6 +142,11 @@ public:
     }
 
     bool Parse(const std::string& path);
+
+public:
+    HttpModuleCore::HttpMainConf* GetModuleMainConf(const Module* module);
+    HttpModuleCore::HttpSrvConf* GetModuleSrvConf(const Module* module);
+    HttpModuleCore::HttpLocConf* GetModuleLocConf(const Module* module);
 
 public:
     void**** config_ctxs_;      //全局配置文件结构体指针,数组指针指向数组指针

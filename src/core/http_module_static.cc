@@ -55,9 +55,6 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
         return MUINX_DECLINED;
     }
 
-    //获取真实路径
-    std::string path = g_http_module_core.HttpMapUriToPath(http_request);
-
     //获取该模块需要的配置项目
     HttpModuleCore::HttpLocConf* loc_conf = http_request.GetModuleLocConf(&g_http_module_static);
     (void)loc_conf;
@@ -67,7 +64,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     //TODO:缓存文件
     
     std::vector<char> data;
-    if(false == base::LoadFile(path, &data))
+    if(false == base::LoadFile(http_request.path(), &data))
     {
         return HttpRequest::NOT_FOUND;
     }
@@ -78,8 +75,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
 bool HttpModuleStatic::Initialize()
 {
     Logger_debug("index:%d, PostConfiguration", this->index()); 
-    auto main_conf = g_http_module_core.GetModuleMainConf(&g_http_module_core);
-    main_conf->phases[HttpModuleCore::HTTP_CONTENT_PHASE]
+    g_http_module_core.core_main_conf()->phases[HttpModuleCore::HTTP_CONTENT_PHASE]
         .handlers.push_back(std::bind(StaticHandler, _1));
 
     return true;
