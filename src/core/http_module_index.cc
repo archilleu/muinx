@@ -39,8 +39,8 @@ HttpModuleIndex::~HttpModuleIndex()
 int HttpModuleIndex::IndexHandler(HttpRequest& http_request)
 {
     (void)http_request;
-
-    return MUINX_OK;
+    Logger_debug("index ");
+    return MUINX_DECLINED;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleIndex::Initialize()
@@ -54,9 +54,13 @@ bool HttpModuleIndex::Initialize()
 bool HttpModuleIndex::ConfigSetIndex(const CommandConfig& config, const CommandModule& module,
        void* module_command)
 {
-    (void)config;
     (void)module;
-    (void)module_command;
+    if(1 == config.args.size())
+        return false;
+
+    HttpIndexConfig* index_config = reinterpret_cast<HttpIndexConfig*>(module_command);
+    auto& indexs = index_config->indexs;
+    indexs.insert(indexs.end(), config.args.begin()+1, config.args.end());
     return true;
 }
 //---------------------------------------------------------------------------

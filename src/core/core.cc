@@ -6,6 +6,7 @@
 #include "core_module_http.h"
 #include "http_module_core.h"
 #include "http_module_static.h"
+#include "http_module_index.h"
 #include <iostream>
 //---------------------------------------------------------------------------
 namespace core
@@ -66,7 +67,8 @@ void Core::InitGlobalModules()
         &g_event_module_core,
         &g_core_module_http,
         &g_http_module_core,
-        &g_http_module_static
+        &g_http_module_static,
+        &g_http_module_index
     };
     modules_.swap(modules);
 }
