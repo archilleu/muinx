@@ -84,17 +84,6 @@ HttpModuleCore::HttpModuleCore()
             offsetof(HttpLocConf, sendfile)
         },
         {
-            "merge_server",
-
-            /*该选项出现可以出现在main srv* loc中，但是因为loc中的srv指向包
-             * 含loc的srv，所以srv的会被覆盖
-             */
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            HTTP_SRV_CONF_OFFSET,
-            offsetof(HttpSrvConf, merge_server)
-        },
-        {
             "server",
             HTTP_MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&HttpModuleCore::ConfigSetServerBlock, this, _1, _2, _3),
@@ -571,7 +560,6 @@ void* HttpModuleCore::CreateSrvConfig()
 {
     HttpSrvConf* conf = new HttpSrvConf();
     conf->ctx = nullptr;
-    conf->merge_server = "unset";
     conf->server_name = "unset";
     return conf;
 }
@@ -583,12 +571,8 @@ bool HttpModuleCore::MergeSrvConfig(void* parent, void* child)
     //当前层的配置
     auto conf = reinterpret_cast<HttpSrvConf*>(child);
 
-    std::string s1 = prev->merge_server;
-    std::string s2 = conf->merge_server;
-    (void)s1;
-    (void)s2;
-    conf->merge_server = s1;
-
+    (void)prev;
+    (void)conf;
     return true;
 }
 //---------------------------------------------------------------------------

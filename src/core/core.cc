@@ -205,38 +205,7 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
     if((command_config.module_type==Module::ModuleType::HTTP)
             && (command_config.conf_type==HTTP_MAIN_CONF))
     {
-        for(auto module : modules_)
-        {
-            if(module->type() != Module::ModuleType::HTTP)
-                continue;
-
-            HttpModule* http_module = static_cast<HttpModule*>(module);
-            auto ctx = http_module->ctx();
-            if(ctx->init_main_config)
-            {
-                HttpModuleCore::HttpMainConf* main_conf =
-                    g_core_module_conf.GetModuleMainConf(module);
-                ctx->init_main_config(main_conf);
-            }
-
-            //合并配置项
-            g_core_module_http.MergeServers(dynamic_cast<HttpModule*>(module));
-        }
-
-        //创建快速搜索location{}树
-        if(false == g_core_module_http.InitMapLocations())
-            return false;
-
-        //构建监听server和hashserver
-        if(false == g_core_module_http.OptimizeServers())
-            return false;
-
-        //构建流式HTTP处理Handlers所需要的postconfiguration
-        if(false == g_core_module_http.InitPostConfiguration())
-            return false;
-
-        //构建流式HTTP处理Handlers
-        if(false == g_core_module_http.InitPhaseHandlers())
+        if(false == g_core_module_http.HttpBlockParseComplete())
             return false;
     }
 

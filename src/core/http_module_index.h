@@ -26,6 +26,8 @@ public:
 
 private:
     bool Initialize();
+    void* CreateLocConfig();
+    bool MergeLocConfig(void* parent, void* child);
 
     bool ConfigSetIndex(const CommandConfig& config, const CommandModule& module,
             void* module_command);

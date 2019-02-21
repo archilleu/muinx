@@ -27,17 +27,7 @@ public:
 
     const std::vector<net::InetAddressData>& addresses() const { return addresses_; }
 
-    bool MergeServers(const HttpModule* module);
-    bool MergeLocations(const std::vector<HttpModuleCore::Location>& locations,
-            void** srv_loc_conf, const HttpModule* module);
-
-    bool InitMapLocations();
-
-    bool OptimizeServers();
-
-    bool InitPostConfiguration();
-
-    bool InitPhaseHandlers();
+    bool HttpBlockParseComplete();
 
 public:
     static int s_max_http_module;
@@ -51,6 +41,20 @@ private:
 
     bool HashAddressServernames(HttpModuleCore::ConfPort& conf_port);
     bool AddListening(const HttpModuleCore::ConfPort& conf_port);
+
+    bool InitMainConfig();
+
+    bool MergeServersConfig();
+    bool MergeLocationsConfig(const std::vector<HttpModuleCore::Location>& locations,
+            void** srv_loc_conf, const HttpModule* module);
+
+    bool InitMapLocations();
+
+    bool OptimizeServers();
+
+    bool InitPostConfiguration();
+
+    bool InitPhaseHandlers();
 
 private:
     std::vector<net::InetAddressData> addresses_;

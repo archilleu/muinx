@@ -81,8 +81,6 @@ public:
     {
         std::string server_name;    //域名localhost
 
-        std::string merge_server;
-
         //指向解析server块时新生成的HttpConfigCtxs结构体
         HttpConfigCtxs* ctx;
     };
