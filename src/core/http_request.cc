@@ -69,7 +69,7 @@ std::string HttpRequest::ToString()
     }
     result += "\r\n";
     result += "header:";
-    for(const auto& header : headers_.headers())
+    for(const auto& header : headers_in_.headers())
     {
         result += header.first + ":" + header.second + "\r\n";
     }

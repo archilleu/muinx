@@ -279,7 +279,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
     if(colon == last)
         return false;
 
-    HttpHeaders& headers = request_.headers();
+    HttpHeaders& headers = request_.headers_in();
 
     TrimBlank(first, colon);
     std::string filed(first, colon);
@@ -292,7 +292,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
     HttpHeaders::HeaderTypeMapConstIter iter = HttpHeaders::kHeaderTypeMap.find(filed);
     if(HttpHeaders::kHeaderTypeMap.end() != iter)
     {
-        if(false == iter->second(request_.headers(), value))
+        if(false == iter->second(headers, value))
             return false;
     }
     headers.AddHeader(std::move(filed), std::move(value));
@@ -303,7 +303,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequestBody(net::Buffer& buffer)
 {
-    size_t content_length = request_.headers().content_length();
+    size_t content_length = request_.headers_in().content_length();
     if(0 == content_length)
     {
         parse_state_ = ParseRequestDone;
@@ -322,7 +322,7 @@ bool HttpContext::FindVirtualServer()
 {
     //寻找对应的server{}
     HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
-    const std::string& host = request_.headers().host();
+    const std::string& host = request_.headers_in().host();
     net::TCPConnectionPtr conn_ptr = connection_.lock();
     if(!conn_ptr)
     {
@@ -365,15 +365,15 @@ bool HttpContext::FindVirtualServer()
 //---------------------------------------------------------------------------
 bool HttpContext::HandleHeader()
 {
-    if(false == request_.headers().keep_alive())
+    if(request_.headers_in().connection().empty())
     {
         if(request_.version() == HttpRequest::Version::HTTP10)
         {
-            request_.headers().set_keep_alive(false);
+            request_.headers_in().set_connection("close");
         }
         else
         {
-            request_.headers().set_keep_alive(true);
+            request_.headers_in().set_connection("keep-alive");
         }
     }
 

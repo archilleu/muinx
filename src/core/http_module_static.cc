@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 #include <memory>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "defines.h"
 #include "../base/function.h"
 #include "../tools/muinx_logger.h"
@@ -62,12 +64,66 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     //TODO:处理目录的符号链接
 
     //TODO:缓存文件
-    
+
+    //判断路径是文件还是目录等，不跟随符号链接
+    struct stat sb;
+    if (-1 == lstat(http_request.path().c_str(), &sb))
+    {
+        switch(errno)
+        {
+            case EACCES:
+                http_request.set_status_code(HttpRequest::StatusCode::FORBIDDEN);
+                break;
+
+            case ENAMETOOLONG:
+                http_request.set_status_code(HttpRequest::StatusCode::REQUEST_URI_TOO_LARGE);
+                break;
+
+            case ENOENT:
+                http_request.set_status_code(HttpRequest::StatusCode::NOT_FOUND);
+                break;
+
+            default:
+                http_request.set_status_code(HttpRequest::StatusCode::INTERNAL_SERVER_ERROR);
+        }
+        return MUINX_ERROR;
+    }
+
+    switch (sb.st_mode & S_IFMT)
+    {
+        case S_IFREG:
+            break;
+        case S_IFDIR:   //目录
+            //TODO:加上'/'重定向
+            break;
+
+        //不是文件或者目录
+        case S_IFBLK:
+        case S_IFCHR:
+        case S_IFIFO:
+        case S_IFLNK:
+        case S_IFSOCK:
+            http_request.set_status_code(HttpRequest::StatusCode::FORBIDDEN);
+            return MUINX_ERROR;
+       }
+
+    //获取文件数据
     std::vector<char> data;
     if(false == base::LoadFile(http_request.path(), &data))
     {
+        http_request.set_status_code(HttpRequest::StatusCode::INTERNAL_SERVER_ERROR);
         return MUINX_DECLINED;
     }
+    http_request.set_response_body(std::move(data));
+
+    //设置响应头
+    http_request.headers_out().set_connection(http_request.headers_in().connection());
+    http_request.headers_out().set_last_modified_time(sb.st_mtim.tv_sec);
+
+    //设置响应头map
+    std::string connection = http_request.headers_in().connection();
+    http_request.headers_out().AddHeader(HttpHeaders::kConnection, std::move(connection));
+    http_request.headers_out().AddHeader(HttpHeaders::kLastModifiedTime, "TODO:time");
 
     return MUINX_OK;
 }

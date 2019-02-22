@@ -29,8 +29,11 @@ public:
     void set_content_length( size_t content_length) { content_length_ = content_length; }
     size_t content_length() const { return content_length_; }
 
-    void set_keep_alive(bool keep_alive) { keep_alive_ = keep_alive; }
-    bool keep_alive() const { return keep_alive_; }
+    void set_connection(const std::string& connection) { connection_ = connection; }
+    const std::string& connection() const { return connection_; }
+
+    void set_last_modified_time(time_t time) { last_modified_time_ = time; }
+    time_t last_modified_time() { return last_modified_time_; }
 
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;
@@ -42,12 +45,14 @@ public:
 
     static const char* kHost;
     static const char* kContentLength;
-    static const char* kKeepAlive;
+    static const char* kConnection;
+    static const char* kLastModifiedTime;
 
 private:
     std::string host_;
     size_t content_length_;
-    bool keep_alive_;
+    std::string connection_;
+    time_t last_modified_time_;
 
     HeaderMap headers_;
 };

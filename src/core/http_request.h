@@ -137,10 +137,19 @@ public:
     void set_parameters(const Parameters& params) { parameters_ = params; }
     const Parameters& parameters() const { return parameters_; }
 
-    HttpHeaders& headers() { return headers_; }
+    HttpHeaders& headers_in() { return headers_in_; }
 
     void set_status_code(StatusCode  status_code) { status_code_ = status_code; }
     StatusCode status_code() const { return status_code_; }
+
+    void set_request_body(std::vector<char>&& request_body) { request_body_ = std::move(request_body); }
+    const std::vector<char>& request_body() const { return request_body_; }
+
+    HttpHeaders& headers_out() { return headers_out_; }
+
+    void set_response_body(std::vector<char>&& response_body) { response_body_ = std::move(response_body); }
+    const std::vector<char>& response_body() const { return response_body_; }
+    std::vector<char>& response_body() { return response_body_; }
 
     void set_phase_handler(int phase_handler) { phase_handler_ = phase_handler; }
     int phase_handler() const { return phase_handler_; }
@@ -199,8 +208,12 @@ private:
     std::string exten_;     //扩展名
     std::string archor_;    //锚
     Parameters parameters_; //url参数
-    HttpHeaders headers_;   //请求头
+    HttpHeaders headers_in_;   //请求头
     StatusCode status_code_;   //HTTP状态码
+    std::vector<char> request_body_;
+
+    HttpHeaders headers_out_;   //响应请求头
+    std::vector<char> response_body_;
 
     int phase_handler_;  //处于哪一个HTTP阶段
 

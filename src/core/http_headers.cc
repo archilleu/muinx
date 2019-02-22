@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------
 #include <cassert>
+#include <stdlib.h>
+#include "../base/function.h"
 #include "http_request.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -7,11 +9,12 @@ namespace core
 
 using namespace std::placeholders;
 //---------------------------------------------------------------------------
-const char* HttpHeaders::kHost          = "host";
-const char* HttpHeaders::kContentLength = "content-length";
-const char* HttpHeaders::kKeepAlive     = "keep-alive";
+const char* HttpHeaders::kHost              = "host";
+const char* HttpHeaders::kContentLength     = "content-length";
+const char* HttpHeaders::kConnection        = "connection";
+const char* HttpHeaders::kLastModifiedTime  = "last-modified-time";
 //---------------------------------------------------------------------------
-bool HeaderActionHost(HttpHeaders& http_header, const std::string& host)
+static bool HeaderActionHost(HttpHeaders& http_header, const std::string& host)
 {
     //TODO:校验
     //是否带端口
@@ -28,22 +31,46 @@ bool HeaderActionHost(HttpHeaders& http_header, const std::string& host)
     return true;
 }
 //---------------------------------------------------------------------------
-bool HeaderActionContentLength(HttpHeaders& http_header, const std::string& content_length)
+static bool HeaderActionContentLength(HttpHeaders& http_header, const std::string& content_length)
 {
     //TODO:校验
     http_header.set_content_length(std::atoi(content_length.c_str()));
     return true;
 }
 //---------------------------------------------------------------------------
+static bool HeaderActionKeepAlive(HttpHeaders& http_header, const std::string& connection)
+{
+    std::string conn = base::ToLower(connection);
+    if("close" == conn)
+    {
+        http_header.set_connection("close");
+    }
+    else
+    {
+        http_header.set_connection("keep-alive");
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+static bool HeaderActionLastModifiedTime(HttpHeaders& http_header, const std::string& last_modified_time)
+{
+    long long time = atoll(last_modified_time.c_str());
+    http_header.set_last_modified_time(time);
+    return true;
+}
+//---------------------------------------------------------------------------
 const HttpHeaders::HeaderTypeMap HttpHeaders::kHeaderTypeMap =
 {
     {HttpHeaders::kHost, std::bind(HeaderActionHost, _1, _2)},
-    {HttpHeaders::kContentLength, std::bind(HeaderActionContentLength, _1, _2)}
+    {HttpHeaders::kContentLength, std::bind(HeaderActionContentLength, _1, _2)},
+    {HttpHeaders::kConnection, std::bind(HeaderActionKeepAlive, _1, _2)},
+    {HttpHeaders::kLastModifiedTime, std::bind(HeaderActionLastModifiedTime, _1, _2)}
 };
 //---------------------------------------------------------------------------
 HttpHeaders::HttpHeaders()
 :   content_length_(0),
-    keep_alive_(false)
+    last_modified_time_(0)
 {
     return;
 }

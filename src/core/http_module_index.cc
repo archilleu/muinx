@@ -61,10 +61,20 @@ int HttpModuleIndex::IndexHandler(HttpRequest& http_request)
         }
 
         //检查文件是否存在
-        if(base::FileExist(http_request.path() + index))
+        std::string index_path = http_request.path() + index;
+        if(false == base::FileExist(index_path))
             continue;
 
         //读取文件内容
+        std::vector<char> data;
+        if(false == base::LoadFile(index_path, &data))
+        {
+            http_request.set_status_code(HttpRequest::StatusCode::INTERNAL_SERVER_ERROR);
+            return MUINX_ERROR;
+        }
+
+        http_request.set_response_body(std::move(data));
+        return MUINX_OK;
     }
 
     return MUINX_DECLINED;
