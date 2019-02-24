@@ -141,7 +141,7 @@ public:
             stack_ctx_.pop();
     }
 
-    bool Parse(const std::string& path);
+    bool Parse(const std::string& path, const std::string& name);
 
 public:
     HttpModuleCore::HttpMainConf* GetModuleMainConf(const Module* module);
@@ -175,6 +175,7 @@ private:
 
 private:
     std::string config_path_;                   //配置文件路径
+    std::string config_name_;                   //配置文件名称
     std::vector<char> config_dat_;              //配置文件数据
     std::shared_ptr<TokenReader> token_reader_; //读取配置文件的token
 

@@ -114,8 +114,9 @@ void Core::BindCallback()
 //---------------------------------------------------------------------------
 bool Core::ParseConfigFile()
 {
-    std::string path = "../conf/nginx.conf";
-    if(false == g_core_module_conf.Parse(path))
+    std::string path = "../conf";
+    std::string name = "nginx.conf";
+    if(false == g_core_module_conf.Parse(path, name))
     {
         assert(((void)"config file parse failed", 0));
         return false;

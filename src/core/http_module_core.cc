@@ -377,6 +377,8 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
     g_core_module_conf.PushCtx(ctx);
 
     ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
+    memset(ctx->loc_conf, 0, sizeof(void*)*CoreModuleHttp::s_max_http_module);
+
     for(auto module: g_core.modules_)
     {
         if(Module::ModuleType::HTTP != module->type())

@@ -183,9 +183,10 @@ CoreModuleConf::~CoreModuleConf()
 {
 }
 //---------------------------------------------------------------------------
-bool CoreModuleConf::Parse(const std::string& path)
+bool CoreModuleConf::Parse(const std::string& path, const std::string& name)
 {
     config_path_ = path;
+    config_name_ = name;
     if(false == GetConfigFileData())
         return false;
 
@@ -282,7 +283,8 @@ HttpModuleCore::HttpLocConf* CoreModuleConf::GetModuleLocConf(const Module* modu
 //---------------------------------------------------------------------------
 bool CoreModuleConf::GetConfigFileData()
 {
-    return base::LoadFile(config_path_, &config_dat_);
+    std::string path = config_path_ + "/" + config_name_;
+    return base::LoadFile(path, &config_dat_);
 }
 //---------------------------------------------------------------------------
 bool CoreModuleConf::CaseStatusEnd()
