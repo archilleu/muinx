@@ -124,6 +124,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     std::string connection = http_request.headers_in().connection();
     http_request.headers_out().AddHeader(HttpHeaders::kConnection, std::move(connection));
     http_request.headers_out().AddHeader(HttpHeaders::kLastModifiedTime, "TODO:time");
+    //设置响应内容格式
 
     return MUINX_OK;
 }
