@@ -19,9 +19,15 @@ public:
         std::string use;
     };
 
+public:
+    EventCoreConfig* core_config() { return core_config_; }
+
 private:
     void* CreateConfig();
     bool InitConfig();
+
+private:
+    EventCoreConfig* core_config_;
 };
 //---------------------------------------------------------------------------
 extern EventModuleCore g_event_module_core;

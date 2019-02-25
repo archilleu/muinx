@@ -42,6 +42,9 @@ private:
 
     bool ConfigCallback(const core::CommandConfig& command_config);
 
+    bool IsTypesItem(const core::CommandConfig& command_config);
+    void AddTypesItem(const core::CommandConfig& command_config);
+
 private:
     CoreServer core_server_;
 };

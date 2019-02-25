@@ -86,6 +86,9 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
     ctx->main_conf = new void*[CoreModuleHttp::s_max_http_module];
     ctx->srv_conf = new void*[CoreModuleHttp::s_max_http_module];
     ctx->loc_conf = new void*[CoreModuleHttp::s_max_http_module];
+    memset(ctx->main_conf, 0, sizeof(void*)*CoreModuleHttp::s_max_http_module);
+    memset(ctx->srv_conf, 0, sizeof(void*)*CoreModuleHttp::s_max_http_module);
+    memset(ctx->loc_conf, 0, sizeof(void*)*CoreModuleHttp::s_max_http_module);
 
     for(auto module : g_core.modules_)
     {

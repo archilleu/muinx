@@ -31,7 +31,7 @@ bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module,
 class CharReader
 {
 public:
-    CharReader(const std::vector<char>& dat)
+    CharReader(std::vector<char>& dat)
     :   pos_(0),
         dat_(dat)
     {}
@@ -61,9 +61,11 @@ public:
         return val;
     }
 
+    size_t pos() const { return pos_; }
+
 private:
-    size_t pos_;                    //配置文件当前解析数据位置下标
-    const std::vector<char>& dat_;  //配置文件数据
+    size_t pos_;                //配置文件当前解析数据位置下标
+    std::vector<char>& dat_;    //配置文件数据
 };
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -72,7 +74,7 @@ class TokenReader
 {
 
 public:
-    TokenReader(const std::vector<char>& dat)
+    TokenReader(std::vector<char>& dat)
     :   reader_(std::make_shared<CharReader>(dat))
     {}
 
@@ -95,6 +97,8 @@ public:
     TokenType ReadNextToken();
 
     bool ReadString(std::string& str);
+
+    size_t pos() const { return reader_->pos(); }
 
 private:
     void SkipBlankSpace();
@@ -154,13 +158,14 @@ public:
     void** block_config_ctxs_;  //block 配置文件块指针,如events块
 
 
-public:
+private:
     //解析过程中处的块
     static const int kCONF_MAIN     = 0x0001;   //域为Main
     static const int kCONF_EVENT    = 0x0002;   //域为Event
     static const int kCONF_HTTP     = 0x0004;   //域为HTTP
     static const int kCONF_SERVICE  = 0x0008;   //域为Service
-    static const int kCONF_LOCATION = 0x0010;   //域为Location
+    static const int kCONF_TYPES    = 0x0010;   //域为types
+    static const int kCONF_LOCATION = 0x0020;   //域为Location
 
 private:
     bool GetConfigFileData();
@@ -172,6 +177,9 @@ private:
     bool CaseStatusSepSemicolon();
     bool CaseStatusString();
     bool HasStatus(int status) { return (cur_status_ & status); }
+
+    //处理include保留字
+    void IncludeFile(const std::string& name);
 
 private:
     std::string config_path_;                   //配置文件路径
@@ -200,10 +208,12 @@ private:
     static const int kEXP_STATUS_SEP_SEMICOLON  = 0x0010;   //期待分号(;)
     static const int kEXP_STATUS_END            = 0x0200;   //期待配置文件结束
 
-    const static char* kRESERVED_EVENTS;    //事件参数块
-    static const char* kRESERVED_HTTP;      //http服务块
-    static const char* kRESERVED_SERVER;    //虚拟主机块
-    static const char* kRESERVED_LOCATION;  //特定location块
+    static const char* kRESERVED_EVENTS;    //events保留字
+    static const char* kRESERVED_HTTP;      //http保留字
+    static const char* kRESERVED_SERVER;    //server保留字
+    static const char* kRESERVED_LOCATION;  //location保留字
+    static const char* kRESERVED_TYPES;     //types保留字
+    static const char* kRESERVED_INCLUDE;   //include保留字
 };
 //---------------------------------------------------------------------------
 extern CoreModuleConf g_core_module_conf;

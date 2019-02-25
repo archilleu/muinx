@@ -176,6 +176,8 @@ public:
     {
         std::string www;    //根路径
 
+        std::unordered_map<std::string, std::string> types; //后缀和MIME类型对应表
+
         std::vector<HttpSrvConf*> servers;  //所有的server{}配置
         std::vector<ConfPort> ports;    //所有的监听端口
 
@@ -185,7 +187,6 @@ public:
         PhaseTemp phases[HTTP_LOG_PHASE + 1];
     };
 
-//工具方法
 public:
     HttpMainConf* core_main_conf() const { return core_main_conf_; }
 
@@ -204,6 +205,7 @@ public:
     static void UpdateRequestLocationConfig(HttpRequest& http_request);
 
 private:
+    bool ConfigSetTypesBlock(const CommandConfig&, const CommandModule&, void*);
     bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
     bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
 

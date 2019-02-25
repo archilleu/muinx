@@ -12,6 +12,7 @@ using namespace std::placeholders;
 EventModuleCore g_event_module_core;
 //---------------------------------------------------------------------------
 EventModuleCore::EventModuleCore()
+:   core_config_(nullptr)
 {
     EventModuleCtx* ctx = new EventModuleCtx();
     ctx->name = "event_core";
@@ -44,10 +45,10 @@ EventModuleCore::~EventModuleCore()
 //---------------------------------------------------------------------------
 void* EventModuleCore::CreateConfig()
 {
-    EventCoreConfig* config = new EventCoreConfig();
-    config->worker_connections = -1;
-    config->use = "unset";
-    return config;
+    core_config_ = new EventCoreConfig();
+    core_config_->worker_connections = -1;
+    core_config_->use = "unset";
+    return core_config_;
 }
 //---------------------------------------------------------------------------
 bool EventModuleCore::InitConfig()

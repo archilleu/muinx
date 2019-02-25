@@ -22,9 +22,15 @@ public:
         std::string error_log;
     };
 
+public:
+    const CoreConfig* core_config() const { return core_config_; }
+
 private:
     void* CreateConfig();
     bool InitConfig();
+
+private:
+    CoreConfig* core_config_;
 };
 //---------------------------------------------------------------------------
 extern CoreModuleCore g_core_module_core;

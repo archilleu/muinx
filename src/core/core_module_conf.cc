@@ -161,10 +161,12 @@ void TokenReader::SkipCommentLine()
 //---------------------------------------------------------------------------
 CoreModuleConf g_core_module_conf;
 //---------------------------------------------------------------------------
-const char* CoreModuleConf::kRESERVED_EVENTS      = "events";
-const char* CoreModuleConf::kRESERVED_HTTP        = "http";         
-const char* CoreModuleConf::kRESERVED_SERVER      = "server";
-const char* CoreModuleConf::kRESERVED_LOCATION    = "location";
+const char* CoreModuleConf::kRESERVED_EVENTS    = "events";
+const char* CoreModuleConf::kRESERVED_HTTP      = "http";
+const char* CoreModuleConf::kRESERVED_SERVER    = "server";
+const char* CoreModuleConf::kRESERVED_LOCATION  = "location";
+const char* CoreModuleConf::kRESERVED_TYPES     = "types";
+const char* CoreModuleConf::kRESERVED_INCLUDE   = "include";
 //---------------------------------------------------------------------------
 CoreModuleConf::CoreModuleConf()
 :   module_type_(Module::ModuleType::CORE),
@@ -347,6 +349,15 @@ bool CoreModuleConf::CaseStatusBlockBegin()
         conf_type_ = HTTP_MAIN_CONF;
         stack_.push(static_cast<int>(kCONF_HTTP));
     }
+    else if(kRESERVED_TYPES == reserve)
+    {
+        if(kCONF_HTTP != stack_.top())
+            return false;
+
+        module_type_ = Module::ModuleType::HTTP;
+        conf_type_ = HTTP_TYPES_CONF;
+        stack_.push(static_cast<int>(kCONF_TYPES));
+    }
     else if(kRESERVED_SERVER == reserve)
     {
         if(kCONF_HTTP != stack_.top())
@@ -437,14 +448,26 @@ bool CoreModuleConf::CaseStatusSepSemicolon()
     if(!HasStatus(kEXP_STATUS_SEP_SEMICOLON))
         return false;
 
-    //回调
-    CommandConfig command_config;
-    command_config.args.swap(cur_line_params_);
-    command_config.conf_type = conf_type_;
-    command_config.module_type = module_type_;
-    if(command_cb_)
-        if(false == command_cb_(command_config))
+    //遇到include关键字展开include的文件
+    if(kRESERVED_INCLUDE == cur_line_params_[0])
+    {
+        if(2 != cur_line_params_.size())
             return false;
+
+        IncludeFile(cur_line_params_[1]);
+        cur_line_params_.clear();
+    }
+    else
+    {
+        //回调
+        CommandConfig command_config;
+        command_config.args.swap(cur_line_params_);
+        command_config.conf_type = conf_type_;
+        command_config.module_type = module_type_;
+        if(command_cb_)
+            if(false == command_cb_(command_config))
+                return false;
+    }
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
                 | kEXP_STATUS_END;
@@ -470,6 +493,16 @@ bool CoreModuleConf::CaseStatusString()
                 | kEXP_STATUS_END | kEXP_STATUS_SEP_SEMICOLON;
 
     return true;
+}
+//---------------------------------------------------------------------------
+void CoreModuleConf::IncludeFile(const std::string& name)
+{
+    std::vector<char> data;
+    if(false == base::LoadFile(config_path_+"/"+name, &data))
+        return;
+
+    size_t pos = token_reader_->pos();
+    config_dat_.insert(config_dat_.begin()+pos, data.begin(), data.end());
 }
 //---------------------------------------------------------------------------
 

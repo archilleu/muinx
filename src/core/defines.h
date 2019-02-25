@@ -41,18 +41,19 @@
 //处理配置项时获取当前配置项的方式
 #define DIRECT_CONF     0x00010000 //与MAIN_CONF同时使用，代表不属于任何{}块的配置
 
-#define MAIN_CONF       0x01000000 //配置项可以出现在全局中，不属于任何{}，即为events、http
-#define EVENT_CONF      0x02000000
+#define MAIN_CONF       0x00020000 //配置项可以出现在全局中，不属于任何{}，即为events、http
+#define EVENT_CONF      0x00040000
 
-#define HTTP_MAIN_CONF  0x02000000
-#define HTTP_SRV_CONF   0x04000000
-#define HTTP_LOC_CONF   0x08000000
-#define HTTP_UPS_CONF   0x10000000
-#define HTTP_SIF_CONF   0x20000000
-#define HTTP_LIF_CONF   0x40000000
-#define HTTP_LMT_CONF   0x80000000  
+#define HTTP_MAIN_CONF  0x00080000
+#define HTTP_SRV_CONF   0x00100000
+#define HTTP_TYPES_CONF 0x00200000
+#define HTTP_LOC_CONF   0x00400000
+#define HTTP_UPS_CONF   0x00800000
+#define HTTP_SIF_CONF   0x01000000
+#define HTTP_LIF_CONF   0x02000000
+#define HTTP_LMT_CONF   0x04000000
 
-#define ANY_CONF        0x0F000000
+#define ANY_CONF        0x0FF00000
 
 //配置项默认无效值
 #define CONF_UNSET          -1

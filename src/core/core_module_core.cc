@@ -13,6 +13,7 @@ using namespace std::placeholders;
 CoreModuleCore g_core_module_core;
 //---------------------------------------------------------------------------
 CoreModuleCore::CoreModuleCore()
+:   core_config_(nullptr)
 {
     CoreModuleCtx* ctx = new CoreModuleCtx();
     ctx->name = "core";
@@ -60,12 +61,13 @@ CoreModuleCore::~CoreModuleCore()
 //---------------------------------------------------------------------------
 void* CoreModuleCore::CreateConfig()
 {
-    CoreConfig* core_config = new CoreConfig();
-    core_config->error_log = "unset";
-    core_config->pid = "unset";
-    core_config->user = "unset";
-    core_config->worker_processes = -1;
-    return core_config;
+    core_config_ = new CoreConfig();
+    core_config_->error_log = "unset";
+    core_config_->pid = "unset";
+    core_config_->user = "unset";
+    core_config_->worker_processes = -1;
+
+    return core_config_;
 }
 //---------------------------------------------------------------------------
 bool CoreModuleCore::InitConfig()

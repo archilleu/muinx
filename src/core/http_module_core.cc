@@ -91,6 +91,13 @@ HttpModuleCore::HttpModuleCore()
             0
         },
         {
+            "types",
+            HTTP_MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
+            std::bind(&HttpModuleCore::ConfigSetTypesBlock, this, _1, _2, _3),
+            0,
+            0
+        },
+        {
             "listen",
             HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
             std::bind(&HttpModuleCore::ConfigSetListen, this, _1, _2, _3),
@@ -325,6 +332,14 @@ void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
     http_request.UriToPath();
 
     return;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetTypesBlock(const CommandConfig&, const CommandModule&, void*)
+{
+    //只是为了占位
+    //FIXME:更好的设计配置文件解析
+    g_core_module_conf.PushCtx(nullptr);
+    return true;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*)

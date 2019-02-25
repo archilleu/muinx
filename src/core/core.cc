@@ -229,6 +229,13 @@ bool Core::ConfigCallback(const core::CommandConfig& command_config)
         if((module->type()==Module::ModuleType::CONF) || (module->type()!=command_config.module_type))
             continue;
 
+        //检测是否是types块内配置项,如果是就特殊处理
+        if(true == IsTypesItem(command_config))
+        {
+            AddTypesItem(command_config);
+            continue;
+        }
+
         //遍历所有的配置项
         for(const auto& command : module->commands())
         {
@@ -282,6 +289,25 @@ bool Core::ConfigCallback(const core::CommandConfig& command_config)
     }
 
     return true;
+}
+//---------------------------------------------------------------------------
+bool Core::IsTypesItem(const core::CommandConfig& command_config)
+{
+    if(HTTP_TYPES_CONF != command_config.conf_type)
+        return false;
+
+    return true;
+}
+//---------------------------------------------------------------------------
+void Core::AddTypesItem(const core::CommandConfig& command_config)
+{
+    if(2 != command_config.args.size())
+        return;
+
+    g_http_module_core.core_main_conf()->types.insert(
+            std::make_pair(command_config.args[0], command_config.args[1]));
+
+    return;
 }
 //---------------------------------------------------------------------------
 
