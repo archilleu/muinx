@@ -13,7 +13,8 @@ void NewConnection(Socket&& client, InetAddress&& addr_peer, uint64_t rcv_time)
     std::cout << "new connection " << " rcv time:" << base::Timestamp(rcv_time).Datetime(true)
         << " fd:" << client.fd() << " peer:" << addr_peer.IpPort() << std::endl;
     const char* msg = "how are you?\n";
-    ::write(client.fd(), msg, strlen(msg));
+    auto len = ::write(client.fd(), msg, strlen(msg));
+    (void)len;
 }
 //---------------------------------------------------------------------------
 int main(int, char**)
