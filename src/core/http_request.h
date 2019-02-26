@@ -106,9 +106,11 @@ public:
     };
 
 public:
+    //该请求所在的server{}上下文
     void set_ctxs(HttpModuleCore::HttpConfigCtxs* ctxs) { ctxs_ = ctxs; }
     HttpModuleCore::HttpConfigCtxs* ctxs() const { return ctxs_; }
 
+    //该请求所在的location{}上下文
     void set_loc_conf(HttpModuleCore::HttpLocConf* loc_conf) { loc_conf_ = loc_conf; }
     const HttpModuleCore::HttpLocConf* loc_conf() const { return loc_conf_; }
 

@@ -28,6 +28,7 @@ bool CoreServer::Initialize()
     loop_->set_sig_quit_cb(std::bind(&CoreServer::EventLoopQuit, this));
     //loop_->SetHandleSingnal();
 
+    //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
     server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
     //TODO:设置线程数目等参数
     //server_->set_event_loop_nums(8);

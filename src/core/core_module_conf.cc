@@ -253,34 +253,25 @@ bool CoreModuleConf::Parse(const std::string& path, const std::string& name)
     return true;
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpMainConf* CoreModuleConf::GetModuleMainConf(const Module* module)
+void* CoreModuleConf::GetModuleMainConf(const Module* module)
 {
     auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
         (block_config_ctxs_[g_core_module_http.index()]);
-    auto main = reinterpret_cast<HttpModuleCore::HttpMainConf*>
-        (ctx->main_conf[module->module_index()]);
-
-    return main;
+    return ctx->main_conf[module->module_index()];
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpSrvConf* CoreModuleConf::GetModuleSrvConf(const Module* module)
+void* CoreModuleConf::GetModuleSrvConf(const Module* module)
 {
     auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
         (block_config_ctxs_[g_core_module_http.index()]);
-    auto srv = reinterpret_cast<HttpModuleCore::HttpSrvConf*>
-        (ctx->srv_conf[module->module_index()]);
-
-    return srv;
+    return ctx->srv_conf[module->module_index()];
 }
 //---------------------------------------------------------------------------
-HttpModuleCore::HttpLocConf* CoreModuleConf::GetModuleLocConf(const Module* module)
+void* CoreModuleConf::GetModuleLocConf(const Module* module)
 {
     auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>
         (block_config_ctxs_[g_core_module_http.index()]);
-    auto loc = reinterpret_cast<HttpModuleCore::HttpLocConf*>
-        (ctx->loc_conf[module->module_index()]);
-
-    return loc;
+    return ctx->loc_conf[module->module_index()];
 }
 //---------------------------------------------------------------------------
 bool CoreModuleConf::GetConfigFileData()

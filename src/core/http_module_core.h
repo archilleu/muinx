@@ -188,6 +188,10 @@ public:
     };
 
 public:
+    HttpMainConf* GetModuleMainConf();
+    HttpSrvConf* GetModuleSrvConf();
+    HttpLocConf* GetModuleLocConf();
+
     HttpMainConf* core_main_conf() const { return core_main_conf_; }
 
 //checker方法

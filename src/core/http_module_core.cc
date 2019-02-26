@@ -125,6 +125,36 @@ HttpModuleCore::~HttpModuleCore()
 {
 }
 //---------------------------------------------------------------------------
+HttpModuleCore::HttpMainConf* HttpModuleCore::GetModuleMainConf()
+{
+    auto ctx = reinterpret_cast<HttpConfigCtxs*>
+        (g_core_module_conf.block_config_ctxs_[index()]);
+    auto main = reinterpret_cast<HttpMainConf*>
+        (ctx->main_conf[this->module_index()]);
+
+    return main;
+}
+//---------------------------------------------------------------------------
+HttpModuleCore::HttpSrvConf* HttpModuleCore::GetModuleSrvConf()
+{
+    auto ctx = reinterpret_cast<HttpConfigCtxs*>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
+    auto srv = reinterpret_cast<HttpSrvConf*>
+        (ctx->srv_conf[module_index()]);
+
+    return srv;
+}
+//---------------------------------------------------------------------------
+HttpModuleCore::HttpLocConf* HttpModuleCore::GetModuleLocConf()
+{
+    auto ctx = reinterpret_cast<HttpConfigCtxs*>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_http.index()]);
+    auto loc = reinterpret_cast<HttpLocConf*>
+        (ctx->loc_conf[module_index()]);
+
+    return loc;
+}
+//---------------------------------------------------------------------------
 int HttpModuleCore::GenericPhase(HttpRequest& request, PhaseHandler& phase_handler)
 {
     int rc = phase_handler.handler(request);

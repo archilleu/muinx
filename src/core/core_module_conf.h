@@ -148,9 +148,9 @@ public:
     bool Parse(const std::string& path, const std::string& name);
 
 public:
-    HttpModuleCore::HttpMainConf* GetModuleMainConf(const Module* module);
-    HttpModuleCore::HttpSrvConf* GetModuleSrvConf(const Module* module);
-    HttpModuleCore::HttpLocConf* GetModuleLocConf(const Module* module);
+    void* GetModuleMainConf(const Module* module);
+    void* GetModuleSrvConf(const Module* module);
+    void* GetModuleLocConf(const Module* module);
 
 public:
     void**** config_ctxs_;      //全局配置文件结构体指针,数组指针指向数组指针

@@ -214,8 +214,7 @@ bool CoreModuleHttp::InitMainConfig()
         auto ctx = http_module->ctx();
         if(ctx->init_main_config)
         {
-            HttpModuleCore::HttpMainConf* main_conf =
-                g_core_module_conf.GetModuleMainConf(module);
+            void* main_conf = g_core_module_conf.GetModuleMainConf(module);
             ctx->init_main_config(main_conf);
         }
     }
