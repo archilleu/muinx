@@ -259,21 +259,12 @@ int HttpModuleCore::ContentPhase(HttpRequest& http_request, PhaseHandler& phase_
 int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
 {
     //查找准确的loc_conf
-    int rc = MUINX_ERROR;
-    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
     const std::string& url = http_request.url();
+    std::unordered_map<std::string, Location>::const_iterator iter;
+    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
     if(1 == url.length())
     {
-        auto iter = loc_conf->map_locations.find("/");
-        if(iter == loc_conf->map_locations.end())
-        {
-            rc = MUINX_ERROR;
-        }
-        else
-        {
-            http_request.set_loc_conf(iter->second);
-            rc = MUINX_OK;
-        }
+        iter = loc_conf->map_locations.find("/");
     }
     else
     {
@@ -293,7 +284,7 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
 
         do
         {
-            auto iter = loc_conf->map_locations.find(prefix_url);
+            iter = loc_conf->map_locations.find(prefix_url);
             if(iter == loc_conf->map_locations.end())
             {
                 prefix_url.resize(prefix_url.size()-(path_items[index].size()+1));
@@ -302,23 +293,26 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
                 continue;
             }
 
-            http_request.set_loc_conf(iter->second);
-            rc = MUINX_OK;
             break;
         }while(index >= 0);
     }
 
-    if(MUINX_ERROR == rc)
+    if(iter == loc_conf->map_locations.end())
     {
         http_request.set_status_code(HttpRequest::StatusCode::NOT_FOUND);
+        return MUINX_ERROR;
     }
 
-    return rc;
+    auto& location = iter->second;
+    auto static_loc_conf = location.exact ? location.exact : location.inclusive;
+    http_request.ctxs()->loc_conf = static_loc_conf->loc_conf;
+
+    return MUINX_OK;
 }
 //---------------------------------------------------------------------------
 void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
 {
-    auto loc_conf = http_request.loc_conf();
+    auto loc_conf = http_request.core_loc_conf();
 
     if(loc_conf->sendfile)
     {

@@ -28,7 +28,15 @@ public:
         void** loc_conf;
     };
 
-    struct Location;
+public:
+    struct HttpLocConf;
+    struct Location
+    {
+        HttpLocConf* exact;
+        HttpLocConf* inclusive;
+        std::string name;
+    };
+
     struct HttpLocConf
     {
         std::string name;   //location{} 路径名
@@ -57,7 +65,7 @@ public:
         /*
          * 快速查找路径对应的结构体(name:HttpLocConf)
          */
-        std::unordered_map<std::string, HttpLocConf*> map_locations;
+        std::unordered_map<std::string, Location> map_locations;
         //最长的loc{} 名字，用来加速匹配map_locations
         int location_name_max_length;
 
@@ -66,13 +74,7 @@ public:
         HttpRequestHandler handler;
     };
 
-    struct Location
-    {
-        HttpLocConf* exact;
-        HttpLocConf* inclusive;
-        std::string name;
-    };
-
+public:
     struct HttpSrvConf
     {
         std::string server_name;    //域名localhost
@@ -81,6 +83,7 @@ public:
         HttpConfigCtxs* ctx;
     };
 
+public:
     struct ConfAddress
     {
         std::string ip;
@@ -94,11 +97,10 @@ public:
 
     struct ConfPort
     {
-        int port;       //监听的端口
+        int port;                       //监听的端口
         std::vector<ConfAddress> addrs; //监听端口对应的IP，一个主机可能有多个IP
     };
 
-public:
     //定义HTTP请求的11个阶段
     enum
     {

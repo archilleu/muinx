@@ -28,7 +28,6 @@ const HttpRequest::MethodType HttpRequest::kMethodType =
 //---------------------------------------------------------------------------
 HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
 :   ctxs_(nullptr),
-    loc_conf_(nullptr),
     connection_(conn_ptr),
     method_(INVALID),
     method_str_("INVALID"),
@@ -46,7 +45,7 @@ void HttpRequest::UriToPath()
 {
     //获取全局的根路径
     const auto& www = g_http_module_core.core_main_conf()->www;
-    path_ = www + "/" + loc_conf()->root + url();
+    path_ = www + "/" + core_loc_conf()->root + url();
 
     return;
 }
