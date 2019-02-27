@@ -23,6 +23,9 @@ public:
 public:
     static int StaticHandler(HttpRequest& http_request);
 
+//config item callback
+    bool ConfigSetCallbackDirectio(const CommandConfig& command_config, const CommandModule& module, void* config);
+
 private:
     bool Initialize();
 };

@@ -30,13 +30,12 @@
 #define CONF_TAKE1234   (CONF_TAKE1|CONF_TAKE2|CONF_TAKE3|CONF_TAKE4)
 
 //限制配置项后的参数出现形式
-#define CONF_ARGS_NUMBER    0x000000ff
 #define CONF_BLOCK          0x00000100
-#define CONF_FLAG           0x00000200
-#define CONF_ANY            0x00000400
-#define CONF_1MORE          0x00000800
-#define CONF_2MORE          0x00001000
-#define CONF_MULTI          0x00002000
+#define CONF_FLAG           0x00000200  //标志参数（on off）
+#define CONF_ANY            0x00000400  //任意个参数
+#define CONF_1MORE          0x00000800  //多于1个参数
+#define CONF_2MORE          0x00001000  //多于2个参数
+#define CONF_MULTI          0x00002000  //多个参数，不定
 
 //处理配置项时获取当前配置项的方式
 #define DIRECT_CONF     0x00010000 //与MAIN_CONF同时使用，代表不属于任何{}块的配置
@@ -57,10 +56,11 @@
 
 //配置项默认无效值
 #define CONF_UNSET          -1
-#define CONF_UNSET_UINT     (ngx_uint_t) -1
-#define CONF_UNSET_PTR      (void *) -1
-#define CONF_UNSET_SIZE     (size_t) -1
-#define CONF_UNSET_MSEC     (ngx_msec_t) -1
+#define CONF_UNSET_UINT     -1
+#define CONF_UNSET_PTR      nullptr
+#define CONF_UNSET_STR      "unset"
+#define CONF_UNSET_SIZE     -1
+#define CONF_UNSET_MSEC     -1
 
 //模块类型，用于指示当前配置解析所在的位置
 #define CORE_MODULE     0x45524F43  /* "CORE" */

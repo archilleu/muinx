@@ -25,7 +25,6 @@ CoreModuleEvent::CoreModuleEvent()
             "events",
             MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&CoreModuleEvent::ConfigSetEventBlock, this, _1, _2, _3),
-            0,
             0
         }
     };

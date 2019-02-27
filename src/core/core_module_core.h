@@ -25,6 +25,13 @@ public:
 public:
     const CoreConfig* core_config() const { return core_config_; }
 
+//config item callback
+private:
+    bool ConfigSetCallbackUser(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackWorkerProcesses(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackErrorLog(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackPid(const CommandConfig& command_config, const CommandModule& module, void* config);
+
 private:
     void* CreateConfig();
     bool InitConfig();

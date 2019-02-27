@@ -24,13 +24,14 @@ public:
 public:
     static int IndexHandler(HttpRequest& http_request);
 
+//config item callback
+    bool ConfigSetCallbackIndex(const CommandConfig& command_config, const CommandModule& module, void* config);
+
 private:
     bool Initialize();
     void* CreateLocConfig();
     bool MergeLocConfig(void* parent, void* child);
 
-    bool ConfigSetIndex(const CommandConfig& config, const CommandModule& module,
-            void* module_command);
 };
 //---------------------------------------------------------------------------
 extern HttpModuleIndex g_http_module_index;

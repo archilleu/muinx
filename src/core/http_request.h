@@ -162,8 +162,7 @@ public:
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
     base::Timestamp recv_time() const { return recv_time_; }
 
-    typedef int (*HttpHandler)(HttpRequest&);
-    void set_content_handler(HttpHandler http_handler);
+    void set_content_handler(const HttpRequestHandler& handler) { content_handler_ = handler; }
     HttpRequestHandler& content_handler() { return content_handler_; }
 
     //转换uri到文件系统的path

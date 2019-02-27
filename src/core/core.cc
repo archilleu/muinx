@@ -26,6 +26,18 @@ Core::~Core()
 {
 }
 //---------------------------------------------------------------------------
+static int s_argument_number[] =
+{
+    CONF_NOARGS,
+    CONF_TAKE1,
+    CONF_TAKE2,
+    CONF_TAKE3,
+    CONF_TAKE4,
+    CONF_TAKE5,
+    CONF_TAKE6,
+    CONF_TAKE7
+};
+//---------------------------------------------------------------------------
 bool Core::Initialize()
 {
     InitModulesIndex();
@@ -149,12 +161,12 @@ bool Core::ActionCoreModuleInitConfig()
     return true;
 }
 //---------------------------------------------------------------------------
-bool Core::ConfigFileParseCallback(const core::CommandConfig& command_config)
+bool Core::ConfigFileParseCallback(const CommandConfig& command_config)
 {
     return ConfigCallback(command_config);
 }
 //---------------------------------------------------------------------------
-bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_config)
+bool Core::ConfigFileBlockBeginCallback(const CommandConfig& command_config)
 {
     //进入http 配置模块解析前
     if((command_config.module_type==Module::ModuleType::HTTP)
@@ -176,7 +188,7 @@ bool Core::ConfigFileBlockBeginCallback(const core::CommandConfig& command_confi
     return ConfigCallback(command_config);
 }
 //---------------------------------------------------------------------------
-bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
+bool Core::ConfigFileBlockEndCallback(const CommandConfig& command_config)
 {
     (void)command_config;
 
@@ -216,7 +228,7 @@ bool Core::ConfigFileBlockEndCallback(const core::CommandConfig& command_config)
     return true;
 }
 //---------------------------------------------------------------------------
-bool Core::ConfigCallback(const core::CommandConfig& command_config)
+bool Core::ConfigCallback(const CommandConfig& command_config)
 {
     /*
      * 对于解析到的每一行配置项，都需要遍历所有的模块找出对该配置项感兴趣的模块
@@ -248,6 +260,8 @@ bool Core::ConfigCallback(const core::CommandConfig& command_config)
                 continue;
 
             //TODO 检擦参数个数
+            if(false == CheckArgumentFormat(command, command_config))
+                return false;
 
             //设置配置文件对应项的上下文
             void* ctx = nullptr;
@@ -291,7 +305,40 @@ bool Core::ConfigCallback(const core::CommandConfig& command_config)
     return true;
 }
 //---------------------------------------------------------------------------
-bool Core::IsTypesItem(const core::CommandConfig& command_config)
+bool Core::CheckArgumentFormat(const CommandModule& module, const CommandConfig& command_config)
+{
+    if(module.type & CONF_ANY)
+        return true;
+
+    if(module.type & CONF_FLAG)
+    {
+        if(2 != command_config.args.size())
+            return false;
+    }
+    else if(module.type & CONF_1MORE)
+    {
+        if(2 > command_config.args.size())
+            return false;
+    }
+    else if(module.type & CONF_2MORE)
+    {
+        if(3 > command_config.args.size())
+            return false;
+    }
+    else if(command_config.args.size() > CONF_MAX_ARGS)
+    {
+        return false;
+    }
+    else
+    {
+        if(!(module.type & s_argument_number[command_config.args.size()-1]))
+            return false;
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool Core::IsTypesItem(const CommandConfig& command_config)
 {
     if(HTTP_TYPES_CONF != command_config.conf_type)
         return false;
@@ -299,7 +346,7 @@ bool Core::IsTypesItem(const core::CommandConfig& command_config)
     return true;
 }
 //---------------------------------------------------------------------------
-void Core::AddTypesItem(const core::CommandConfig& command_config)
+void Core::AddTypesItem(const CommandConfig& command_config)
 {
     if(2 != command_config.args.size())
         return;

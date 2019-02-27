@@ -22,6 +22,11 @@ public:
 public:
     EventCoreConfig* core_config() { return core_config_; }
 
+//config item callback
+private:
+    bool ConfigSetCallbackWorkerConnections(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackUse(const CommandConfig& command_config, const CommandModule& module, void* config);
+
 private:
     void* CreateConfig();
     bool InitConfig();

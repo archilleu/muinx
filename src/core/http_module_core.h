@@ -17,6 +17,9 @@ public:
     HttpModuleCore();
     virtual ~HttpModuleCore();
 
+    //当前HTTP模块处理方法
+    using HttpRequestHandler = std::function<int (HttpRequest&)>;
+
 public:
     struct HttpConfigCtxs
     {
@@ -25,7 +28,6 @@ public:
         void** loc_conf;
     };
 
-    typedef int (*HttpHandler)(HttpRequest&);
     struct Location;
     struct HttpLocConf
     {
@@ -61,13 +63,7 @@ public:
 
         bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
 
-        /*
-         * 在HTTP_CONTENT_PHASE阶段loc{}专用的处理函数
-         * invalid-offsetof(offsetoff警告，std::function实现不是non-POD
-         * 所以用HttpHandler代替HttpRequestHandler handler
-         */
-
-        HttpHandler handler;
+        HttpRequestHandler handler;
     };
 
     struct Location
@@ -148,9 +144,6 @@ public:
     struct PhaseHandler;
     //checker方法定义
     using HttpChecker = std::function<int (HttpRequest&, PhaseHandler&)>;
-    //当前HTTP模块处理方法
-    using HttpRequestHandler = std::function<int (HttpRequest&)>;
-
     //参与HTTP处理流程的结构体
     struct PhaseHandler
     {
@@ -208,12 +201,22 @@ public:
     static int FindRequestLocation(HttpRequest& http_request);
     static void UpdateRequestLocationConfig(HttpRequest& http_request);
 
+//config item callback
 private:
-    bool ConfigSetTypesBlock(const CommandConfig&, const CommandModule&, void*);
-    bool ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*);
-    bool ConfigSetLocationBlock(const CommandConfig&, const CommandModule&, void*);
+    bool ConfigSetCallbackWww(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackRoot(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackKeepaliveTimeout(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackKeepalive(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule& module, void* config);
 
-    bool ConfigSetListen(const CommandConfig& config, const CommandModule& module, void* module_command);
+    bool ConfigSetCallbackServerBlock(const CommandConfig&, const CommandModule&, void*);
+    bool ConfigSetCallbackTypesBlock(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackLocationBlock(const CommandConfig&, const CommandModule&, void*);
+
     bool AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default);
     bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
     bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);

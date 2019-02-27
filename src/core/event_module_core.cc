@@ -24,17 +24,15 @@ EventModuleCore::EventModuleCore()
     {
         {
             "worker_connections",
-            EVENT_CONF|CONF_NOARGS,
-            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
-            0,
-            offsetof(EventModuleCore::EventCoreConfig, worker_connections)
+            EVENT_CONF|CONF_TAKE1,
+            std::bind(&EventModuleCore::ConfigSetCallbackWorkerConnections, this, _1, _2, _3),
+            0
         },
         {
             "use",
-            EVENT_CONF|CONF_NOARGS,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            0,
-            offsetof(EventModuleCore::EventCoreConfig, use)
+            EVENT_CONF|CONF_TAKE1,
+            std::bind(&EventModuleCore::ConfigSetCallbackUse, this, _1, _2, _3),
+            0
         }
     };
 }
@@ -43,11 +41,30 @@ EventModuleCore::~EventModuleCore()
 {
 }
 //---------------------------------------------------------------------------
+bool EventModuleCore::ConfigSetCallbackWorkerConnections(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto event_core_config = reinterpret_cast<EventCoreConfig*>(config);
+    event_core_config->worker_connections = ::atoi(command_config.args[1].c_str());
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool EventModuleCore::ConfigSetCallbackUse(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto event_core_config = reinterpret_cast<EventCoreConfig*>(config);
+    event_core_config->use = command_config.args[1].c_str();
+
+    return true;
+}
+//---------------------------------------------------------------------------
 void* EventModuleCore::CreateConfig()
 {
     core_config_ = new EventCoreConfig();
-    core_config_->worker_connections = -1;
-    core_config_->use = "unset";
+    core_config_->worker_connections = CONF_UNSET_UINT;
+    core_config_->use = CONF_UNSET_STR;
+
     return core_config_;
 }
 //---------------------------------------------------------------------------

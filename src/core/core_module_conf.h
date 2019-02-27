@@ -19,9 +19,9 @@ namespace default_cb
 /*
  * 通用的配置项解析回调
  */
-bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
-bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
-bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
+//bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
+//bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
+//bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
 
 }//namespace default_cb
 //---------------------------------------------------------------------------

@@ -12,36 +12,36 @@ namespace default_cb
 {
 
 //---------------------------------------------------------------------------
-bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
-{
-    auto& commands = config.args;
-    int* command = reinterpret_cast<int*>(
-            static_cast<char*>(module_command) + module.offset);
-    *command = atoi(commands[1].c_str());
-    return true;
-}
-//---------------------------------------------------------------------------
-bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
-{
-    auto& commands = config.args;
-    std::string* command = reinterpret_cast<std::string*>(
-            static_cast<char*>(module_command) + module.offset);
-    *command = commands[1];
-    return true;
-}
-//---------------------------------------------------------------------------
-bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
-{
-    auto& commands = config.args;
-    bool* command = reinterpret_cast<bool*>(
-            static_cast<char*>(module_command) + module.offset);
-    bool flag = false;
-    if("on" == commands[1])
-        flag = true;
-
-    *command = flag;
-    return true;
-}
+//bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
+//{
+//    auto& commands = config.args;
+//    int* command = reinterpret_cast<int*>(
+//            static_cast<char*>(module_command) + module.offset);
+//    *command = atoi(commands[1].c_str());
+//    return true;
+//}
+////---------------------------------------------------------------------------
+//bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
+//{
+//    auto& commands = config.args;
+//    std::string* command = reinterpret_cast<std::string*>(
+//            static_cast<char*>(module_command) + module.offset);
+//    *command = commands[1];
+//    return true;
+//}
+////---------------------------------------------------------------------------
+//bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
+//{
+//    auto& commands = config.args;
+//    bool* command = reinterpret_cast<bool*>(
+//            static_cast<char*>(module_command) + module.offset);
+//    bool flag = false;
+//    if("on" == commands[1])
+//        flag = true;
+//
+//    *command = flag;
+//    return true;
+//}
 //---------------------------------------------------------------------------
 
 }//namespace default_cb

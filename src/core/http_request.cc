@@ -42,12 +42,6 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
     return;
 }
 //---------------------------------------------------------------------------
-void HttpRequest::set_content_handler(HttpHandler http_handler)
-{
-    content_handler_ = std::bind(http_handler, _1);
-    return;
-}
-//---------------------------------------------------------------------------
 void HttpRequest::UriToPath()
 {
     //获取全局的根路径

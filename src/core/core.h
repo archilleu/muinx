@@ -36,14 +36,16 @@ private:
     bool ActionCoreModuleInitConfig();
 
 private:
-    bool ConfigFileParseCallback(const core::CommandConfig& command_config);
-    bool ConfigFileBlockBeginCallback(const core::CommandConfig& command_config);
-    bool ConfigFileBlockEndCallback(const core::CommandConfig& command_config);
+    bool ConfigFileParseCallback(const CommandConfig& command_config);
+    bool ConfigFileBlockBeginCallback(const CommandConfig& command_config);
+    bool ConfigFileBlockEndCallback(const CommandConfig& command_config);
 
-    bool ConfigCallback(const core::CommandConfig& command_config);
+    bool ConfigCallback(const CommandConfig& command_config);
 
-    bool IsTypesItem(const core::CommandConfig& command_config);
-    void AddTypesItem(const core::CommandConfig& command_config);
+    bool CheckArgumentFormat(const CommandModule& module, const CommandConfig& command_config);
+
+    bool IsTypesItem(const CommandConfig& command_config);
+    void AddTypesItem(const CommandConfig& command_config);
 
 private:
     CoreServer core_server_;

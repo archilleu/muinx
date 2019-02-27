@@ -36,86 +36,74 @@ HttpModuleCore::HttpModuleCore()
     {
         {
             "www",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            HTTP_MAIN_CONF_OFFSET,
-            offsetof(HttpMainConf, www)
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackWww, this, _1, _2, _3),
+            HTTP_MAIN_CONF_OFFSET
         },
         {
             "root",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, root)
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackRoot, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         },
         {
             "keepalive_timeout",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, keepalive_timeout)
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackKeepaliveTimeout, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         },
         {
             "keepalive",
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, keepalive)
+            std::bind(&HttpModuleCore::ConfigSetCallbackKeepalive, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         },
         {
             "tcp_nopush",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, tcp_nopush)
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackTcpNopush, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         },
         {
             "limit_rate",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, limit_rate)
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackLimitRate, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         },
         {
             "sendfile",
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpLocConf, sendfile)
+            std::bind(&HttpModuleCore::ConfigSetCallbackSendfile, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         },
         {
             "server",
             HTTP_MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
-            std::bind(&HttpModuleCore::ConfigSetServerBlock, this, _1, _2, _3),
-            0,
+            std::bind(&HttpModuleCore::ConfigSetCallbackServerBlock, this, _1, _2, _3),
             0
         },
         {
             "types",
             HTTP_MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
-            std::bind(&HttpModuleCore::ConfigSetTypesBlock, this, _1, _2, _3),
-            0,
+            std::bind(&HttpModuleCore::ConfigSetCallbackTypesBlock, this, _1, _2, _3),
             0
         },
         {
             "listen",
-            HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(&HttpModuleCore::ConfigSetListen, this, _1, _2, _3),
-            HTTP_SRV_CONF_OFFSET,
-            0
+            HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_1MORE,
+            std::bind(&HttpModuleCore::ConfigSetCallbackListen, this, _1, _2, _3),
+            HTTP_SRV_CONF_OFFSET
         },
         {
             "server_name",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            HTTP_SRV_CONF_OFFSET,
-            offsetof(HttpSrvConf, server_name)
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackServerName, this, _1, _2, _3),
+            HTTP_SRV_CONF_OFFSET
         },
         {
             "location",
-            HTTP_SRV_CONF|CONF_BLOCK|CONF_NOARGS,
-            std::bind(&HttpModuleCore::ConfigSetLocationBlock, this, _1, _2, _3),
-            0,
+            HTTP_SRV_CONF|CONF_BLOCK|CONF_1MORE,
+            std::bind(&HttpModuleCore::ConfigSetCallbackLocationBlock, this, _1, _2, _3),
             0
         }
     };
@@ -364,15 +352,71 @@ void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
     return;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetTypesBlock(const CommandConfig&, const CommandModule&, void*)
+bool HttpModuleCore::ConfigSetCallbackWww(const CommandConfig& command_config, const CommandModule& module, void* config)
 {
-    //只是为了占位
-    //FIXME:更好的设计配置文件解析
-    g_core_module_conf.PushCtx(nullptr);
+    (void)module;
+    auto http_main_conf = reinterpret_cast<HttpMainConf*>(config);
+    http_main_conf->www = command_config.args[1];
+
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandModule&, void*)
+bool HttpModuleCore::ConfigSetCallbackRoot(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->root = command_config.args[1];
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackKeepaliveTimeout(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->keepalive_timeout = ::atoi(command_config.args[1].c_str());
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackKeepalive(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->keepalive = (command_config.args[1] == "on");
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->tcp_nopush = ::atoi(command_config.args[1].c_str());
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->limit_rate = ::atoi(command_config.args[1].c_str());
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->sendfile = (command_config.args[1] == "on");
+
+    return true;
+}
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const CommandModule&, void*)
 {
     //遇到了server配置项，就新建立一个HttpConfigCtxs，并使main_conf指向http层的main_conf
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
@@ -414,7 +458,15 @@ bool HttpModuleCore::ConfigSetServerBlock(const CommandConfig&, const CommandMod
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config, const CommandModule&, void*)
+bool HttpModuleCore::ConfigSetCallbackTypesBlock(const CommandConfig&, const CommandModule&, void*)
+{
+    //只是为了占位
+    //FIXME:更好的设计配置文件解析
+    g_core_module_conf.PushCtx(nullptr);
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command_config, const CommandModule&, void*)
 {
     //遇到了location配置项，就新建立一个HttpConfigCtxs，获取当前server层HttpConfigCtxs结构体
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
@@ -478,12 +530,12 @@ bool HttpModuleCore::ConfigSetLocationBlock(const CommandConfig& command_config,
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandModule&, void* module_command)
+bool HttpModuleCore::ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule&, void* config)
 {
     //第一个参数为ip和端口(ip:port) or (port)
     int port;
     std::string ip;
-    const std::string& ip_port = config.args[1];
+    const std::string& ip_port = command_config.args[1];
     auto found = ip_port.find(':');
     if(std::string::npos == found)
     {
@@ -498,9 +550,9 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
 
     //是否是默认的server{}
     bool is_default = false;
-    if(config.args.size() == 3)
+    if(command_config.args.size() == 3)
     {
-        if("default" == config.args[2])
+        if("default" == command_config.args[2])
             is_default = true;
     }
 
@@ -511,11 +563,20 @@ bool HttpModuleCore::ConfigSetListen(const CommandConfig& config, const CommandM
             continue;
 
         //端口已经存在，添加监听地址
-        return AddConfAddresses(conf_port, ip, static_cast<HttpSrvConf*>(module_command), is_default);
+        return AddConfAddresses(conf_port, ip, static_cast<HttpSrvConf*>(config), is_default);
     }
 
     //没有添加过端口，新建端口
-    return AddConfPort(ip, port, static_cast<HttpSrvConf*>(module_command), is_default);
+    return AddConfPort(ip, port, static_cast<HttpSrvConf*>(config), is_default);
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_srv_conf = reinterpret_cast<HttpSrvConf*>(config);
+    http_srv_conf->server_name = command_config.args[1];
+
+    return true;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default)

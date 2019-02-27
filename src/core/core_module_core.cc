@@ -25,33 +25,28 @@ CoreModuleCore::CoreModuleCore()
     {
         {
             "user",
-            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            0,
-            offsetof(CoreModuleCore::CoreConfig, user)
+            MAIN_CONF|DIRECT_CONF|CONF_TAKE1,
+            std::bind(&CoreModuleCore::ConfigSetCallbackUser, this, _1, _2, _3),
+            0
         },
         {
             "worker_processes",
-            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetNumberSlot, _1, _2, _3),
-            0,
-            offsetof(CoreModuleCore::CoreConfig, worker_processes)
+            MAIN_CONF|DIRECT_CONF|CONF_TAKE1,
+            std::bind(&CoreModuleCore::ConfigSetCallbackWorkerProcesses, this, _1, _2, _3),
+            0
         },
         {
             "error_log",
-            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            0,
-            offsetof(CoreModuleCore::CoreConfig, error_log)
+            MAIN_CONF|DIRECT_CONF|CONF_TAKE1,
+            std::bind(&CoreModuleCore::ConfigSetCallbackErrorLog, this, _1, _2, _3),
+            0
         },
         {
             "pid",
-            MAIN_CONF|DIRECT_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetStringSlot, _1, _2, _3),
-            0,
-            offsetof(CoreModuleCore::CoreConfig, pid)
+            MAIN_CONF|DIRECT_CONF|CONF_TAKE1,
+            std::bind(&CoreModuleCore::ConfigSetCallbackPid, this, _1, _2, _3),
+            0
         }
-        
     };
 }
 //---------------------------------------------------------------------------
@@ -59,13 +54,49 @@ CoreModuleCore::~CoreModuleCore()
 {
 }
 //---------------------------------------------------------------------------
+bool CoreModuleCore::ConfigSetCallbackUser(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto core_config = reinterpret_cast<CoreConfig*>(config);
+    core_config->user = command_config.args[1];
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleCore::ConfigSetCallbackWorkerProcesses(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto core_config = reinterpret_cast<CoreConfig*>(config);
+    core_config->worker_processes = ::atoi(command_config.args[1].c_str());
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleCore::ConfigSetCallbackErrorLog(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto core_config = reinterpret_cast<CoreConfig*>(config);
+    core_config->error_log = command_config.args[1];
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool CoreModuleCore::ConfigSetCallbackPid(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto core_config = reinterpret_cast<CoreConfig*>(config);
+    core_config->pid = command_config.args[1];
+
+    return true;
+}
+//---------------------------------------------------------------------------
 void* CoreModuleCore::CreateConfig()
 {
     core_config_ = new CoreConfig();
-    core_config_->error_log = "unset";
-    core_config_->pid = "unset";
-    core_config_->user = "unset";
-    core_config_->worker_processes = -1;
+    core_config_->error_log = CONF_UNSET_STR;
+    core_config_->pid = CONF_UNSET_STR;
+    core_config_->user = CONF_UNSET_STR;
+    core_config_->worker_processes = CONF_UNSET_UINT;
 
     return core_config_;
 }

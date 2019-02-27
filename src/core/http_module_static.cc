@@ -28,9 +28,8 @@ HttpModuleStatic::HttpModuleStatic()
         {
             "directio",
             HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(default_cb::ConfigSetFlagSlot, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            offsetof(HttpStaticConfig, cache)
+            std::bind(&HttpModuleStatic::ConfigSetCallbackDirectio, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         }
     };
 }
@@ -127,6 +126,15 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     //设置响应内容格式
 
     return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleStatic::ConfigSetCallbackDirectio(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_static_config = reinterpret_cast<HttpStaticConfig*>(config);
+    http_static_config->cache = (command_config.args[1] == "on");
+
+    return true;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleStatic::Initialize()

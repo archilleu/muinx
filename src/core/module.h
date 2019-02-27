@@ -19,18 +19,17 @@ namespace core
 struct CommandConfig 
 {
     std::vector<std::string> args;  //配置项参数
-    uint32_t module_type;           //模块类型
-    uint32_t conf_type;             //command对应的域
+    uint64_t module_type;           //模块类型
+    uint64_t conf_type;             //command对应的域
 };
 //---------------------------------------------------------------------------
 //模块配置项结构，模块用于解析配置文件的配置项目
 struct CommandModule
 {
     std::string name;   //配置项目名称
-    uint32_t type;      //配置项类别
+    uint64_t type;      //配置项类别
     std::function<bool (const CommandConfig&, const CommandModule&, void*)> Set;
-    uint32_t conf;      //http{}对应结构图HttpConfCtxs成员偏移，仅在没有设置DIRICT_CONF和MAIN_CONF生效
-    uint32_t offset;    //当前配置项目在结构体中的偏移
+    uint64_t conf;      //http{}对应结构图HttpConfCtxs成员偏移，仅在没有设置DIRICT_CONF和MAIN_CONF生效
 };
 //---------------------------------------------------------------------------
 

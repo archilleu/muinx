@@ -27,7 +27,6 @@ CoreModuleHttp::CoreModuleHttp()
             "http",
             MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&CoreModuleHttp::ConfigSetHttpBlock, this, _1, _2, _3),
-            0,
             0
         }
     };

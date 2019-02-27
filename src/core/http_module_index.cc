@@ -29,10 +29,9 @@ HttpModuleIndex::HttpModuleIndex()
     {
         {
             "index",
-            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_FLAG,
-            std::bind(&HttpModuleIndex::ConfigSetIndex, this, _1, _2, _3),
-            HTTP_LOC_CONF_OFFSET,
-            0
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_1MORE,
+            std::bind(&HttpModuleIndex::ConfigSetCallbackIndex, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
         }
     };
 }
@@ -80,6 +79,17 @@ int HttpModuleIndex::IndexHandler(HttpRequest& http_request)
     return MUINX_DECLINED;
 }
 //---------------------------------------------------------------------------
+bool HttpModuleIndex::ConfigSetCallbackIndex(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto index_config = reinterpret_cast<HttpIndexConfig*>(config);
+    auto& indexs = index_config->indexs;
+    //TODO:检查是否已经有index了（重复定义）
+    indexs.assign(command_config.args.begin()+1, command_config.args.end());
+
+    return true;
+}
+//---------------------------------------------------------------------------
 bool HttpModuleIndex::Initialize()
 {
     g_http_module_core.core_main_conf()->phases[HttpModuleCore::HTTP_CONTENT_PHASE]
@@ -111,20 +121,6 @@ bool HttpModuleIndex::MergeLocConfig(void* parent, void* child)
         conf->indexs.push_back(HTTP_DEFAULT_INDEX);
     }
 
-    return true;
-}
-//---------------------------------------------------------------------------
-bool HttpModuleIndex::ConfigSetIndex(const CommandConfig& config, const CommandModule& module,
-       void* module_command)
-{
-    (void)module;
-    if(1 == config.args.size())
-        return false;
-
-    HttpIndexConfig* index_config = reinterpret_cast<HttpIndexConfig*>(module_command);
-    auto& indexs = index_config->indexs;
-    //TODO:检查是否已经有index了（重复定义）
-    indexs.assign(config.args.begin()+1, config.args.end());
     return true;
 }
 //---------------------------------------------------------------------------
