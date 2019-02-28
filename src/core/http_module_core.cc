@@ -77,6 +77,12 @@ HttpModuleCore::HttpModuleCore()
             HTTP_LOC_CONF_OFFSET
         },
         {
+            "default_type",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_TAKE1,
+            std::bind(&HttpModuleCore::ConfigSetCallbackDefaultType, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
+        },
+        {
             "server",
             HTTP_MAIN_CONF|CONF_BLOCK|CONF_NOARGS,
             std::bind(&HttpModuleCore::ConfigSetCallbackServerBlock, this, _1, _2, _3),
@@ -411,6 +417,14 @@ bool HttpModuleCore::ConfigSetCallbackSendfile(const CommandConfig& command_conf
     return true;
 }
 //---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->default_type = command_config.args[1];
+
+    return true;
+}
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const CommandModule&, void*)
 {
@@ -693,6 +707,7 @@ void* HttpModuleCore::CreateLocConfig()
     conf->tcp_nopush = -1;
     conf->limit_rate = -1;
     conf->sendfile = false;
+    conf->default_type = "text/plain";
     conf->loc_conf = nullptr;
     conf->location_name_max_length = 0;
 

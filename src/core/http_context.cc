@@ -190,35 +190,37 @@ char* HttpContext::ParseRequestLineURL(char* begin, char* end)
 {
     ++begin;
     char* space = std::find(begin, end, ' ');
-    if(space != end)
-    {
-        //参数
-        char* question_mark = std::find(begin, space, '?');
-        if(question_mark != space)
-        {
-            std::map<std::string, std::string> parameters;
-            std::vector<std::string> params = base::split(std::string(question_mark+1, space), '&');
-            for(const auto& param : params)
-            {
-                size_t equal = param.find('=');
-                if(equal == std::string::npos)
-                    continue;
-
-                parameters.insert(std::make_pair(std::string(param.substr(0, equal)),
-                                std::string(param.substr(equal+1))));
-            }
-
-            request_.set_parameters(parameters);
-        }
-        //TODO:扩展名
-        //TODO:锚
-        request_.set_url(std::string(begin, space));
-        return space;
-    }
-    else
-    {
+    if(space == end)
         return nullptr;
+
+    //参数
+    char* param_mark = std::find(begin, space, '?');
+    if(param_mark != space)
+    {
+        std::map<std::string, std::string> parameters;
+        std::vector<std::string> params = base::split(std::string(param_mark+1, space), '&');
+        for(const auto& param : params)
+        {
+            size_t equal = param.find('=');
+            if(equal == std::string::npos)
+                continue;
+
+            parameters.insert(std::make_pair(std::string(param.substr(0, equal)),
+                            std::string(param.substr(equal+1))));
+        }
+
+        request_.set_parameters(parameters);
     }
+
+    //TODO:扩展名
+    char* dot = space;
+    while(begin != dot)
+    {
+    }
+
+    //TODO:锚
+    request_.set_url(std::string(begin, space));
+    return space;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequestLineVersion(char* begin, char* end)

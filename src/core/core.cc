@@ -348,11 +348,27 @@ bool Core::IsTypesItem(const CommandConfig& command_config)
 //---------------------------------------------------------------------------
 void Core::AddTypesItem(const CommandConfig& command_config)
 {
-    if(2 != command_config.args.size())
+    if(2 > command_config.args.size())
         return;
 
-    g_http_module_core.core_main_conf()->types.insert(
-            std::make_pair(command_config.args[0], command_config.args[1]));
+    if(2 == command_config.args.size())
+    {
+        g_http_module_core.core_main_conf()->types.insert(
+                std::make_pair(command_config.args[1], command_config.args[0]));
+
+        return;
+    }
+
+    if(2 <= command_config.args.size())
+    {
+        for(size_t i=1; i<command_config.args.size(); i++)
+        {
+            g_http_module_core.core_main_conf()->types.insert(
+                    std::make_pair(command_config.args[i], command_config.args[0]));
+        }
+
+        return;
+    }
 
     return;
 }

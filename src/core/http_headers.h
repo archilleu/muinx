@@ -35,6 +35,9 @@ public:
     void set_last_modified_time(time_t time) { last_modified_time_ = time; }
     time_t last_modified_time() { return last_modified_time_; }
 
+    void set_content_type(const std::string& content_type) { content_type_ = content_type; }
+    const std::string& content_type() const { return content_type_; }
+
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;
     using HeaderTypeMap = std::map<std::string, HeaderAction>;
@@ -47,12 +50,14 @@ public:
     static const char* kContentLength;
     static const char* kConnection;
     static const char* kLastModifiedTime;
+    static const char* kContentType;
 
 private:
     std::string host_;
     size_t content_length_;
     std::string connection_;
     time_t last_modified_time_;
+    std::string content_type_;
 
     HeaderMap headers_;
 };

@@ -49,6 +49,8 @@ public:
 
         bool sendfile; //发送文件
 
+        std::string default_type;   //默认的content-type
+
         //同一个server块内的location,可能location有嵌套，所以放在该结构体内部
         std::vector<Location> locations;
 
@@ -164,11 +166,13 @@ public:
         std::vector<HttpRequest::HttpRequestHandler> handlers;
     };
 
+    using MineTypeMap = std::unordered_map<std::string, std::string>;
+    using MineTypeMapIten = MineTypeMap::iterator;
     struct HttpMainConf
     {
         std::string www;    //根路径
 
-        std::unordered_map<std::string, std::string> types; //后缀和MIME类型对应表
+        MineTypeMap types; //后缀和MIME类型对应表
 
         std::vector<HttpSrvConf*> servers;  //所有的server{}配置
         std::vector<ConfPort> ports;    //所有的监听端口
@@ -209,6 +213,7 @@ private:
     bool ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule& module, void* config);
     bool ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule& module, void* config);
     bool ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule& module, void* config);
     bool ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule& module, void* config);
     bool ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule& module, void* config);
 

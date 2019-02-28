@@ -62,28 +62,36 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     //TODO:处理目录的符号链接
 
     //TODO:缓存文件
+    auto static_config = reinterpret_cast<HttpStaticConfig*>
+        (http_request.loc_conf()[g_http_module_static.module_index()]);
+    if(true == static_config->cache)
+    {
+    }
 
     //判断路径是文件还是目录等，不跟随符号链接
     struct stat sb;
+    HttpRequest::StatusCode status_code;
     if (-1 == lstat(http_request.path().c_str(), &sb))
     {
         switch(errno)
         {
             case EACCES:
-                http_request.set_status_code(HttpRequest::StatusCode::FORBIDDEN);
+                status_code = HttpRequest::StatusCode::FORBIDDEN;
                 break;
 
             case ENAMETOOLONG:
-                http_request.set_status_code(HttpRequest::StatusCode::REQUEST_URI_TOO_LARGE);
+                status_code = HttpRequest::StatusCode::REQUEST_URI_TOO_LARGE;
                 break;
 
             case ENOENT:
-                http_request.set_status_code(HttpRequest::StatusCode::NOT_FOUND);
+                status_code = HttpRequest::StatusCode::NOT_FOUND;
                 break;
 
             default:
-                http_request.set_status_code(HttpRequest::StatusCode::INTERNAL_SERVER_ERROR);
+                status_code = HttpRequest::StatusCode::INTERNAL_SERVER_ERROR;
         }
+
+        http_request.set_status_code(status_code);
         return MUINX_ERROR;
     }
 
@@ -122,7 +130,19 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     std::string connection = http_request.headers_in().connection();
     http_request.headers_out().AddHeader(HttpHeaders::kConnection, std::move(connection));
     http_request.headers_out().AddHeader(HttpHeaders::kLastModifiedTime, "TODO:time");
-    //设置响应内容格式
+    //根据后缀设置响应内容格式
+    auto main_conf = reinterpret_cast<HttpModuleCore::HttpMainConf*>
+        (http_request.main_conf()[g_http_module_core.module_index()]);
+    if(http_request.exten().empty())
+    {
+    }
+    else
+    {
+        auto iter = main_conf->types.find(http_request.exten());
+        if(iter == main_conf->types.end())
+        {
+        }
+    }
 
     return MUINX_OK;
 }

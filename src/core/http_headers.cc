@@ -13,6 +13,7 @@ const char* HttpHeaders::kHost              = "host";
 const char* HttpHeaders::kContentLength     = "content-length";
 const char* HttpHeaders::kConnection        = "connection";
 const char* HttpHeaders::kLastModifiedTime  = "last-modified-time";
+const char* HttpHeaders::kContentType       = "content-type";
 //---------------------------------------------------------------------------
 static bool HeaderActionHost(HttpHeaders& http_header, const std::string& host)
 {
@@ -60,12 +61,20 @@ static bool HeaderActionLastModifiedTime(HttpHeaders& http_header, const std::st
     return true;
 }
 //---------------------------------------------------------------------------
+static bool HeaderActionContentType(HttpHeaders& http_header, const std::string& content_type)
+{
+    //TODO:校验
+    http_header.set_content_type(content_type);
+    return true;
+}
+//---------------------------------------------------------------------------
 const HttpHeaders::HeaderTypeMap HttpHeaders::kHeaderTypeMap =
 {
     {HttpHeaders::kHost, std::bind(HeaderActionHost, _1, _2)},
     {HttpHeaders::kContentLength, std::bind(HeaderActionContentLength, _1, _2)},
     {HttpHeaders::kConnection, std::bind(HeaderActionKeepAlive, _1, _2)},
-    {HttpHeaders::kLastModifiedTime, std::bind(HeaderActionLastModifiedTime, _1, _2)}
+    {HttpHeaders::kLastModifiedTime, std::bind(HeaderActionLastModifiedTime, _1, _2)},
+    {HttpHeaders::kContentType, std::bind(HeaderActionContentType, _1, _2)}
 };
 //---------------------------------------------------------------------------
 HttpHeaders::HttpHeaders()
