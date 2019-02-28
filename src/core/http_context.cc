@@ -348,19 +348,17 @@ bool HttpContext::FindVirtualServer()
     }
     if(nullptr == srv_conf)
     {
+        if(nullptr == conf_address.default_server)
+            return false;
+
         srv_conf = conf_address.default_server;
     }
 
-    if(nullptr != srv_conf)
-    {
-        //此时获取的是server{}的ctx，其中的loc_conf还要再下一步的checker中重新赋值
-        request_.set_ctxs(srv_conf->ctx);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    //此时获取的是server{}的ctx，其中的loc_conf还要再下一步的checker中重新赋值
+    request_.set_main_conf(srv_conf->ctx->main_conf);
+    request_.set_srv_conf(srv_conf->ctx->srv_conf);
+    request_.set_loc_conf(srv_conf->ctx->loc_conf);
+    return true;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::HandleHeader()

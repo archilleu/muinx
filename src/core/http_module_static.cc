@@ -57,8 +57,6 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     }
 
     //获取该模块需要的配置项目
-    HttpModuleCore::HttpLocConf* loc_conf = http_request.GetModuleLocConf(&g_http_module_static);
-    (void)loc_conf;
 
     //TODO:处理目录的符号链接
 

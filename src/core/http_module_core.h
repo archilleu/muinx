@@ -5,20 +5,16 @@
 #include <vector>
 #include <unordered_map>
 #include "http_module.h"
+#include "http_request.h"
 //---------------------------------------------------------------------------
 namespace core
 {
-
-class HttpRequest;
 
 class HttpModuleCore : public HttpModule
 {
 public:
     HttpModuleCore();
     virtual ~HttpModuleCore();
-
-    //当前HTTP模块处理方法
-    using HttpRequestHandler = std::function<int (HttpRequest&)>;
 
 public:
     struct HttpConfigCtxs
@@ -71,7 +67,7 @@ public:
 
         bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
 
-        HttpRequestHandler handler;
+        HttpRequest::HttpRequestHandler handler;
     };
 
 public:
@@ -150,7 +146,7 @@ public:
     struct PhaseHandler
     {
         HttpChecker checker;            //checker定义
-        HttpRequestHandler handler;     //各个HTTP模块处理流程
+        HttpRequest::HttpRequestHandler handler;     //各个HTTP模块处理流程
         int next;                       //该HTTP阶段的下一个HTTP阶段下标
     };
     //HTTP流程定义
@@ -164,7 +160,7 @@ public:
     //HTTP模块初始化时候通过 HttpModule的postconfiguration添加进来的handler
     struct PhaseTemp
     {
-        std::vector<HttpRequestHandler> handlers;
+        std::vector<HttpRequest::HttpRequestHandler> handlers;
     };
 
     struct HttpMainConf

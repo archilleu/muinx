@@ -8,7 +8,6 @@
 #include "../base/timestamp.h"
 #include "../base/any.h"
 #include "http_headers.h"
-#include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -106,15 +105,14 @@ public:
     };
 
 public:
-    //该请求所在的server{}上下文
-    void set_ctxs(HttpModuleCore::HttpConfigCtxs* ctxs) { ctxs_ = ctxs; }
-    HttpModuleCore::HttpConfigCtxs* ctxs() const { return ctxs_; }
+    void set_main_conf(void** conf) { main_conf_ = conf; }
+    void** main_conf() { return main_conf_; }
 
-    HttpModuleCore::HttpLocConf* core_loc_conf()
-    {
-        return reinterpret_cast<HttpModuleCore::HttpLocConf*>
-            (ctxs_->loc_conf[g_http_module_core.module_index()]);
-    }
+    void set_srv_conf(void** conf) { srv_conf_ = conf; }
+    void** srv_conf() { return srv_conf_; }
+
+    void set_loc_conf(void** conf) { loc_conf_ = conf; }
+    void** loc_conf() { return loc_conf_; }
 
     void set_method(Method method) { method_ = method; }
     Method method() const { return method_; }
@@ -173,10 +171,6 @@ public:
     std::string ToString();
 
 public:
-    //获取srv{}下面的loc结构体,并不是该请求所在的loc{}，是该请求所在的srv{}的loc
-    HttpModuleCore::HttpLocConf* GetModuleLocConf(const Module* module) const;
-
-public:
     using MethodType = std::map<std::string, Method>;
     using MethodTypeConstIter = MethodType::const_iterator;
     static const MethodType kMethodType;
@@ -191,8 +185,10 @@ public:
     static const char* kHTTP10;
 
 private:
-    //当前请求的srv{}配置项，和loc_conf_不一样，ctxs_包含了该请求所在的虚拟主机的所有配置
-    HttpModuleCore::HttpConfigCtxs* ctxs_;
+    //该请求的配置项
+    void** main_conf_;
+    void** srv_conf_;
+    void** loc_conf_;
 
     //该请求对应的链接
     //FIXME:不需要这个对象

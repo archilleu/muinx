@@ -27,7 +27,9 @@ const HttpRequest::MethodType HttpRequest::kMethodType =
 };
 //---------------------------------------------------------------------------
 HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
-:   ctxs_(nullptr),
+:   main_conf_(nullptr),
+    srv_conf_(nullptr),
+    loc_conf_(nullptr),
     connection_(conn_ptr),
     method_(INVALID),
     method_str_("INVALID"),
@@ -43,9 +45,11 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
 //---------------------------------------------------------------------------
 void HttpRequest::UriToPath()
 {
+    auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+        (loc_conf_[g_http_module_core.module_index()]);
     //获取全局的根路径
     const auto& www = g_http_module_core.core_main_conf()->www;
-    path_ = www + "/" + core_loc_conf()->root + url();
+    path_ = www + "/" + loc_conf->root + url();
 
     return;
 }
@@ -68,13 +72,6 @@ std::string HttpRequest::ToString()
     }
     result += "\r\n";
     return result;
-}
-//---------------------------------------------------------------------------
-HttpModuleCore::HttpLocConf* HttpRequest::GetModuleLocConf(const Module* module) const
-{
-    auto conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
-        (ctxs_->loc_conf[module->module_index()]);
-    return conf;
 }
 //---------------------------------------------------------------------------
 

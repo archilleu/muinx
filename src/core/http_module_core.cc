@@ -261,7 +261,8 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
     //查找准确的loc_conf
     const std::string& url = http_request.url();
     std::unordered_map<std::string, Location>::const_iterator iter;
-    auto loc_conf = http_request.GetModuleLocConf(&g_http_module_core);
+    auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>  //该loc_conf目前为srv{}块内的值
+        (http_request.loc_conf()[g_http_module_core.module_index()]);
     if(1 == url.length())
     {
         iter = loc_conf->map_locations.find("/");
@@ -305,14 +306,15 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
 
     auto& location = iter->second;
     auto static_loc_conf = location.exact ? location.exact : location.inclusive;
-    http_request.ctxs()->loc_conf = static_loc_conf->loc_conf;
+    http_request.set_loc_conf(static_loc_conf->loc_conf);
 
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
 void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
 {
-    auto loc_conf = http_request.core_loc_conf();
+    auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+        (http_request.loc_conf()[g_http_module_core.module_index()]);
 
     if(loc_conf->sendfile)
     {

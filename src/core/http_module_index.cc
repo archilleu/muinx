@@ -51,7 +51,8 @@ int HttpModuleIndex::IndexHandler(HttpRequest& http_request)
         return MUINX_DECLINED;
     }
 
-    auto http_index_conf = reinterpret_cast<HttpIndexConfig*>(http_request.GetModuleLocConf(&g_http_module_index));
+    auto http_index_conf = reinterpret_cast<HttpIndexConfig*>
+        (http_request.loc_conf()[g_http_module_index.module_index()]);
     for(auto& index : http_index_conf->indexs)
     {
         if('/' == index.front())
