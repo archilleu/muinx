@@ -55,6 +55,7 @@ public:
         /*
          * 指向所属location块内ngx_http_conf_ctx_t结构中的loc_conf指针数组，它保存
          * 着当前location块内所有HTTP模块create_loc_conf方法产生的结构体指针
+         * 通过其他http模块的模块下标可以对应的loc{}配置结构体,srv{}的可以通过srv{}->ctx->loc{}
          */
         void** loc_conf;
 

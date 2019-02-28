@@ -115,10 +115,10 @@ void HttpCoreConfig()
 //---------------------------------------------------------------------------
 void PrintLocationIndex(HttpModuleIndex::HttpIndexConfig* index_config)
 {
-    std::cout << "indexs:" << std::endl;
+    std::cout << "indexs:";
     for(auto& index : index_config->indexs)
     {
-        std::cout << index << "," << std::endl;
+        std::cout << index << ",";
     }
     std::cout<< std::endl;
     return;
@@ -140,9 +140,51 @@ void HttpIndexConfig()
         //该server下的location记录在loc_conf[0]下面
         auto http_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
             (server->ctx->loc_conf[g_http_module_core.module_index()]);
+
         for(auto location : http_loc_conf->locations)
         {
-            (void)location;
+            auto conf = location.exact ? location.exact : location.inclusive;
+            //每一个loc{}的loc_conf指针数组记录了该ctx->loc_conf数组
+            auto index_conf = reinterpret_cast<HttpModuleIndex::HttpIndexConfig*>
+                (conf->loc_conf[g_http_module_index.module_index()]);
+            PrintLocationIndex(index_conf);
+        }
+    }
+    
+    return;
+}
+//---------------------------------------------------------------------------
+void PrintLocationStatic(HttpModuleStatic::HttpStaticConfig* static_config)
+{
+    std::cout << "static:" << static_config->cache << std::endl;
+    return;
+}
+//---------------------------------------------------------------------------
+void HttpStaticConfig()
+{
+    auto main_conf = g_core_module_conf.GetModuleMainConf(&g_http_module_static);
+    std::cout << "main conf eq 0:" << (main_conf==nullptr) << std::endl;
+    auto srv_conf = g_core_module_conf.GetModuleSrvConf(&g_http_module_static);
+    std::cout << "srv conf eq 0:" << (srv_conf==nullptr) << std::endl;
+    std::cout << "loc conf: ";
+    auto loc_conf = reinterpret_cast<HttpModuleStatic::HttpStaticConfig*>
+        (g_core_module_conf.GetModuleLocConf(&g_http_module_static));
+    PrintLocationStatic(loc_conf);
+
+    for(auto server : g_http_module_core.core_main_conf()->servers)
+    {
+        //该server下的location记录在loc_conf[0]下面
+        auto http_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+            (server->ctx->loc_conf[g_http_module_core.module_index()]);
+
+        for(auto location : http_loc_conf->locations)
+        {
+            std::cout << "location name:" << location.name << std::endl;
+            auto conf = location.exact ? location.exact : location.inclusive;
+            //每一个loc{}的loc_conf指针数组记录了该ctx->loc_conf数组
+            auto static_conf = reinterpret_cast<HttpModuleStatic::HttpStaticConfig*>
+                (conf->loc_conf[g_http_module_static.module_index()]);
+            PrintLocationStatic(static_conf);
         }
     }
     
@@ -154,9 +196,20 @@ int main(int, char**)
     if(false == g_core.Initialize())
         return -1;
 
+    std::cout << "main core====================>" << std::endl;
     MainConfig();
+
+    std::cout << "event module core====================>" << std::endl;
     EventConfig();
+
+    std::cout << "http module core====================>" << std::endl;
     HttpCoreConfig();
+
+    std::cout << "http module index====================>" << std::endl;
+    HttpIndexConfig();
+
+    std::cout << "http module static====================>" << std::endl;
+    HttpStaticConfig();
 
     //启动服务器，进入loop
     g_core.Start();

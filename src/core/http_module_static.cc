@@ -21,6 +21,7 @@ HttpModuleStatic::HttpModuleStatic()
 {
     HttpModuleCtx* ctx = new HttpModuleCtx();
     ctx->postconfiguration = std::bind(&HttpModuleStatic::Initialize, this);
+    ctx->create_loc_config = std::bind(&HttpModuleStatic::CreateStaticConfig, this);
     this->ctx_.reset(ctx);
 
     this->commands_ =
@@ -142,6 +143,13 @@ bool HttpModuleStatic::Initialize()
         .handlers.push_back(std::bind(StaticHandler, _1));
 
     return true;
+}
+//---------------------------------------------------------------------------
+void* HttpModuleStatic::CreateStaticConfig()
+{
+    auto config = new HttpStaticConfig();
+    config->cache = false;
+    return config;
 }
 //---------------------------------------------------------------------------
 

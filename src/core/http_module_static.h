@@ -28,6 +28,7 @@ public:
 
 private:
     bool Initialize();
+    void* CreateStaticConfig();
 };
 //---------------------------------------------------------------------------
 extern HttpModuleStatic g_http_module_static;
