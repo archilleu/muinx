@@ -324,8 +324,14 @@ bool HttpContext::ParseRequestBody(net::Buffer& buffer)
         return true;
     }
 
-    if(content_length > buffer.ReadableBytes())
+    if(0 == request_.request_body().size())
+        request_.request_body().reserve(content_length);
+
+    if(content_length > request_.request_body().size())
         return true;
+
+    request_.request_body().insert
+        (request_.request_body().end(), buffer.Peek(), buffer.Peek()+buffer.ReadableBytes());
 
     buffer.Retrieve(content_length);
     parse_state_ = ParseRequestDone;

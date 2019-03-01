@@ -146,6 +146,7 @@ public:
 
     void set_request_body(std::vector<char>&& request_body) { request_body_ = std::move(request_body); }
     const std::vector<char>& request_body() const { return request_body_; }
+    std::vector<char>& request_body() { return request_body_; }
 
     HttpHeaders& headers_out() { return headers_out_; }
 
