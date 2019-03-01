@@ -213,13 +213,25 @@ char* HttpContext::ParseRequestLineURL(char* begin, char* end)
     }
 
     //TODO:扩展名
-    char* dot = space;
+    char* dot = param_mark;
     while(begin != dot)
     {
+        if('.' == *dot)
+        {
+            dot++;
+            request_.set_exten(std::string(dot, param_mark-dot));
+            break;
+        }
+
+        if('/' == *dot)
+            break;
+
+        dot--;
     }
 
     //TODO:锚
-    request_.set_url(std::string(begin, space));
+    char* url_idx = space==param_mark ? space : param_mark;
+    request_.set_url(std::string(begin, url_idx));
     return space;
 }
 //---------------------------------------------------------------------------
@@ -351,7 +363,10 @@ bool HttpContext::FindVirtualServer()
     if(nullptr == srv_conf)
     {
         if(nullptr == conf_address.default_server)
+        {
+            //FIXME:返回404错误
             return false;
+        }
 
         srv_conf = conf_address.default_server;
     }
@@ -360,6 +375,7 @@ bool HttpContext::FindVirtualServer()
     request_.set_main_conf(srv_conf->ctx->main_conf);
     request_.set_srv_conf(srv_conf->ctx->srv_conf);
     request_.set_loc_conf(srv_conf->ctx->loc_conf);
+
     return true;
 }
 //---------------------------------------------------------------------------

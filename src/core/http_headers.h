@@ -18,6 +18,7 @@ public:
     using HeaderMapIter = HeaderMap::iterator;
 
 public:
+    void AddHeader(const std::string& filed, const std::string& value);
     void AddHeader(std::string&& filed, std::string&& value);
     const std::string& GetHeader(const std::string& header);
     const HeaderMap& headers() { return headers_; }

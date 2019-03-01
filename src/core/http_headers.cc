@@ -84,6 +84,11 @@ HttpHeaders::HttpHeaders()
     return;
 }
 //---------------------------------------------------------------------------
+void HttpHeaders::AddHeader(const std::string& field, const std::string& value)
+{
+    AddHeader(std::string(field), std::string(value));
+}
+//---------------------------------------------------------------------------
 void HttpHeaders::AddHeader(std::string&& field, std::string&& value)
 {
     headers_.insert(std::make_pair(std::move(field), std::move(value)));

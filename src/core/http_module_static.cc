@@ -130,17 +130,26 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     std::string connection = http_request.headers_in().connection();
     http_request.headers_out().AddHeader(HttpHeaders::kConnection, std::move(connection));
     http_request.headers_out().AddHeader(HttpHeaders::kLastModifiedTime, "TODO:time");
+
     //根据后缀设置响应内容格式
-    auto main_conf = reinterpret_cast<HttpModuleCore::HttpMainConf*>
-        (http_request.main_conf()[g_http_module_core.module_index()]);
+    auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
+        (http_request.loc_conf()[g_http_module_core.module_index()]);
     if(http_request.exten().empty())
     {
+        http_request.headers_out().AddHeader(HttpHeaders::kContentType, std::string(loc_conf->default_type));
     }
     else
     {
+        auto main_conf = reinterpret_cast<HttpModuleCore::HttpMainConf*>
+            (http_request.main_conf()[g_http_module_core.module_index()]);
         auto iter = main_conf->types.find(http_request.exten());
         if(iter == main_conf->types.end())
         {
+            http_request.headers_out().AddHeader(HttpHeaders::kContentType, loc_conf->default_type);
+        }
+        else
+        {
+            http_request.headers_out().AddHeader(HttpHeaders::kContentType, iter->second);
         }
     }
 
