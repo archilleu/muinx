@@ -168,23 +168,6 @@ bool Core::ConfigFileParseCallback(const CommandConfig& command_config)
 //---------------------------------------------------------------------------
 bool Core::ConfigFileBlockBeginCallback(const CommandConfig& command_config)
 {
-    //进入http 配置模块解析前
-    if((command_config.module_type==Module::ModuleType::HTTP)
-            && (command_config.conf_type==HTTP_MAIN_CONF))
-    {
-        for(auto module : modules_)
-        {
-            if(module->type() != Module::ModuleType::HTTP)
-                continue;
-
-            HttpModule* http_module = static_cast<HttpModule*>(module);
-            auto ctx = http_module->ctx();
-            if(ctx->preconfiguration)
-            {
-                ctx->preconfiguration();
-            }
-        }
-    }
     return ConfigCallback(command_config);
 }
 //---------------------------------------------------------------------------

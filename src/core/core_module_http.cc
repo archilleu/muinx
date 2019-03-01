@@ -111,6 +111,20 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
         }
     }
 
+    //调用配置解析前的回调
+    for(auto module : g_core.modules_)
+    {
+        if(module->type() != Module::ModuleType::HTTP)
+            continue;
+
+        HttpModule* http_module = static_cast<HttpModule*>(module);
+        auto module_ctx = http_module->ctx();
+        if(module_ctx->preconfiguration)
+        {
+            module_ctx->preconfiguration();
+        }
+    }
+
     return true;
 }
 //---------------------------------------------------------------------------
