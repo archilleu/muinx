@@ -16,6 +16,12 @@ public:
     HttpModuleCore();
     virtual ~HttpModuleCore();
 
+    /*
+     * HTTP过滤器
+     */
+    using HttpOutputHeaderFilterHandler = std::function<int (HttpRequest&)>;
+    using HttpOutputBodyFilterHandler = std::function<int (HttpRequest&)>;
+
 public:
     struct HttpConfigCtxs
     {
@@ -181,6 +187,10 @@ public:
         PhaseEngine phase_engine;
         //初始化phase_engine，运行过程无用
         PhaseTemp phases[HTTP_LOG_PHASE + 1];
+
+        //过滤器链表
+        std::vector<HttpOutputHeaderFilterHandler> header_filter;
+        std::vector<HttpOutputBodyFilterHandler> body_filter;
     };
 
 public:

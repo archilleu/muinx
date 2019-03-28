@@ -16,7 +16,7 @@ public:
     struct HttpModuleCtx
     {
         std::function<bool (void)> preconfiguration;
-        std::function<bool (void)> postconfiguration;
+        std::function<bool (void)> postconfiguration;   //一般用来初始化HTTP流程engine或者过滤器链表
 
         std::function<void* (void)> create_main_config; //创建模块配置结构体回调
         std::function<bool (void*)> init_main_config;   //

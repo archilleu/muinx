@@ -6,7 +6,6 @@
 #include "../base/function.h"
 #include "../tools/muinx_logger.h"
 #include "http_module_core.h"
-#include "core_module_conf.h"
 #include "http_module_static.h"
 //---------------------------------------------------------------------------
 namespace core
