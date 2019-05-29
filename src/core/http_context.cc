@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
-#include "../net/tcp_connection.h"
-#include "../base/any.h"
-#include "../base/function.h"
+#include "net/include/tcp_connection.h"
+#include "base/include/any.h"
+#include "base/include/function.h"
 #include "../tools/muinx_logger.h"
 #include "defines.h"
 #include "http_context.h"
@@ -349,7 +349,7 @@ bool HttpContext::FindVirtualServer()
         Logger_error("connection has been destroy");
         return false;
     }
-    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->config_data());
+    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->data());
     if(conf_address.servers.size() == 1)
     {
         //一个server就不需要hash表了

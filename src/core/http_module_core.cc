@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 #include <cstring>
 #include <iostream>
-#include "../base/function.h"
+#include "base/include/function.h"
 #include "../tools/muinx_logger.h"
 #include "core.h"
 #include "defines.h"

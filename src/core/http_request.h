@@ -4,9 +4,9 @@
 //---------------------------------------------------------------------------
 #include <vector>
 #include <map>
-#include "../net/callback.h"
-#include "../base/timestamp.h"
-#include "../base/any.h"
+#include "net/include/callback.h"
+#include "base/include/timestamp.h"
+#include "base/include/any.h"
 #include "http_headers.h"
 //---------------------------------------------------------------------------
 namespace core

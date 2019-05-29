@@ -2,8 +2,8 @@
 #ifndef TOOLS_MUINX_LOGGER_H_
 #define TOOLS_MUINX_LOGGER_H_
 //---------------------------------------------------------------------------
-#include "../base/logger.h"
-#include "../base/thread.h"
+#include "base/include/logger.h"
+#include "base/include/thread.h"
 //---------------------------------------------------------------------------
 #define Logger_trace(format, ...) logger->trace("[%s:%s:%d:%s]:" format " ", base::CurrentThread::tid_str(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define Logger_debug(format, ...) logger->debug("[%s:%s:%d]:" format " ", base::CurrentThread::tid_str(),__FILE__, __LINE__, ##__VA_ARGS__)

@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 #include <memory>
-#include "../base/function.h"
+#include "base/include/function.h"
 #include "defines.h"
 #include "../tools/muinx_logger.h"
 #include "http_module_core.h"

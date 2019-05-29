@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "defines.h"
-#include "../base/function.h"
+#include "base/include/function.h"
 #include "../tools/muinx_logger.h"
 #include "http_module_core.h"
 #include "http_module_static.h"

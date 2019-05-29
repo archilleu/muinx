@@ -6,6 +6,9 @@ cmake_minimum_required (VERSION 2.8)
 #aux_source_directory(<dir> <variable>)
 aux_source_directory(. DIR_SRCS)
 #---------------------------------------------------------------------------
+#add include path
+include_directories(../../thirdpart)
+#---------------------------------------------------------------------------
 #generate static library
 #add_library(libname ${<dir>})
 set(LIBTOOLS tools)

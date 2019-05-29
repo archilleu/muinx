@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 #include <iostream>
-#include "../net/buffer.h"
-#include "../net/tcp_connection.cc"
+#include "net/include/buffer.h"
+#include "net/include/tcp_connection.h"
 #include "defines.h"
 #include "core_server.h"
 #include "core_module_http.h"
@@ -30,6 +30,7 @@ bool CoreServer::Initialize()
 
     //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
     server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
+
     //TODO:设置线程数目等参数
     //server_->set_event_loop_nums(8);
     server_->set_connection_cb(std::bind(&CoreServer::OnConnection, this, _1));

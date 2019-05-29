@@ -2,9 +2,9 @@
 #ifndef CORE_HTTP_CONTEXT_H_
 #define CORE_HTTP_CONTEXT_H_
 //---------------------------------------------------------------------------
-#include "../base/timestamp.h"
-#include "../net/buffer.h"
-#include "../net/callback.h"
+#include "base/include/timestamp.h"
+#include "net/include/buffer.h"
+#include "net/include/callback.h"
 #include "http_request.h"
 //---------------------------------------------------------------------------
 namespace core

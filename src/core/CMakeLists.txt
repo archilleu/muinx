@@ -10,14 +10,13 @@ set(EXENAME muinx)
 add_executable(${EXENAME} ${DIR_SRC})
 #---------------------------------------------------------------------------
 #add include path
-#include_directories(${LIBRARY_OUTPUT_PATH_INC})
+include_directories(../../thirdpart)
 #---------------------------------------------------------------------------
-#add lib path
-#link_directories(${CMAKE_INSTALL_PREFIX}/src})
+#add lib
+find_library(LIBBASE base HINTS ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart/base/lib)
+find_library(LIBNET net HINTS ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart/net/lib)
 #---------------------------------------------------------------------------
 #add link lib
-set(LIBBASE base)
-set(LIBNET net)
 set(LIBTOOLS tools)
 target_link_libraries(${EXENAME} ${LIBNET} ${LIBBASE} ${LIBTOOLS}  pthread rt)
 #---------------------------------------------------------------------------

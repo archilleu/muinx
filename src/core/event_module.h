@@ -2,7 +2,7 @@
 #ifndef CORE_EVENT_MODULE_H_
 #define CORE_EVENT_MODULE_H_
 //---------------------------------------------------------------------------
-#include "../net/callback.h"
+#include "net/include/callback.h"
 #include "module.h"
 //---------------------------------------------------------------------------
 namespace core

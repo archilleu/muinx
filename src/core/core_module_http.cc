@@ -199,17 +199,17 @@ bool CoreModuleHttp::AddListening(const HttpModuleCore::ConfPort& conf_port)
         {
             //TODO:ipv4还是ipv6, 是否loopback
 
-            net::InetAddressData addr_data = net::InetAddressData();
-            addr_data.address = net::InetAddress(static_cast<short>(conf_port.port), true);
-            addr_data.data = address;
-            addresses_.push_back(addr_data);
+            net::InetAddressConfig address_conf = net::InetAddressConfig();
+            address_conf.address = net::InetAddress(static_cast<short>(conf_port.port), true);
+            address_conf.data = address;
+            addresses_.push_back(address_conf);
         }
         else
         {
-            net::InetAddressData addr_data = net::InetAddressData();
-            addr_data.address = net::InetAddress(address.ip, static_cast<short>(conf_port.port));
-            addr_data.data = address;
-            addresses_.push_back(addr_data);
+            net::InetAddressConfig address_conf = net::InetAddressConfig();
+            address_conf.address = net::InetAddress(address.ip, static_cast<short>(conf_port.port));
+            address_conf.data = address;
+            addresses_.push_back(address_conf);
         }
     }
 

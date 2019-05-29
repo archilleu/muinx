@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 #include <functional>
-#include "../base/noncopyable.h"
+#include "base/include/noncopyable.h"
 //---------------------------------------------------------------------------
 namespace core
 {

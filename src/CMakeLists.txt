@@ -9,8 +9,6 @@ cmake_minimum_required (VERSION 2.8)
 #add_library(libname ${<dir>})
 #---------------------------------------------------------------------------
 #install target 
-add_subdirectory(base)
 add_subdirectory(tools)
-add_subdirectory(net)
 add_subdirectory(core)
 #---------------------------------------------------------------------------

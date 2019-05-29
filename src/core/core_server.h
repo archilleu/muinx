@@ -4,10 +4,10 @@
 //---------------------------------------------------------------------------
 #include <vector>
 #include <memory>
-#include "../net/callback.h"
-#include "../net/inet_address.h"
-#include "../net/event_loop.h"
-#include "../net/tcp_server.h"
+#include "net/include/callback.h"
+#include "net/include/inet_address.h"
+#include "net/include/event_loop.h"
+#include "net/include/tcp_server.h"
 //---------------------------------------------------------------------------
 namespace core
 {
