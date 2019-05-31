@@ -43,17 +43,17 @@ bool Core::Initialize()
 {
     InitModulesIndex();
 
-    ActionCoreModulesCreatConfig();
+    ActionCoreModulesConfigCreate();
 
-    BindCallback();
+    BindConfigFileCallback();
 
     if(false == ParseConfigFile())
         return false;
 
-    if(false == ActionCoreModuleInitConfig())
+    if(false == ActionCoreModuleConfigInit())
         return false;
 
-    if(false == core_server_.Initialize())
+    if(false == g_event_module_core.Initialize())
         return false;
 
     return true;
@@ -61,13 +61,13 @@ bool Core::Initialize()
 //---------------------------------------------------------------------------
 void Core::Start()
 {
-    core_server_.Start();
+    g_event_module_core.Start();
     return;
 }
 //---------------------------------------------------------------------------
 void Core::Stop()
 {
-    core_server_.Stop();
+    g_event_module_core.Stop();
     return;
 }
 //---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ void Core::InitModulesIndex()
     return;
 }
 //---------------------------------------------------------------------------
-void Core::ActionCoreModulesCreatConfig()
+void Core::ActionCoreModulesConfigCreate()
 {
     for(auto& module : modules_)
     {
@@ -119,7 +119,7 @@ void Core::ActionCoreModulesCreatConfig()
     return;
 }
 //---------------------------------------------------------------------------
-void Core::BindCallback()
+void Core::BindConfigFileCallback()
 {
     g_core_module_conf.set_command_callback(std::bind(&Core::ConfigFileParseCallback, this, _1));
     g_core_module_conf.set_block_begin_callback(std::bind(&Core::ConfigFileBlockBeginCallback, this, _1));
@@ -139,7 +139,7 @@ bool Core::ParseConfigFile()
     return true;
 }
 //---------------------------------------------------------------------------
-bool Core::ActionCoreModuleInitConfig()
+bool Core::ActionCoreModuleConfigInit()
 {
     //解析完配置项目后调用初始化配置项，此刻可以对配置项进行默认值或者其他操作,
     //该初始化只初始化CORE类型的模块，其他模块在对应管理的模块内初始化
@@ -223,8 +223,11 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
     for(auto module : modules_)
     {
         //模块类型不是配置模块并且是否匹配
-        if((module->type()==Module::ModuleType::CONF) || (module->type()!=command_config.module_type))
+        if((module->type()==Module::ModuleType::CONF)
+                || (module->type()!=command_config.module_type))
+        {
             continue;
+        }
 
         //检测是否是types块内配置项,如果是就特殊处理
         if(true == IsTypesItem(command_config))

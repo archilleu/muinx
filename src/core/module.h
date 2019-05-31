@@ -19,8 +19,8 @@ namespace core
 struct CommandConfig 
 {
     std::vector<std::string> args;  //配置项参数
-    uint64_t module_type;           //模块类型
-    uint64_t conf_type;             //command对应的域
+    uint64_t module_type;           //模块类型,如CORE、EVENT、HTTP
+    uint64_t conf_type;             //command对应的域, 如EVENT_CONF、HTTP_MAIN_CONF、HTTP_SRV_CONF
 };
 //---------------------------------------------------------------------------
 //模块配置项结构，模块用于解析配置文件的配置项目
@@ -32,7 +32,6 @@ struct CommandModule
     uint64_t conf;      //http{}对应结构图HttpConfCtxs成员偏移，仅在没有设置DIRICT_CONF和MAIN_CONF生效
 };
 //---------------------------------------------------------------------------
-
 class Module : public base::Noncopyable
 {
 public:

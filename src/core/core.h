@@ -8,7 +8,6 @@
 #include <functional>
 #include "defines.h"
 #include "core_module_conf.h"
-#include "core_server.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -30,10 +29,10 @@ public:
 private:
     void InitGlobalModules();
     void InitModulesIndex();
-    void ActionCoreModulesCreatConfig();
-    void BindCallback();
+    void ActionCoreModulesConfigCreate();
+    void BindConfigFileCallback();
     bool ParseConfigFile();
-    bool ActionCoreModuleInitConfig();
+    bool ActionCoreModuleConfigInit();
 
 private:
     bool ConfigFileParseCallback(const CommandConfig& command_config);
@@ -46,9 +45,6 @@ private:
 
     bool IsTypesItem(const CommandConfig& command_config);
     void AddTypesItem(const CommandConfig& command_config);
-
-private:
-    CoreServer core_server_;
 };
 //---------------------------------------------------------------------------
 extern core::Core g_core;

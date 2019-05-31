@@ -13,7 +13,7 @@ public:
     CoreModuleEvent();
     virtual ~CoreModuleEvent();
 
-    //event 模块的配置项,只是用于引导event模块启动，不需要配置项
+    //event 模块的配置项,由于该模块只是用于引导event模块启动，并不需要配置项
     struct EventConfig
     {
     };

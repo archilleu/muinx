@@ -14,19 +14,6 @@ namespace core
 {
 
 //---------------------------------------------------------------------------
-namespace default_cb
-{
-/*
- * 通用的配置项解析回调
- */
-//bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
-//bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
-//bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command);
-
-}//namespace default_cb
-//---------------------------------------------------------------------------
-
-//---------------------------------------------------------------------------
 //配置文件读取类
 class CharReader
 {
@@ -101,9 +88,6 @@ public:
     size_t pos() const { return reader_->pos(); }
 
 private:
-    void SkipBlankSpace();
-    bool IsBlank(char c);
-
     void SkipComments();
     bool IsComments(char c);
     void SkipCommentLine();
@@ -168,7 +152,7 @@ private:
     static const int kCONF_LOCATION = 0x0020;   //域为Location
 
 private:
-    bool GetConfigFileData();
+    bool LoadConfigFile();
 
     bool CaseStatusEnd();
     bool CaseStatusBlank();
@@ -179,7 +163,7 @@ private:
     bool HasStatus(int status) { return (cur_status_ & status); }
 
     //处理include保留字
-    void IncludeFile(const std::string& name);
+    bool IncludeFile(const std::string& name);
 
 private:
     std::string config_path_;                   //配置文件路径
@@ -191,9 +175,9 @@ private:
     std::vector<std::string> cur_line_params_;
     std::stack<int> stack_;
 
-    Module::ModuleType module_type_;    //当前模块的类型
-    int conf_type_;                     //当前域
-    std::stack<void*> stack_ctx_;       //当前使用的上下文,在event{}, http{}使用
+    Module::ModuleType module_type_;    //当前解析行模块的类型
+    int conf_type_;                     //当前解析行域
+    std::stack<void*> stack_ctx_;       //当前解析行使用的上下文,在event{}, http{}使用
 
     CommandCallback command_cb_;        //解析完整配置项后的回调
     BlockEndCallback block_begin_cb_;   //解析完整配置块后的回调

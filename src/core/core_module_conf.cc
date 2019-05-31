@@ -8,45 +8,6 @@
 namespace core
 {
 
-namespace default_cb
-{
-
-//---------------------------------------------------------------------------
-//bool ConfigSetNumberSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
-//{
-//    auto& commands = config.args;
-//    int* command = reinterpret_cast<int*>(
-//            static_cast<char*>(module_command) + module.offset);
-//    *command = atoi(commands[1].c_str());
-//    return true;
-//}
-////---------------------------------------------------------------------------
-//bool ConfigSetStringSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
-//{
-//    auto& commands = config.args;
-//    std::string* command = reinterpret_cast<std::string*>(
-//            static_cast<char*>(module_command) + module.offset);
-//    *command = commands[1];
-//    return true;
-//}
-////---------------------------------------------------------------------------
-//bool ConfigSetFlagSlot(const CommandConfig& config, const CommandModule& module, void* module_command)
-//{
-//    auto& commands = config.args;
-//    bool* command = reinterpret_cast<bool*>(
-//            static_cast<char*>(module_command) + module.offset);
-//    bool flag = false;
-//    if("on" == commands[1])
-//        flag = true;
-//
-//    *command = flag;
-//    return true;
-//}
-//---------------------------------------------------------------------------
-
-}//namespace default_cb
-
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 TokenReader::TokenType TokenReader::ReadNextToken()
 {
@@ -102,28 +63,6 @@ bool TokenReader::ReadString(std::string& str)
     }
 
     return true;
-}
-//---------------------------------------------------------------------------
-void TokenReader::SkipBlankSpace()
-{
-    for(;;)
-    {
-        if(!reader_->HasMore())
-            break;
-
-        char c = reader_->Peek();
-        if(!IsBlank(c))
-            break;
-
-        reader_->Next();
-    }
-
-    return;
-}
-//---------------------------------------------------------------------------
-bool TokenReader::IsBlank(char c)
-{
-    return ((' '==c) || ('\t'==c) || ('\n'==c) || ('\r'==c));
 }
 //---------------------------------------------------------------------------
 void TokenReader::SkipComments()
@@ -183,16 +122,15 @@ CoreModuleConf::CoreModuleConf()
 //---------------------------------------------------------------------------
 CoreModuleConf::~CoreModuleConf()
 {
+    return;
 }
 //---------------------------------------------------------------------------
 bool CoreModuleConf::Parse(const std::string& path, const std::string& name)
 {
     config_path_ = path;
     config_name_ = name;
-    if(false == GetConfigFileData())
+    if(false == LoadConfigFile())
         return false;
-
-    token_reader_ = std::make_shared<TokenReader>(config_dat_);
 
     //以行为单位解析
     //遇到一个单词放入cur_line_params_中，直到遇到分号结束
@@ -274,10 +212,14 @@ void* CoreModuleConf::GetModuleLocConf(const Module* module)
     return ctx->loc_conf[module->module_index()];
 }
 //---------------------------------------------------------------------------
-bool CoreModuleConf::GetConfigFileData()
+bool CoreModuleConf::LoadConfigFile()
 {
     std::string path = config_path_ + "/" + config_name_;
-    return base::LoadFile(path, &config_dat_);
+    if(false == base::LoadFile(path, &config_dat_))
+        return false;
+
+    token_reader_ = std::make_shared<TokenReader>(config_dat_);
+    return true;
 }
 //---------------------------------------------------------------------------
 bool CoreModuleConf::CaseStatusEnd()
@@ -311,18 +253,19 @@ bool CoreModuleConf::CaseStatusBlockBegin()
 
     std::string reserve = cur_line_params_[0];
 
-    //回调,因为本质上event{}
-    //http{}等都是属于同一层级的作用域，所以先回调再修改作用域
+    //回调,因为本质上event{},http{}等都是属于同一层级的作用域，所以先回调再修改作用域
     CommandConfig command_config;
     command_config.args.swap(cur_line_params_);
     command_config.module_type = module_type_;
     command_config.conf_type = conf_type_;
     if(block_begin_cb_)
+    {
         if(false == block_begin_cb_(command_config))
             return false;
+    }
 
     //第一次进入该函数前，module_type_=Module::ModuleType::CORE;
-    if(kRESERVED_EVENTS ==reserve) 
+    if(kRESERVED_EVENTS == reserve) 
     {
         if(kCONF_MAIN != stack_.top())
             return false;
@@ -393,8 +336,10 @@ bool CoreModuleConf::CaseStatusBlockEnd()
     command_config.conf_type = conf_type_;
     command_config.module_type = module_type_;
     if(block_end_cb_)
+    {
         if(false == block_end_cb_(command_config))
             return false;
+    }
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
         | kEXP_STATUS_END;
@@ -445,7 +390,9 @@ bool CoreModuleConf::CaseStatusSepSemicolon()
         if(2 != cur_line_params_.size())
             return false;
 
-        IncludeFile(cur_line_params_[1]);
+        if(false == IncludeFile(cur_line_params_[1]))
+            return false;
+
         cur_line_params_.clear();
     }
     else
@@ -456,8 +403,10 @@ bool CoreModuleConf::CaseStatusSepSemicolon()
         command_config.conf_type = conf_type_;
         command_config.module_type = module_type_;
         if(command_cb_)
+        {
             if(false == command_cb_(command_config))
                 return false;
+        }
     }
 
     cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
@@ -486,14 +435,16 @@ bool CoreModuleConf::CaseStatusString()
     return true;
 }
 //---------------------------------------------------------------------------
-void CoreModuleConf::IncludeFile(const std::string& name)
+bool CoreModuleConf::IncludeFile(const std::string& name)
 {
+    //如果文件不存在，忽略该include
     std::vector<char> data;
     if(false == base::LoadFile(config_path_+"/"+name, &data))
-        return;
+        return true;
 
     size_t pos = token_reader_->pos();
     config_dat_.insert(config_dat_.begin()+pos, data.begin(), data.end());
+    return true;
 }
 //---------------------------------------------------------------------------
 
