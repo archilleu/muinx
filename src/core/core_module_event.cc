@@ -1,7 +1,9 @@
 //---------------------------------------------------------------------------
 #include "defines.h"
 #include "core.h"
+#include "event_module.h"
 #include "core_module_event.h"
+#include "event_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -32,6 +34,24 @@ CoreModuleEvent::CoreModuleEvent()
 //---------------------------------------------------------------------------
 CoreModuleEvent::~CoreModuleEvent()
 {
+}
+//---------------------------------------------------------------------------
+bool CoreModuleEvent::EventBlockParseComplete()
+{
+    for(auto module : g_core.modules_)
+    {
+        if(module->type() != Module::ModuleType::EVENT)
+            continue;
+
+        EventModule* event_module = static_cast<EventModule*>(module);
+        auto ctx = event_module->ctx();
+        if(ctx->init_config)
+        {
+            auto core_event_core = g_event_module_core.core_config();
+            ctx->init_config(&core_event_core);
+        }
+    }
+    return true;
 }
 //---------------------------------------------------------------------------
 bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandModule&, void* module_command)

@@ -18,6 +18,8 @@ public:
     {
     };
 
+    bool EventBlockParseComplete();
+
 public:
     static int s_max_event_module;
 

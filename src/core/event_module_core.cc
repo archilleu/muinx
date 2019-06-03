@@ -46,28 +46,6 @@ EventModuleCore::~EventModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-bool EventModuleCore::Initialize()
-{
-    //TODO:日志路径
-    net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
-    loop_ = std::make_shared<net::EventLoop>();
-    loop_->set_sig_quit_cb(std::bind(&EventModuleCore::EventLoopQuit, this));
-    //loop_->SetHandleSingnal();
-
-    //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
-    server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
-
-    //TODO:设置线程数目等参数
-    //server_->set_event_loop_nums(8);
-    server_->set_connection_cb(std::bind(&EventModuleCore::OnConnection, this, _1));
-    server_->set_disconnection_cb(std::bind(&EventModuleCore::OnDisconnection, this, _1));
-    server_->set_read_cb(std::bind(&EventModuleCore::OnMessage, this, _1, _2));
-    server_->set_write_complete_cb(std::bind(&EventModuleCore::OnWriteComplete, this, _1));
-    server_->set_high_water_mark_cb(std::bind(&EventModuleCore::OnWriteWirteHighWater, this, _1, _2), 100);
-
-    return true;
-}
-//---------------------------------------------------------------------------
 void EventModuleCore::Start()
 {
     server_->Start();
@@ -77,6 +55,8 @@ void EventModuleCore::Start()
 void EventModuleCore::Stop()
 {
     server_->Stop();
+    server_.reset();
+    loop_.reset();
     return;
 }
 //---------------------------------------------------------------------------
@@ -136,8 +116,8 @@ void EventModuleCore::EventLoopQuit()
     loop_->Quit();
 }
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-bool EventModuleCore::ConfigSetCallbackWorkerConnections(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool EventModuleCore::ConfigSetCallbackWorkerConnections(const CommandConfig& command_config,
+        const CommandModule& module, void* config)
 {
     (void)module;
     auto event_core_config = reinterpret_cast<EventCoreConfig*>(config);
@@ -146,7 +126,8 @@ bool EventModuleCore::ConfigSetCallbackWorkerConnections(const CommandConfig& co
     return true;
 }
 //---------------------------------------------------------------------------
-bool EventModuleCore::ConfigSetCallbackUse(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool EventModuleCore::ConfigSetCallbackUse(const CommandConfig& command_config,
+        const CommandModule& module, void* config)
 {
     (void)module;
     auto event_core_config = reinterpret_cast<EventCoreConfig*>(config);
@@ -167,6 +148,23 @@ void* EventModuleCore::CreateConfig()
 bool EventModuleCore::InitConfig()
 {
     //初始化网络事件处理模块
+    //TODO:日志路径
+    net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
+    loop_ = std::make_shared<net::EventLoop>();
+    loop_->set_sig_quit_cb(std::bind(&EventModuleCore::EventLoopQuit, this));
+    loop_->SetHandleSingnal();
+
+    //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
+    server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
+
+    //TODO:设置线程数目等参数
+    //server_->set_event_loop_nums(8);
+    server_->set_connection_cb(std::bind(&EventModuleCore::OnConnection, this, _1));
+    server_->set_disconnection_cb(std::bind(&EventModuleCore::OnDisconnection, this, _1));
+    server_->set_read_cb(std::bind(&EventModuleCore::OnMessage, this, _1, _2));
+    server_->set_write_complete_cb(std::bind(&EventModuleCore::OnWriteComplete, this, _1));
+    server_->set_high_water_mark_cb(std::bind(&EventModuleCore::OnWriteWirteHighWater, this, _1, _2), 100);
+
     return true;
 }
 //---------------------------------------------------------------------------

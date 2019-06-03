@@ -28,7 +28,6 @@ public:
 public:
     EventCoreConfig* core_config() { return core_config_; }
 
-    bool Initialize();
     void Start();
     void Stop();
 

@@ -53,9 +53,6 @@ bool Core::Initialize()
     if(false == ActionCoreModuleConfigInit())
         return false;
 
-    if(false == g_event_module_core.Initialize())
-        return false;
-
     return true;
 }
 //---------------------------------------------------------------------------
@@ -177,27 +174,13 @@ bool Core::ConfigFileBlockEndCallback(const CommandConfig& command_config)
 {
     (void)command_config;
 
-    /*
     //event模块配置解析完成后调用Event模块的初始化回调
-    if((command_config.module_type==Module::ModuleType::CORE)
-            && (command_config.conf_type==ConfFile::kCONF_EVENT))
-        {
-            void** event_conf = reinterpret_cast<void**>(block_config_ctxs_[g_core_module_event.index()]);
-            for(auto module : modules_)
-            {
-                if(module->type() != Module::ModuleType::EVENT)
-                    continue;
-
-                EventModule* event_module = static_cast<EventModule*>(module);
-                auto ctx = event_module->ctx();
-                if(ctx->init_config)
-                {
-                    void* config  = event_conf[module->module_index()];
-                    event_module->ctx()->init_config(config);
-                }
-            }
-        }
-    */
+    if((command_config.module_type==Module::ModuleType::EVENT)
+            && (command_config.conf_type==EVENT_CONF))
+    {
+        if(false == g_core_module_event.EventBlockParseComplete())
+            return false;
+    }
 
     //http 配置模块解析完成后
     if((command_config.module_type==Module::ModuleType::HTTP)
