@@ -7,6 +7,8 @@
 namespace core
 {
 
+class EventModule;
+
 class CoreModuleEvent : public CoreModule
 {
 public:
@@ -19,6 +21,8 @@ public:
     };
 
     bool EventBlockParseComplete();
+
+    void* GetModuleEventConf(const EventModule* event_module);
 
 public:
     static int s_max_event_module;

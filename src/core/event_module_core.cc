@@ -3,6 +3,7 @@
 #include "net/include/buffer.h"
 #include "net/include/tcp_connection.h"
 #include "core_module_conf.h"
+#include "core_module_core.h"
 #include "event_module_core.h"
 #include "defines.h"
 #include "core_module_http.h"
@@ -22,7 +23,7 @@ EventModuleCore::EventModuleCore()
     EventModuleCtx* ctx = new EventModuleCtx();
     ctx->name = "event_core";
     ctx->create_config = std::bind(&EventModuleCore::CreateConfig, this);
-    ctx->init_config = std::bind(&EventModuleCore::InitConfig, this);
+    ctx->init_config = std::bind(&EventModuleCore::InitConfig, this, _1);
     this->ctx_.reset(ctx);
 
     this->commands_ =
@@ -145,8 +146,13 @@ void* EventModuleCore::CreateConfig()
     return core_config_;
 }
 //---------------------------------------------------------------------------
-bool EventModuleCore::InitConfig()
+bool EventModuleCore::InitConfig(void* config)
 {
+    auto event_conf = reinterpret_cast<EventCoreConfig*>(config);
+    (void)event_conf;
+
+    const auto core_conf = g_core_module_core.core_config();
+
     //初始化网络事件处理模块
     //TODO:日志路径
     net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
@@ -158,7 +164,7 @@ bool EventModuleCore::InitConfig()
     server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
 
     //TODO:设置线程数目等参数
-    //server_->set_event_loop_nums(8);
+    server_->set_event_loop_nums(core_conf->worker_processes);
     server_->set_connection_cb(std::bind(&EventModuleCore::OnConnection, this, _1));
     server_->set_disconnection_cb(std::bind(&EventModuleCore::OnDisconnection, this, _1));
     server_->set_read_cb(std::bind(&EventModuleCore::OnMessage, this, _1, _2));

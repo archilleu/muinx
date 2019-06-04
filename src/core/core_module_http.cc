@@ -160,6 +160,7 @@ bool CoreModuleHttp::BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf)
 
     for(auto& location : loc_conf->locations)
     {
+        //匹配url的时候用最长匹配，需要记录当前最长的url name
         if(loc_conf->location_name_max_length < static_cast<int>(location.name.size()))
             loc_conf->location_name_max_length = static_cast<int>(location.name.size());
 

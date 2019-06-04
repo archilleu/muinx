@@ -47,7 +47,7 @@ private:
 
 private:
     void* CreateConfig();
-    bool InitConfig();
+    bool InitConfig(void* config);
 
 private:
     EventCoreConfig* core_config_;

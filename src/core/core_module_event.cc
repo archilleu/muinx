@@ -36,6 +36,13 @@ CoreModuleEvent::~CoreModuleEvent()
 {
 }
 //---------------------------------------------------------------------------
+void* CoreModuleEvent::GetModuleEventConf(const EventModule* event_module)
+{
+    auto ctx = *reinterpret_cast<void***>
+        (g_core_module_conf.block_config_ctxs_[g_core_module_event.index()]);
+    return ctx[event_module->module_index()];
+}
+//---------------------------------------------------------------------------
 bool CoreModuleEvent::EventBlockParseComplete()
 {
     for(auto module : g_core.modules_)
@@ -47,8 +54,8 @@ bool CoreModuleEvent::EventBlockParseComplete()
         auto ctx = event_module->ctx();
         if(ctx->init_config)
         {
-            auto core_event_core = g_event_module_core.core_config();
-            ctx->init_config(&core_event_core);
+            void* event_conf = GetModuleEventConf(event_module);
+            ctx->init_config(event_conf);
         }
     }
     return true;
