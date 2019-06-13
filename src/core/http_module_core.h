@@ -154,9 +154,9 @@ public:
     //参与HTTP处理流程的结构体
     struct PhaseHandler
     {
-        HttpChecker checker;            //checker定义
-        HttpRequest::HttpRequestHandler handler;     //各个HTTP模块处理流程
-        int next;                       //该HTTP阶段的下一个HTTP阶段下标
+        HttpChecker checker;                        //checker定义
+        HttpRequest::HttpRequestHandler handler;    //各个HTTP模块处理流程
+        int next;                                   //该HTTP阶段的下一个HTTP阶段下标
     };
     //HTTP流程定义
     struct PhaseEngine

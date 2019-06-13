@@ -250,11 +250,11 @@ int HttpModuleCore::ContentPhase(HttpRequest& http_request, PhaseHandler& phase_
     }
 
     //没有找到合适的content handler
-    if('/' == http_request.url().back())
+    if('/' == http_request.url().back())    //目录返回403
     {
         http_request.set_status_code(HttpRequest::StatusCode::FORBIDDEN);
     }
-    else
+    else    //文件返回404
     {
         http_request.set_status_code(HttpRequest::StatusCode::NOT_FOUND);
     }
@@ -310,6 +310,7 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
         return MUINX_ERROR;
     }
 
+    //重新设置精确匹配当前loc{}块配置项
     auto& location = iter->second;
     auto static_loc_conf = location.exact ? location.exact : location.inclusive;
     http_request.set_loc_conf(static_loc_conf->loc_conf);
@@ -342,7 +343,8 @@ void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
         //TODO:支持限速
     }
 
-    //设置该loc特有的HTTP_CONTENT_PHASE过程，覆盖全局
+    //当改loc{}配置项handler回调被设置的时候，代表该模块特有的HTTP_CONTENT_PHASE过程，覆盖全局
+    //阶段handler，一般是在解析配置文件的时候顺便设置
     if(loc_conf->handler)
     {
         http_request.set_content_handler(loc_conf->handler);
@@ -502,7 +504,7 @@ bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command
         }
     }
 
-    //使用loc_conf数组第一个结构体的loc_conf记录整个HTTP模块的loc_conf数组
+    //使用loc_conf数组第一个结构体的loc_conf记录全部模块在该loc_conf数组
     HttpLocConf* loc_conf = reinterpret_cast<HttpLocConf*>(
             ctx->loc_conf[this->module_index()]);
     loc_conf->loc_conf = ctx->loc_conf;
@@ -520,7 +522,7 @@ bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command
     }
 
     //server层的loc_http结构体locations成员，因为location有可能嵌套，所以不能
-    //直接放server结构体成员内部，该locations存储该server下面的所有location
+    //直接放loc结构体成员内部，该locations存储该server下面的所有location
     HttpLocConf* srv_loc_conf = reinterpret_cast<HttpLocConf*>(
             srv_ctx->loc_conf[this->module_index()]);
     Location location;
@@ -594,9 +596,8 @@ bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* c
     ConfPort conf_port;
     conf_port.port = port;
 
-    HttpMainConf* main_conf = core_main_conf_;
-    main_conf->ports.push_back(conf_port);
-    return AddConfAddresses(main_conf->ports.back(), ip, conf, is_default);
+    core_main_conf_->ports.push_back(conf_port);
+    return AddConfAddresses(core_main_conf_->ports.back(), ip, conf, is_default);
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default)

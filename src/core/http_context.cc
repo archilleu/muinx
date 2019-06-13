@@ -129,7 +129,7 @@ bool HttpContext::ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_tim
 //---------------------------------------------------------------------------
 char* HttpContext::ParseRequestLineMethod(char* begin, char* end)
 {
-    std::string method_str;
+    const char* method_str;
     HttpRequest::Method method;
     char* space = std::find(begin, end, ' ');
     if(space != end)
@@ -352,7 +352,7 @@ bool HttpContext::FindVirtualServer()
     auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->data());
     if(conf_address.servers.size() == 1)
     {
-        //一个server就不需要hash表了
+        //一个server就不需要查找hash表了
         if(conf_address.servers[0]->server_name == host)
         {
             srv_conf = conf_address.servers[0];
@@ -370,7 +370,7 @@ bool HttpContext::FindVirtualServer()
     {
         if(nullptr == conf_address.default_server)
         {
-            //FIXME:返回404错误
+            request_.set_status_code(HttpRequest::NOT_FOUND);
             return false;
         }
 
