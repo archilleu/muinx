@@ -123,7 +123,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
 
     //设置响应头
     http_request.headers_out().set_connection(http_request.headers_in().connection());
-    http_request.headers_out().set_last_modified_time(sb.st_mtim.tv_sec);
+    http_request.headers_out().set_last_modified(sb.st_mtim.tv_sec);
 
     //设置响应头map
     std::string connection = http_request.headers_in().connection();
