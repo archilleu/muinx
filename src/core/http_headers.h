@@ -33,11 +33,23 @@ public:
     void set_connection(const std::string& connection) { connection_ = connection; }
     const std::string& connection() const { return connection_; }
 
-    void set_last_modified_time(time_t time) { last_modified_time_ = time; }
-    time_t last_modified_time() { return last_modified_time_; }
+    void set_last_modified(time_t time) { last_modified_ = time; }
+    time_t last_modified() const { return last_modified_; }
 
     void set_content_type(const std::string& content_type) { content_type_ = content_type; }
     const std::string& content_type() const { return content_type_; }
+
+    void set_if_modified_since(time_t time) { if_modified_since_ = time; };
+    time_t if_modified_since() const { return if_modified_since_; }
+
+    void set_if_unmodified_since(time_t time) { if_unmodified_since_ = time; };
+    time_t if_unmodified_since() const { return if_unmodified_since_; }
+
+    void set_if_match(time_t time) { if_match_ = time; };
+    time_t if_match() const { return if_match_; }
+
+    void set_if_none_match(time_t time) { if_none_match_ = time; };
+    time_t if_none_match() const { return if_none_match_; }
 
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;
@@ -50,15 +62,25 @@ public:
     static const char* kHost;
     static const char* kContentLength;
     static const char* kConnection;
-    static const char* kLastModifiedTime;
     static const char* kContentType;
+
+    static const char* kLastModified;
+    static const char* kIfModifiedSince;
+    static const char* kIfUnmodifiedSince;
+    static const char* kIfMatch;
+    static const char* kIfNoneMatch;
 
 private:
     std::string host_;
     size_t content_length_;
     std::string connection_;
-    time_t last_modified_time_;
+    time_t last_modified_;
     std::string content_type_;
+
+    time_t if_modified_since_;
+    time_t if_unmodified_since_;
+    time_t if_match_;
+    time_t if_none_match_;
 
     HeaderMap headers_;
 };

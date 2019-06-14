@@ -189,8 +189,8 @@ public:
         PhaseTemp phases[HTTP_LOG_PHASE + 1];
 
         //过滤器链表
-        std::vector<HttpOutputHeaderFilterHandler> header_filter;
-        std::vector<HttpOutputBodyFilterHandler> body_filter;
+        std::vector<HttpOutputHeaderFilterHandler> header_filters;
+        std::vector<HttpOutputBodyFilterHandler> body_filters;
     };
 
 public:

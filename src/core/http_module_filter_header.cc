@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 #include "defines.h"
 #include "http_module_core.h"
-#include "http_module_filter_not_modified.h"
+#include "http_module_filter_header.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -9,13 +9,12 @@ namespace core
 //---------------------------------------------------------------------------
 using namespace std::placeholders;
 //---------------------------------------------------------------------------
-HttpModuleFilterNotModified g_http_module_filter_not_modified;
+HttpModuleFilterHeader g_http_module_filter_header;
 //---------------------------------------------------------------------------
-HttpModuleFilterNotModified::HttpModuleFilterNotModified()
+HttpModuleFilterHeader::HttpModuleFilterHeader()
 {
     HttpModuleCtx* ctx = new HttpModuleCtx();
-    ctx->postconfiguration = std::bind(&HttpModuleFilterNotModified::Initialize, this);
-    ctx->create_loc_config = std::bind(&HttpModuleFilterNotModified::CreateHttpConfig, this);
+    ctx->postconfiguration = std::bind(&HttpModuleFilterHeader::Initialize, this);
     this->ctx_.reset(ctx);
 
     this->commands_ =
@@ -23,34 +22,44 @@ HttpModuleFilterNotModified::HttpModuleFilterNotModified()
     };
 }
 //---------------------------------------------------------------------------
-HttpModuleFilterNotModified::~HttpModuleFilterNotModified()
+HttpModuleFilterHeader::~HttpModuleFilterHeader()
 {
     return;
 }
 //---------------------------------------------------------------------------
-int HttpModuleFilterNotModified::FilterHandler(HttpRequest& http_request)
+int HttpModuleFilterHeader::FilterHandler(HttpRequest& http_request)
 {
-    //TODO:禁用not modified
+    //http1.0不需要发送头部
+    if(http_request.version() < HttpRequest::Version::HTTP10)
+        return MUINX_OK;
 
-    //https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/If-Unmodified-Since
-    
-    //https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/If-Modified-Since
-    (void)http_request;
+    //HEAD方法不需要发送body
+    if(http_request.method() == HttpRequest::Method::HEAD)
+    {
+        http_request.set_header_only(true);
+    }
+
+    //判断是否需要Last-Modified响应头
+    if(http_request.headers_out().last_modified() != 0)
+    {
+        if(http_request.status_code() != HttpRequest::StatusCode::OK
+            && http_request.status_code() != HttpRequest::StatusCode::PARTIAL_CONTENT
+            && http_request.status_code() != HttpRequest::StatusCode::NOT_MODIFIED)
+        {
+            http_request.headers_out().set_last_modified(0);
+        }
+    }
+
+
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleFilterNotModified::Initialize()
+bool HttpModuleFilterHeader::Initialize()
 {
     g_http_module_core.core_main_conf()->header_filters.push_back(
             std::bind(FilterHandler, _1));
 
     return true;
-}
-//---------------------------------------------------------------------------
-void* HttpModuleFilterNotModified::CreateHttpConfig()
-{
-    auto config = new HttpNotModifiedConfig();
-    return config;
 }
 //---------------------------------------------------------------------------
 

@@ -35,6 +35,7 @@ HttpRequest::HttpRequest(const net::TCPConnectionPtr& conn_ptr)
     method_str_("INVALID"),
     version_(NOTSUPPORT),
     status_code_(StatusCode::OK),
+    header_only_(false),
     phase_handler_(HttpModuleCore::HTTP_POST_READ_PHASE ),
     internal_(false)
 {

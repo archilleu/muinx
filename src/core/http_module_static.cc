@@ -128,7 +128,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     //设置响应头map
     std::string connection = http_request.headers_in().connection();
     http_request.headers_out().AddHeader(HttpHeaders::kConnection, std::move(connection));
-    http_request.headers_out().AddHeader(HttpHeaders::kLastModifiedTime, "TODO:time");
+    http_request.headers_out().AddHeader(HttpHeaders::kLastModified, base::FormatHTTPDatetime(sb.st_mtime));
 
     //根据后缀设置响应内容格式
     auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>

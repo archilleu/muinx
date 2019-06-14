@@ -148,6 +148,9 @@ public:
     const std::vector<char>& request_body() const { return request_body_; }
     std::vector<char>& request_body() { return request_body_; }
 
+    void set_header_only(bool header_only) { header_only_ = header_only; }
+    bool header_only() { return header_only_; }
+
     HttpHeaders& headers_out() { return headers_out_; }
 
     void set_response_body(std::vector<char>&& response_body) { response_body_ = std::move(response_body); }
@@ -210,6 +213,7 @@ private:
     StatusCode status_code_;   //HTTP状态码
     std::vector<char> request_body_;
 
+    bool header_only_;  //仅仅发送头部(HEAD方法)
     HttpHeaders headers_out_;   //响应请求头
     std::vector<char> response_body_;
 
