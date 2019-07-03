@@ -39,6 +39,9 @@ public:
     void set_content_type(const std::string& content_type) { content_type_ = content_type; }
     const std::string& content_type() const { return content_type_; }
 
+    void set_chunked(bool chunked) { chunked_ = chunked; }
+    bool chunked() const { return chunked_; }
+
     void set_if_modified_since(time_t time) { if_modified_since_ = time; };
     time_t if_modified_since() const { return if_modified_since_; }
 
@@ -50,6 +53,21 @@ public:
 
     void set_if_none_match(time_t time) { if_none_match_ = time; };
     time_t if_none_match() const { return if_none_match_; }
+
+    void set_date(time_t date) { date_ = date; };
+    time_t date() const { return date_; }
+
+    void set_server(const std::string& server) { server_ = server; }
+    const std::string& server() const { return server_; }
+
+    void set_location(const std::string& location) { location_ = location; }
+    const std::string& location() const { return location_; }
+
+    void set_charset(const std::string& charset) { charset_ = charset; }
+    const std::string& charset() const { return charset_; }
+
+    void set_response_header(const std::string&& header) { response_header_ = std::move(header); }
+    const std::string& response_header() const { return response_header_; }
 
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;
@@ -76,13 +94,26 @@ private:
     std::string connection_;
     time_t last_modified_;
     std::string content_type_;
+    bool chunked_;
+
+    //压缩
 
     time_t if_modified_since_;
     time_t if_unmodified_since_;
     time_t if_match_;
     time_t if_none_match_;
 
+    //response 头
+    time_t date_;           //文件创建时间
+    std::string server_;
+    std::string location_;
+    std::string charset_;
+
+    //非标准或者常用的头
     HeaderMap headers_;
+
+    //格式化respond 头为字符串
+    std::string response_header_;
 };
 
 }//namespace core

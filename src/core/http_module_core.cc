@@ -111,7 +111,13 @@ HttpModuleCore::HttpModuleCore()
             HTTP_SRV_CONF|CONF_BLOCK|CONF_1MORE,
             std::bind(&HttpModuleCore::ConfigSetCallbackLocationBlock, this, _1, _2, _3),
             0
-        }
+        },
+        {
+            "server_token",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|CONF_BLOCK|CONF_FLAG,
+            std::bind(&HttpModuleCore::ConfigSetCallbackServerToken, this, _1, _2, _3),
+            HTTP_LOC_CONF_OFFSET
+        },
     };
 }
 //---------------------------------------------------------------------------
@@ -587,6 +593,15 @@ bool HttpModuleCore::ConfigSetCallbackServerName(const CommandConfig& command_co
     (void)module;
     auto http_srv_conf = reinterpret_cast<HttpSrvConf*>(config);
     http_srv_conf->server_name = command_config.args[1];
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackServerToken(const CommandConfig& command_config, const CommandModule& module, void* config)
+{
+    (void)module;
+    auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
+    http_loc_conf->server_token = (command_config.args[1]=="on") ? true : false;
 
     return true;
 }

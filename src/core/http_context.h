@@ -39,6 +39,7 @@ private:
 
     int HttpHandler();
     int RunPhases();
+    int RunResponse();
 
 private:
     enum

@@ -49,6 +49,29 @@ EventModuleCore::~EventModuleCore()
 //---------------------------------------------------------------------------
 void EventModuleCore::Start()
 {
+    const auto core_conf = g_core_module_core.core_config();
+
+    //初始化网络事件处理模块
+    //TODO:日志路径
+    net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
+    loop_ = std::make_shared<net::EventLoop>();
+    loop_->set_sig_quit_cb(std::bind(&EventModuleCore::EventLoopQuit, this));
+    loop_->SetHandleSingnal();
+
+    //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
+    server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
+
+    //TODO:设置线程数目等参数
+    if(0 != core_conf->worker_processes)
+    {
+        server_->set_event_loop_nums(core_conf->worker_processes);
+    }
+    server_->set_connection_cb(std::bind(&EventModuleCore::OnConnection, this, _1));
+    server_->set_disconnection_cb(std::bind(&EventModuleCore::OnDisconnection, this, _1));
+    server_->set_read_cb(std::bind(&EventModuleCore::OnMessage, this, _1, _2));
+    server_->set_write_complete_cb(std::bind(&EventModuleCore::OnWriteComplete, this, _1));
+    server_->set_high_water_mark_cb(std::bind(&EventModuleCore::OnWriteWirteHighWater, this, _1, _2), 100);
+
     server_->Start();
     loop_->Loop();
 }
@@ -150,26 +173,6 @@ bool EventModuleCore::InitConfig(void* config)
 {
     auto event_conf = reinterpret_cast<EventCoreConfig*>(config);
     (void)event_conf;
-
-    const auto core_conf = g_core_module_core.core_config();
-
-    //初始化网络事件处理模块
-    //TODO:日志路径
-    net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
-    loop_ = std::make_shared<net::EventLoop>();
-    loop_->set_sig_quit_cb(std::bind(&EventModuleCore::EventLoopQuit, this));
-    loop_->SetHandleSingnal();
-
-    //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
-    server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
-
-    //TODO:设置线程数目等参数
-    server_->set_event_loop_nums(core_conf->worker_processes);
-    server_->set_connection_cb(std::bind(&EventModuleCore::OnConnection, this, _1));
-    server_->set_disconnection_cb(std::bind(&EventModuleCore::OnDisconnection, this, _1));
-    server_->set_read_cb(std::bind(&EventModuleCore::OnMessage, this, _1, _2));
-    server_->set_write_complete_cb(std::bind(&EventModuleCore::OnWriteComplete, this, _1));
-    server_->set_high_water_mark_cb(std::bind(&EventModuleCore::OnWriteWirteHighWater, this, _1, _2), 100);
 
     return true;
 }

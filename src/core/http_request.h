@@ -4,6 +4,7 @@
 //---------------------------------------------------------------------------
 #include <vector>
 #include <map>
+#include "defines.h"
 #include "net/include/callback.h"
 #include "base/include/timestamp.h"
 #include "base/include/any.h"
@@ -114,6 +115,8 @@ public:
     void set_loc_conf(void** conf) { loc_conf_ = conf; }
     void** loc_conf() { return loc_conf_; }
 
+    net::TCPConnectionWeakPtr connection() const { return connection_; }
+
     void set_method(Method method) { method_ = method; }
     Method method() const { return method_; }
 
@@ -195,7 +198,6 @@ private:
     void** loc_conf_;
 
     //该请求对应的链接
-    //FIXME:不需要这个对象
     net::TCPConnectionWeakPtr connection_;
 
     //指向存放所有HTTP模块的上下文结构体指针

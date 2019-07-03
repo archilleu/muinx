@@ -108,10 +108,12 @@ const HttpHeaders::HeaderTypeMap HttpHeaders::kHeaderTypeMap =
 HttpHeaders::HttpHeaders()
 :   content_length_(0),
     last_modified_(0),
+    chunked_(false),
     if_modified_since_(0),
     if_unmodified_since_(0),
     if_match_(0),
-    if_none_match_(0)
+    if_none_match_(0),
+    date_(0)
 {
     return;
 }

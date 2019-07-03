@@ -57,6 +57,8 @@ public:
 
         std::string default_type;   //默认的content-type
 
+        bool server_token;
+
         //同一个server块内的location,可能location有嵌套，所以放在该结构体内部
         std::vector<Location> locations;
 
@@ -226,6 +228,7 @@ private:
     bool ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule& module, void* config);
     bool ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule& module, void* config);
     bool ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackServerToken(const CommandConfig& command_config, const CommandModule& module, void* config);
 
     bool ConfigSetCallbackServerBlock(const CommandConfig&, const CommandModule&, void*);
     bool ConfigSetCallbackTypesBlock(const CommandConfig& command_config, const CommandModule& module, void* config);

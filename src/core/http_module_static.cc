@@ -7,6 +7,7 @@
 #include "../tools/muinx_logger.h"
 #include "http_module_core.h"
 #include "http_module_static.h"
+#include "http_module_filter_header.h"
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -125,17 +126,14 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
     http_request.headers_out().set_connection(http_request.headers_in().connection());
     http_request.headers_out().set_last_modified(sb.st_mtim.tv_sec);
 
-    //设置响应头map
-    std::string connection = http_request.headers_in().connection();
-    http_request.headers_out().AddHeader(HttpHeaders::kConnection, std::move(connection));
-    http_request.headers_out().AddHeader(HttpHeaders::kLastModified, base::FormatHTTPDatetime(sb.st_mtime));
+    //TODO:设置响应头map
 
     //根据后缀设置响应内容格式
     auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
         (http_request.loc_conf()[g_http_module_core.module_index()]);
     if(http_request.exten().empty())
     {
-        http_request.headers_out().AddHeader(HttpHeaders::kContentType, std::string(loc_conf->default_type));
+        http_request.headers_out().set_content_type(loc_conf->default_type);
     }
     else
     {
@@ -144,11 +142,11 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
         auto iter = main_conf->types.find(http_request.exten());
         if(iter == main_conf->types.end())
         {
-            http_request.headers_out().AddHeader(HttpHeaders::kContentType, loc_conf->default_type);
+            http_request.headers_out().set_content_type(loc_conf->default_type);
         }
         else
         {
-            http_request.headers_out().AddHeader(HttpHeaders::kContentType, iter->second);
+            http_request.headers_out().set_content_type(iter->second);
         }
     }
 

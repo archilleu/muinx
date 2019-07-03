@@ -405,7 +405,15 @@ bool HttpContext::HandleHeader()
 //---------------------------------------------------------------------------
 int HttpContext::HttpHandler()
 {
-    return RunPhases();
+    int rc = RunPhases();
+    if(MUINX_OK != rc)
+        return rc;
+
+    rc = RunResponse();
+    if(MUINX_OK != rc)
+        return rc;
+
+    return MUINX_OK;
 }
 //---------------------------------------------------------------------------
 int HttpContext::RunPhases()
@@ -431,6 +439,27 @@ int HttpContext::RunPhases()
             default:
                 continue;
         }
+    }
+
+    return MUINX_OK;
+}
+//---------------------------------------------------------------------------
+int HttpContext::RunResponse()
+{
+    //处理响应头
+    for(auto header_filter : g_http_module_core.core_main_conf()->header_filters)
+    {
+        int rc = header_filter(request_);
+        if(rc != MUINX_OK)
+            return rc;
+    }
+
+    //处理响应体
+    for(auto header_filter : g_http_module_core.core_main_conf()->body_filters)
+    {
+        int rc = header_filter(request_);
+        if(rc != MUINX_OK)
+            return rc;
     }
 
     return MUINX_OK;
