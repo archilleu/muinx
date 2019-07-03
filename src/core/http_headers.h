@@ -69,6 +69,8 @@ public:
     void set_response_header(const std::string&& header) { response_header_ = std::move(header); }
     const std::string& response_header() const { return response_header_; }
 
+    void ResponseHeaderClear() { response_header_.clear(); }
+
 public:
     using HeaderAction = std::function<bool (HttpHeaders&, const std::string&)>;
     using HeaderTypeMap = std::map<std::string, HeaderAction>;

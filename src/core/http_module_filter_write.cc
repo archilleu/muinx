@@ -34,7 +34,18 @@ int HttpModuleFilterWrite::WriteFilter(HttpRequest& http_request)
     if(!connection)
         return MUINX_OK;
 
-    connection->Send(http_request.headers_out().response_header());
+    auto& out = http_request.headers_out();
+    if(!out.response_header().empty())
+    {
+        connection->Send(out.response_header());
+        out.ResponseHeaderClear();
+    }
+    if(!http_request.response_body().empty())
+    {
+        connection->Send(http_request.response_body().data(), http_request.response_body().size());
+        http_request.response_body().clear();
+    }
+
     return MUINX_OK;
 }
 //---------------------------------------------------------------------------

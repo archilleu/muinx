@@ -455,9 +455,9 @@ int HttpContext::RunResponse()
     }
 
     //处理响应体
-    for(auto header_filter : g_http_module_core.core_main_conf()->body_filters)
+    for(auto body_filter : g_http_module_core.core_main_conf()->body_filters)
     {
-        int rc = header_filter(request_);
+        int rc = body_filter(request_);
         if(rc != MUINX_OK)
             return rc;
     }
