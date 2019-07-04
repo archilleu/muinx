@@ -73,6 +73,7 @@ int HttpModuleIndex::IndexHandler(HttpRequest& http_request)
             return MUINX_ERROR;
         }
 
+        http_request.headers_out().set_content_length(data.size());
         http_request.set_response_body(std::move(data));
         return MUINX_OK;
     }

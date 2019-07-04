@@ -19,12 +19,14 @@ public:
 public:
     bool done() { return done_; }
 
-    const HttpRequest& request() const { return request_; }
+    const std::shared_ptr<HttpRequest>& request() const { return request_; }
     const net::TCPConnectionWeakPtr& connection() const { return connection_; }
 
     bool ParseRequest(net::Buffer& buffer, base::Timestamp recv_time);
 
     int ProcessRequest();
+
+    void Reset();
 
 private:
     bool ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_time);
@@ -53,7 +55,7 @@ private:
     //解析是否完成
     bool done_;
 
-    HttpRequest request_;
+    std::shared_ptr<HttpRequest> request_;
     net::TCPConnectionWeakPtr connection_;
 
     static const char kCRLF[];

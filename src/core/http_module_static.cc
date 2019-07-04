@@ -120,6 +120,7 @@ int HttpModuleStatic::StaticHandler(HttpRequest& http_request)
         http_request.set_status_code(HttpRequest::StatusCode::INTERNAL_SERVER_ERROR);
         return MUINX_DECLINED;
     }
+    http_request.headers_out().set_content_length(data.size());
     http_request.set_response_body(std::move(data));
 
     //设置响应头

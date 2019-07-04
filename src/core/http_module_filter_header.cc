@@ -234,7 +234,7 @@ int HttpModuleFilterHeader::FilterHandler(HttpRequest& http_request)
     }
 
     //Content length
-    if(0 == headers_out.content_length())
+    if(0 != headers_out.content_length())
     {
         response_str.append(base::CombineString(
                     "Content-Length: %d" CRLF, headers_out.content_length()));

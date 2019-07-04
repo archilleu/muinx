@@ -281,33 +281,44 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
     }
     else
     {
-        //按照url分割url，做最长匹配
+        //分割url，做最长匹配
         std::string prefix_url;
         auto path_items = base::split(url, '/');
-        int index = 0;
-        for(; static_cast<int>(path_items.size())>index; index++)
+
+        //根据配置文件构造最长的匹配url
+        for(int i=0; static_cast<int>(path_items.size())>i; i++)
         {
-            prefix_url += "/" + path_items[index];
+            prefix_url += "/" + path_items[i];
             if(static_cast<int>(prefix_url.size()) >= loc_conf->location_name_max_length)
                 break;
         }
 
-        if(index == static_cast<int>(path_items.size()))
-            index--;
-
-        do
+        //匹配location name
+        while(true)
         {
             iter = loc_conf->map_locations.find(prefix_url);
             if(iter == loc_conf->map_locations.end())
             {
-                prefix_url.resize(prefix_url.size()-(path_items[index].size()+1));
+                //没找到
+                if(prefix_url.back() == '/')
+                {
+                    prefix_url.pop_back();
+                }
+                else
+                {
+                    size_t rpos = prefix_url.rfind('/');
+                    if(std::string::npos == rpos)
+                        break;
 
-                index--;
+                    prefix_url.resize(rpos+1);
+                }
+
                 continue;
             }
 
+            //找到
             break;
-        }while(index >= 0);
+        }
     }
 
     if(iter == loc_conf->map_locations.end())

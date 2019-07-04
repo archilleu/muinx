@@ -39,7 +39,7 @@ const char HttpContext::kCRLF[] = "\r\n";
 HttpContext::HttpContext(const net::TCPConnectionPtr& conn_ptr)
 :   parse_state_(ExpectRequestLine),
     done_(false),
-    request_(HttpRequest(conn_ptr)),
+    request_(std::make_shared<HttpRequest>(conn_ptr)),
     connection_(conn_ptr)
 {
     return;
@@ -77,7 +77,7 @@ bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 
                 HandleHeader();
 
-                std::cout << request_.ToString() << std::endl;
+                std::cout << request_->ToString() << std::endl;
                 return success;
 
             default:
@@ -90,7 +90,17 @@ bool HttpContext::ParseRequest(net::Buffer& buffer, base::Timestamp recv_time)
 //---------------------------------------------------------------------------
 int HttpContext::ProcessRequest()
 {
-    return HttpHandler();
+    int rc = HttpHandler();
+    return rc;
+}
+//---------------------------------------------------------------------------
+void HttpContext::Reset()
+{
+    done_ = false;
+    parse_state_ = ExpectRequestLine;
+    request_ = std::make_shared<HttpRequest>(connection_.lock());
+
+    return;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_time)
@@ -122,7 +132,7 @@ bool HttpContext::ParseRequestLine(net::Buffer& buffer, base::Timestamp recv_tim
         return false;
 
     parse_state_ = ExpectRequestHeaders;
-    request_.set_recv_time(recv_time);
+    request_->set_recv_time(recv_time);
     buffer.RetrieveUntil(crlf);
     return true;;
 }
@@ -174,8 +184,8 @@ char* HttpContext::ParseRequestLineMethod(char* begin, char* end)
             method_str = "INVALID";
         }
 
-        request_.set_method(method);
-        request_.set_method_str(method_str);
+        request_->set_method(method);
+        request_->set_method_str(method_str);
         return space;
     }
     else
@@ -209,7 +219,7 @@ char* HttpContext::ParseRequestLineURL(char* begin, char* end)
                             std::string(param.substr(equal+1))));
         }
 
-        request_.set_parameters(parameters);
+        request_->set_parameters(parameters);
     }
 
     //TODO:扩展名
@@ -219,7 +229,7 @@ char* HttpContext::ParseRequestLineURL(char* begin, char* end)
         if('.' == *dot)
         {
             dot++;
-            request_.set_exten(std::string(dot, param_mark-dot));
+            request_->set_exten(std::string(dot, param_mark-dot));
             break;
         }
 
@@ -231,7 +241,7 @@ char* HttpContext::ParseRequestLineURL(char* begin, char* end)
 
     //TODO:锚
     char* url_idx = space==param_mark ? space : param_mark;
-    request_.set_url(std::string(begin, url_idx));
+    request_->set_url(std::string(begin, url_idx));
     return space;
 }
 //---------------------------------------------------------------------------
@@ -244,15 +254,15 @@ bool HttpContext::ParseRequestLineVersion(char* begin, char* end)
         std::string version(begin, crlf);
         if(HttpRequest::kHTTP10 == version)
         {
-            request_.set_version(HttpRequest::Version::HTTP10);
+            request_->set_version(HttpRequest::Version::HTTP10);
         }
         else if(HttpRequest::kHTTP11 == version)
         {
-            request_.set_version(HttpRequest::Version::HTTP11);
+            request_->set_version(HttpRequest::Version::HTTP11);
         }
         else
         {
-            request_.set_version(HttpRequest::Version::NOTSUPPORT);
+            request_->set_version(HttpRequest::Version::NOTSUPPORT);
             return false;
         }
     }
@@ -293,7 +303,7 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
     if(colon == last)
         return false;
 
-    HttpHeaders& headers = request_.headers_in();
+    HttpHeaders& headers = request_->headers_in();
 
     TrimBlank(first, colon);
     std::string filed(first, colon);
@@ -317,21 +327,21 @@ bool HttpContext::ParseRequestHeader(net::Buffer& buffer)
 //---------------------------------------------------------------------------
 bool HttpContext::ParseRequestBody(net::Buffer& buffer)
 {
-    size_t content_length = request_.headers_in().content_length();
+    size_t content_length = request_->headers_in().content_length();
     if(0 == content_length)
     {
         parse_state_ = ParseRequestDone;
         return true;
     }
 
-    if(0 == request_.request_body().size())
-        request_.request_body().reserve(content_length);
+    if(0 == request_->request_body().size())
+        request_->request_body().reserve(content_length);
 
-    if(content_length > request_.request_body().size())
+    if(content_length > request_->request_body().size())
         return true;
 
-    request_.request_body().insert
-        (request_.request_body().end(), buffer.Peek(), buffer.Peek()+buffer.ReadableBytes());
+    request_->request_body().insert
+        (request_->request_body().end(), buffer.Peek(), buffer.Peek()+buffer.ReadableBytes());
 
     buffer.Retrieve(content_length);
     parse_state_ = ParseRequestDone;
@@ -342,7 +352,7 @@ bool HttpContext::FindVirtualServer()
 {
     //寻找对应的server{}
     HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
-    const std::string& host = request_.headers_in().host();
+    const std::string& host = request_->headers_in().host();
     net::TCPConnectionPtr conn_ptr = connection_.lock();
     if(!conn_ptr)
     {
@@ -370,7 +380,7 @@ bool HttpContext::FindVirtualServer()
     {
         if(nullptr == conf_address.default_server)
         {
-            request_.set_status_code(HttpRequest::NOT_FOUND);
+            request_->set_status_code(HttpRequest::NOT_FOUND);
             return false;
         }
 
@@ -378,24 +388,24 @@ bool HttpContext::FindVirtualServer()
     }
 
     //此时获取的是server{}的ctx，其中的loc_conf还要再下一步的checker中重新赋值
-    request_.set_main_conf(srv_conf->ctx->main_conf);
-    request_.set_srv_conf(srv_conf->ctx->srv_conf);
-    request_.set_loc_conf(srv_conf->ctx->loc_conf);
+    request_->set_main_conf(srv_conf->ctx->main_conf);
+    request_->set_srv_conf(srv_conf->ctx->srv_conf);
+    request_->set_loc_conf(srv_conf->ctx->loc_conf);
 
     return true;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::HandleHeader()
 {
-    if(request_.headers_in().connection().empty())
+    if(request_->headers_in().connection().empty())
     {
-        if(request_.version() == HttpRequest::Version::HTTP10)
+        if(request_->version() == HttpRequest::Version::HTTP10)
         {
-            request_.headers_in().set_connection("close");
+            request_->headers_in().set_connection("close");
         }
         else
         {
-            request_.headers_in().set_connection("keep-alive");
+            request_->headers_in().set_connection("keep-alive");
         }
     }
 
@@ -419,9 +429,9 @@ int HttpContext::HttpHandler()
 int HttpContext::RunPhases()
 {
     auto& handlers = g_http_module_core.core_main_conf()->phase_engine.handlers;
-    while(handlers[request_.phase_handler()].checker)
+    while(handlers[request_->phase_handler()].checker)
     {
-        int rc = handlers[request_.phase_handler()].checker(request_, handlers[request_.phase_handler()]);
+        int rc = handlers[request_->phase_handler()].checker(*request_, handlers[request_->phase_handler()]);
 
         switch(rc)
         {
@@ -449,7 +459,7 @@ int HttpContext::RunResponse()
     //处理响应头
     for(auto header_filter : g_http_module_core.core_main_conf()->header_filters)
     {
-        int rc = header_filter(request_);
+        int rc = header_filter(*request_);
         if(rc != MUINX_OK)
             return rc;
     }
@@ -457,7 +467,7 @@ int HttpContext::RunResponse()
     //处理响应体
     for(auto body_filter : g_http_module_core.core_main_conf()->body_filters)
     {
-        int rc = body_filter(request_);
+        int rc = body_filter(*request_);
         if(rc != MUINX_OK)
             return rc;
     }

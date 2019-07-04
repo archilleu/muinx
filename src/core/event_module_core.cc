@@ -118,7 +118,13 @@ void EventModuleCore::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buff
     if(MUINX_OK != context->ProcessRequest())
     {
         //TODO 处理错误
+        std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
+        conn_ptr->Send(error.c_str(), error.length());
+        conn_ptr->ForceClose();
     }
+
+    //重置Context
+    context->Reset();
 
     return;
 }
