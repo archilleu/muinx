@@ -79,8 +79,10 @@ void Core::InitGlobalModules()
         &g_event_module_core,
         &g_core_module_http,
         &g_http_module_core,
+
         &g_http_module_static,
         &g_http_module_index,
+
         &g_http_module_filter_write,
         &g_http_module_filter_header,
         &g_http_module_filter_not_modified

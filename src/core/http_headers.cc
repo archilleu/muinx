@@ -13,11 +13,11 @@ const char* HttpHeaders::kHost              = "host";
 const char* HttpHeaders::kContentLength     = "content-length";
 const char* HttpHeaders::kConnection        = "connection";
 const char* HttpHeaders::kContentType       = "content-type";
-const char* HttpHeaders::kLastModified      = "Last-Modified";
-const char* HttpHeaders::kIfModifiedSince   = "If-Modified-Since";
-const char* HttpHeaders::kIfUnmodifiedSince = "If-Unmodified-Since";
-const char* HttpHeaders::kIfMatch           = "If-Match";
-const char* HttpHeaders::kIfNoneMatch       = "If-None-Match";
+const char* HttpHeaders::kLastModified      = "last-modified";
+const char* HttpHeaders::kIfModifiedSince   = "if-modified-since";
+const char* HttpHeaders::kIfUnmodifiedSince = "if-unmodified-since";
+const char* HttpHeaders::kIfMatch           = "if-match";
+const char* HttpHeaders::kIfNoneMatch       = "if-none-match";
 //---------------------------------------------------------------------------
 static bool HeaderActionHost(HttpHeaders& http_header, const std::string& host)
 {

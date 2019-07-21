@@ -34,16 +34,20 @@ int HttpModuleFilterWrite::WriteFilter(HttpRequest& http_request)
     if(!connection)
         return MUINX_OK;
 
-    auto& out = http_request.headers_out();
-    if(!out.response_header().empty())
+    auto& out_header = http_request.headers_out();
+    if(!out_header.response_header().empty())
     {
-        connection->Send(out.response_header());
-        out.ResponseHeaderClear();
+        connection->Send(out_header.response_header());
+        out_header.ResponseHeaderClear();
     }
-    if(!http_request.response_body().empty())
+    auto& out_body = http_request.response_body();
+    if(!out_body.empty())
     {
-        connection->Send(http_request.response_body().data(), http_request.response_body().size());
-        http_request.response_body().clear();
+        if(!http_request.header_only())
+        {
+            connection->Send(out_body.data(), http_request.response_body().size());
+        }
+        out_body.clear();
     }
 
     return MUINX_OK;
@@ -51,7 +55,7 @@ int HttpModuleFilterWrite::WriteFilter(HttpRequest& http_request)
 //---------------------------------------------------------------------------
 bool HttpModuleFilterWrite::Initialize()
 {
-    g_http_module_core.core_main_conf()->body_filters.push_back(
+    g_http_module_core.core_main_conf()->body_filters.push_front(
             std::bind(WriteFilter, _1));
 
     return true;

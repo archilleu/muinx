@@ -460,16 +460,44 @@ int HttpContext::RunResponse()
     for(auto header_filter : g_http_module_core.core_main_conf()->header_filters)
     {
         int rc = header_filter(*request_);
-        if(rc != MUINX_OK)
-            return rc;
+        switch(rc)
+        {
+            case MUINX_DECLINED:
+            case MUINX_AGAIN:
+                continue;
+
+            //返回成功不继续处理剩余HTTP流程
+            case MUINX_OK:
+                return MUINX_OK;
+
+            case MUINX_ERROR:
+                return MUINX_ERROR;
+
+            default:
+                continue;
+        }
     }
 
     //处理响应体
     for(auto body_filter : g_http_module_core.core_main_conf()->body_filters)
     {
         int rc = body_filter(*request_);
-        if(rc != MUINX_OK)
-            return rc;
+        switch(rc)
+        {
+            case MUINX_DECLINED:
+            case MUINX_AGAIN:
+                continue;
+
+            //返回成功不继续处理剩余HTTP流程
+            case MUINX_OK:
+                return MUINX_OK;
+
+            case MUINX_ERROR:
+                return MUINX_ERROR;
+
+            default:
+                continue;
+        }
     }
 
     return MUINX_OK;
