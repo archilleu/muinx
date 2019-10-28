@@ -3,7 +3,7 @@
 #define CORE_MODULE_H_
 //---------------------------------------------------------------------------
 /*
- * 模块定义基类
+ * 模块基类
  */
 //---------------------------------------------------------------------------
 #include <memory>
@@ -29,7 +29,7 @@ struct CommandModule
     std::string name;   //配置项目名称
     uint64_t type;      //配置项类别
     std::function<bool (const CommandConfig&, const CommandModule&, void*)> Set;
-    uint64_t conf;      //http{}对应结构图HttpConfCtxs成员偏移，仅在没有设置DIRICT_CONF和MAIN_CONF生效
+    uint64_t conf;      //http{}模块对应HttpConfCtxs成员偏移，仅在没有设置DIRICT_CONF和MAIN_CONF生效
 };
 //---------------------------------------------------------------------------
 class Module : public base::Noncopyable
@@ -39,7 +39,8 @@ public:
     virtual ~Module();
 
 public:
-    enum ModuleType
+    //模块类型，目前分为4类
+    enum Type
     {
         INVALID,
         CORE,
@@ -57,13 +58,13 @@ public:
 
     const std::vector<CommandModule>& commands() const { return commands_; }
 
-    ModuleType type() const { return type_; }
+    Type type() const { return type_; }
 
 public:
     static int s_max_module;
 
 protected:
-    ModuleType type_;                       //模块类型
+    Type type_;                             //模块类型
     std::shared_ptr<void> ctx_;             //该模块具体对应哪一类模块的上下文结构
     std::vector<CommandModule> commands_;   //该模块的配置项
 

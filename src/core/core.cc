@@ -109,7 +109,7 @@ void Core::ActionCoreModulesConfigCreate()
         //如果是核心模块，初始化的时候已经分配核心模块配置结构体内存，由核心模块管
         //理的模块会在需要的时候在分配，也就是解析配置文件回调条件command.type&MAIN_CONF
         //成立时分配
-        if(module->type() != Module::ModuleType::CORE)
+        if(module->type() != Module::Type::CORE)
             continue;
 
         auto module_ctx = static_cast<core::CoreModule*>(module)->ctx();
@@ -131,6 +131,8 @@ void Core::BindConfigFileCallback()
 //---------------------------------------------------------------------------
 bool Core::ParseConfigFile()
 {
+    //TODO:可以由命令行传递配置文件路径参数
+    //目前默认在上一层的conf目录下的nginx.config文件
     std::string path = "../conf";
     std::string name = "nginx.conf";
     if(false == g_core_module_conf.Parse(path, name))
@@ -148,7 +150,7 @@ bool Core::ActionCoreModuleConfigInit()
     //该初始化只初始化CORE类型的模块，其他模块在对应管理的模块内初始化
     for(auto& module : modules_)
     {
-        if(module->type() != Module::ModuleType::CORE)
+        if(module->type() != Module::Type::CORE)
             continue;
 
         auto module_ctx = (static_cast<core::CoreModule*>(module))->ctx();
@@ -181,7 +183,7 @@ bool Core::ConfigFileBlockEndCallback(const CommandConfig& command_config)
     (void)command_config;
 
     //event模块配置解析完成后调用Event模块的初始化回调
-    if((command_config.module_type==Module::ModuleType::EVENT)
+    if((command_config.module_type==Module::Type::EVENT)
             && (command_config.conf_type==EVENT_CONF))
     {
         if(false == g_core_module_event.EventBlockParseComplete())
@@ -189,14 +191,14 @@ bool Core::ConfigFileBlockEndCallback(const CommandConfig& command_config)
     }
 
     //http 配置模块解析完成后
-    if((command_config.module_type==Module::ModuleType::HTTP)
+    if((command_config.module_type==Module::Type::HTTP)
             && (command_config.conf_type==HTTP_MAIN_CONF))
     {
         if(false == g_core_module_http.HttpBlockParseComplete())
             return false;
     }
 
-    //当前{}结束，弹出该上下文栈
+    //当前block{}结束，弹出该块上下文栈(FIXME:设计不好，不应该由外部弹栈)
     g_core_module_conf.PopCtx();
 
     return true;
@@ -211,17 +213,17 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
      */
     for(auto module : modules_)
     {
-        //模块类型不是配置模块并且是否匹配
-        if((module->type()==Module::ModuleType::CONF)
+        //模块类型不是配置模块（配置模块没有配置项）或者类型不匹配
+        if((module->type()==Module::Type::CONF)
                 || (module->type()!=command_config.module_type))
         {
             continue;
         }
 
-        //检测是否是types块内配置项,如果是就特殊处理
+        //检测是否是types配置项(mime.types文件内配置项),如果是就把内容解析为mime对应表
         if(true == IsTypesItem(command_config))
         {
-            AddTypesItem(command_config);
+            AddMimeTypesItem(command_config);
             continue;
         }
 
@@ -236,7 +238,7 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
             if(!(command_config.conf_type&command.type))
                 continue;
 
-            //TODO 检擦参数个数
+            //检擦参数个数
             if(false == CheckArgumentFormat(command, command_config))
                 return false;
 
@@ -256,7 +258,6 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
                 //在event{}、http{}里面new另外的指针数组，所以需要传递指针的地址(传递引用也行)
                 ctx = &(g_core_module_conf.block_config_ctxs_[module->index()]);
             }
-            //event{}
             //http{}里面的HttpConfCtx结构体，每一个http{}、server{}、location{}都独立一个
             else if(g_core_module_conf.CurrentCtx())
             {
@@ -323,7 +324,7 @@ bool Core::IsTypesItem(const CommandConfig& command_config)
     return true;
 }
 //---------------------------------------------------------------------------
-void Core::AddTypesItem(const CommandConfig& command_config)
+void Core::AddMimeTypesItem(const CommandConfig& command_config)
 {
     if(2 > command_config.args.size())
         return;

@@ -15,17 +15,17 @@ public:
 
     struct HttpModuleCtx
     {
-        std::function<bool (void)> preconfiguration;
-        std::function<bool (void)> postconfiguration;   //一般用来初始化HTTP流程engine或者过滤器链表
+        std::function<bool (void)> preconfiguration;                        //启动配置解析前的回调
+        std::function<bool (void)> postconfiguration;                       //配置解析完成后的回调
 
-        std::function<void* (void)> create_main_config; //创建模块配置结构体回调
-        std::function<bool (void*)> init_main_config;   //
+        std::function<void* (void)> create_main_config;                     //创建main模块配置结构体回调
+        std::function<bool (void*)> init_main_config;                       //初始化main模块回调
 
-        std::function<void* (void)> create_srv_config;  //创建模块配置结构体回调
-        std::function<bool (void* prev, void* conf)> merge_srv_config;   //
+        std::function<void* (void)> create_srv_config;                      //创建server模块配置结构体回调
+        std::function<bool (void* prev, void* conf)> merge_srv_config;      //初始化server模块回调
 
-        std::function<void* (void)> create_loc_config;  //创建模块配置结构体回调
-        std::function<bool (void* prev, void* conf)> merge_loc_config;    //
+        std::function<void* (void)> create_loc_config;                      //创建loc模块配置结构体回调
+        std::function<bool (void* prev, void* conf)> merge_loc_config;      //初始化loc模块回调
     };
 
 public:

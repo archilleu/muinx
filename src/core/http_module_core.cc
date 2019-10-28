@@ -458,7 +458,7 @@ bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const Co
     memset(ctx->loc_conf, 0, sizeof(void*)*CoreModuleHttp::s_max_http_module);
     for(auto module : g_core.modules_)
     {
-        if(Module::ModuleType::HTTP != module->type())
+        if(Module::Type::HTTP != module->type())
             continue;
 
         HttpModule* http_module = static_cast<HttpModule*>(module);
@@ -474,7 +474,8 @@ bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const Co
         }
     }
 
-    //HttpSrvConf ctx成员指向解析server块时新生成的HttpConfigCtxs结构体
+    //HttpSrvConf->ctx成员指向解析server块时新生成的HttpConfigCtxs结构体
+    //目的是让HttpSrvConf可以找到该HttpConfigCtxs结构体
     HttpSrvConf* srv_conf = reinterpret_cast<HttpSrvConf*>
         (ctx->srv_conf[this->module_index()]);
     srv_conf->ctx = ctx;
@@ -489,8 +490,7 @@ bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const Co
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetCallbackTypesBlock(const CommandConfig&, const CommandModule&, void*)
 {
-    //只是为了占位
-    //FIXME:更好的设计配置文件解析
+    //占位
     g_core_module_conf.PushCtx(nullptr);
     return true;
 }
@@ -509,7 +509,7 @@ bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command
 
     for(auto module : g_core.modules_)
     {
-        if(Module::ModuleType::HTTP != module->type())
+        if(Module::Type::HTTP != module->type())
             continue;
 
         HttpModule* http_module = static_cast<HttpModule*>(module);
@@ -521,7 +521,7 @@ bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command
         }
     }
 
-    //使用loc_conf数组第一个结构体的loc_conf记录全部模块在该loc_conf数组
+    //使用loc_conf数组第一个结构体的loc_conf,记录全部loc模块在该loc_conf数组
     HttpLocConf* loc_conf = reinterpret_cast<HttpLocConf*>(
             ctx->loc_conf[this->module_index()]);
     loc_conf->loc_conf = ctx->loc_conf;

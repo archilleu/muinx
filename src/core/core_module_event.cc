@@ -47,7 +47,7 @@ bool CoreModuleEvent::EventBlockParseComplete()
 {
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::EVENT)
+        if(module->type() != Module::Type::EVENT)
             continue;
 
         EventModule* event_module = static_cast<EventModule*>(module);
@@ -61,10 +61,10 @@ bool CoreModuleEvent::EventBlockParseComplete()
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandModule&, void* module_command)
+bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandModule&, void* module_conf)
 {
-    //只能有一个event
-    if(*reinterpret_cast<void**>(module_command))
+    //全局配置项中,只能有一个event配置项
+    if(*reinterpret_cast<void**>(module_conf))
     {
         return false;
     }
@@ -72,21 +72,22 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandMod
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::EVENT)
+        if(module->type() != Module::Type::EVENT)
             continue;
 
         module->set_module_index(CoreModuleEvent::s_max_event_module++);
     }
 
+    //void*** (指向void*数组的指针(void*) ([void*]);
     void*** ctx = reinterpret_cast<void***>(new void*);
     *ctx = new void*[CoreModuleEvent::s_max_event_module];
-    *reinterpret_cast<void**>(module_command) = ctx;
+    *reinterpret_cast<void**>(module_conf) = ctx;
 
     g_core_module_conf.PushCtx(ctx);
 
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::EVENT)
+        if(module->type() != Module::Type::EVENT)
             continue;
 
         auto event = static_cast<CoreModule*>(module);

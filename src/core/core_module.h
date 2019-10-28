@@ -2,6 +2,10 @@
 #ifndef CORE_CORE_MODULE_H_
 #define CORE_CORE_MODULE_H_
 //---------------------------------------------------------------------------
+/**
+ * 核心模块定义
+ */
+//---------------------------------------------------------------------------
 #include "module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -16,7 +20,7 @@ public:
     {
         std::string name;                           //模块名字
         std::function<void* (void)> create_config;  //创建模块配置结构体回调
-        std::function<bool (void*)> init_config;    //
+        std::function<bool (void*)> init_config;    //初始化模块
     };
 
     CoreModule();

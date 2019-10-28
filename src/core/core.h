@@ -2,6 +2,10 @@
 #ifndef CORE_CORE_H_
 #define CORE_CORE_H_
 //---------------------------------------------------------------------------
+/**
+ * 主程序类，引导各个模块初始化，启动程序
+ */
+//---------------------------------------------------------------------------
 #include <string>
 #include <vector>
 #include <memory>
@@ -44,7 +48,7 @@ private:
     bool CheckArgumentFormat(const CommandModule& module, const CommandConfig& command_config);
 
     bool IsTypesItem(const CommandConfig& command_config);
-    void AddTypesItem(const CommandConfig& command_config);
+    void AddMimeTypesItem(const CommandConfig& command_config);
 };
 //---------------------------------------------------------------------------
 extern core::Core g_core;

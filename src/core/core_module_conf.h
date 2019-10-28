@@ -96,7 +96,6 @@ private:
     std::shared_ptr<CharReader> reader_;    //配置文件数据操作对象
 
 private:
-
     static const char LF            = 0x0a; //换行符号
     static const char SPACE         = ' ';  //空格
     static const char SEMICOLON     = ';';  //分号
@@ -132,6 +131,7 @@ public:
     bool Parse(const std::string& path, const std::string& name);
 
 public:
+    //获取顶层配置项
     void* GetModuleMainConf(const Module* module);
     void* GetModuleSrvConf(const Module* module);
     void* GetModuleLocConf(const Module* module);
@@ -163,7 +163,7 @@ private:
     bool HasStatus(int status) { return (cur_status_ & status); }
 
     //处理include保留字
-    bool IncludeFile(const std::string& name);
+    bool ReserveKeywordInclude(const std::string& name);
 
 private:
     std::string config_path_;                   //配置文件路径
@@ -175,7 +175,7 @@ private:
     std::vector<std::string> cur_line_params_;
     std::stack<int> stack_;
 
-    Module::ModuleType module_type_;    //当前解析行模块的类型
+    Module::Type module_type_;          //当前解析行模块的类型
     int conf_type_;                     //当前解析行域
     std::stack<void*> stack_ctx_;       //当前解析行使用的上下文,在event{}, http{}使用
 

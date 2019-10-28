@@ -2,6 +2,10 @@
 #ifndef CORE_MODULE_CORE_H_
 #define CORE_MODULE_CORE_H_
 //---------------------------------------------------------------------------
+/**
+ * 核心模块类，解析全局的配置项
+ */
+//---------------------------------------------------------------------------
 #include "core_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -16,10 +20,10 @@ public:
     //core 模块的配置项
     struct CoreConfig
     {
-        std::string user;
-        int worker_processes;
-        std::string pid;
-        std::string error_log;
+        std::string user;       //用户名
+        int worker_processes;   //工作线程
+        std::string pid;        //pid名字
+        std::string error_log;  //日志文件路径
     };
 
 public:
