@@ -36,6 +36,7 @@ TokenReader::TokenType TokenReader::ReadNextToken()
             return SEP_SEMICOLON;
 
         case LF:    //'/n'
+            column_++;
             reader_->Next();
             //换行对于状态机没有实际意义，内部消化
             return ReadNextToken();
@@ -96,6 +97,7 @@ void TokenReader::SkipCommentLine()
         if(LF == c)
             break;
     }
+    column_++;
 }
 //---------------------------------------------------------------------------
 CoreModuleConf g_core_module_conf;
@@ -125,12 +127,12 @@ CoreModuleConf::~CoreModuleConf()
     return;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleConf::Parse(const std::string& path, const std::string& name)
+std::string CoreModuleConf::Parse(const std::string& path, const std::string& name)
 {
     config_path_ = path;
     config_name_ = name;
     if(false == LoadConfigFile())
-        return false;
+        return (config_path_ + "/" + config_name_ + " not found");
 
     //以行为单位解析
     //遇到一个单词放入cur_line_params_中，直到遇到分号结束
@@ -146,49 +148,50 @@ bool CoreModuleConf::Parse(const std::string& path, const std::string& name)
         {
             case TokenReader::TokenType::END:
                 if(false == CaseStatusEnd())
-                    return false;
+                    return errorMsg("exp end");
 
-                return true;
+
+                return "OK";
 
             case TokenReader::TokenType::BLANK:
                 if(false == CaseStatusBlank())
-                    return false;
+                    return errorMsg("exp blank");
 
                 break;
 
             case TokenReader::TokenType::BLOCK_BEGIN:
                 if(false == CaseStatusBlockBegin())
-                    return false;
+                    return errorMsg("exp block begin");
 
                 break;
 
             case TokenReader::TokenType::BLOCK_END:
                 if(false == CaseStatusBlockEnd())
-                    return false;
+                    return errorMsg("exp block end");
 
                 break;
 
             case TokenReader::TokenType::SEP_SEMICOLON:
                 if(false == CaseStatusSepSemicolon())
-                    return false;
+                    return errorMsg("exp semicolon");
 
                 break;
 
             case TokenReader::TokenType::STRING:
                 if(false == CaseStatusString())
-                    return false;
+                    return errorMsg("exp word");
 
                 break;
 
             case TokenReader::TokenType::INVALID:
-                return false;
+                    return errorMsg("invalid token");
 
             default:
-                return false;
+                return errorMsg("invalid token");
         }
     }
 
-    return true;
+    return "OK";
 }
 //---------------------------------------------------------------------------
 void* CoreModuleConf::GetModuleMainConf(const Module* module)
@@ -317,8 +320,7 @@ bool CoreModuleConf::CaseStatusBlockBegin()
         conf_type_ = DIRECT_CONF;
         return false;
     }
-    cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_BEGIN
-                | kEXP_STATUS_END | kEXP_STATUS_BLOCK_END;
+    cur_status_ = kEXP_STATUS_STRING | kEXP_STATUS_BLANK | kEXP_STATUS_BLOCK_END;
 
     return true;
 }
@@ -384,6 +386,10 @@ bool CoreModuleConf::CaseStatusSepSemicolon()
     if(!HasStatus(kEXP_STATUS_SEP_SEMICOLON))
         return false;
 
+    //检擦当前解析行是否包含保留字,保留字在每行的第一个单词
+    if(0 == cur_line_params_.size())
+        return false;
+
     //遇到include关键字展开include的文件
     if(kRESERVED_INCLUDE == cur_line_params_[0])
     {
@@ -445,6 +451,11 @@ bool CoreModuleConf::IncludeFile(const std::string& name)
     size_t pos = token_reader_->pos();
     config_dat_.insert(config_dat_.begin()+pos, data.begin(), data.end());
     return true;
+}
+//---------------------------------------------------------------------------
+std::string CoreModuleConf::errorMsg(const char* msg)
+{
+    return base::CombineString("%s, line: %zu", msg, token_reader_->column()).c_str();
 }
 //---------------------------------------------------------------------------
 

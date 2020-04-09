@@ -62,7 +62,8 @@ class TokenReader
 
 public:
     TokenReader(std::vector<char>& dat)
-    :   reader_(std::make_shared<CharReader>(dat))
+    :   column_(1),
+        reader_(std::make_shared<CharReader>(dat))
     {}
 
     ~TokenReader()
@@ -86,6 +87,7 @@ public:
     bool ReadString(std::string& str);
 
     size_t pos() const { return reader_->pos(); }
+    size_t column() const { return column_; }
 
 private:
     void SkipComments();
@@ -93,6 +95,7 @@ private:
     void SkipCommentLine();
 
 private:
+    size_t column_; //行数
     std::shared_ptr<CharReader> reader_;    //配置文件数据操作对象
 
 private:
@@ -129,7 +132,7 @@ public:
             stack_ctx_.pop();
     }
 
-    bool Parse(const std::string& path, const std::string& name);
+    std::string Parse(const std::string& path, const std::string& name);
 
 public:
     void* GetModuleMainConf(const Module* module);
@@ -140,7 +143,6 @@ public:
     void**** config_ctxs_;      //全局配置文件结构体指针,数组指针指向数组指针
     void** main_config_ctxs_;   //main 配置文件块指针,指针数组
     void** block_config_ctxs_;  //block 配置文件块指针,如events块
-
 
 private:
     //解析过程中处的块
@@ -165,6 +167,8 @@ private:
     //处理include保留字
     bool IncludeFile(const std::string& name);
 
+    std::string errorMsg(const char* msg);
+
 private:
     std::string config_path_;                   //配置文件路径
     std::string config_name_;                   //配置文件名称
@@ -180,8 +184,8 @@ private:
     std::stack<void*> stack_ctx_;       //当前解析行使用的上下文,在event{}, http{}使用
 
     CommandCallback command_cb_;        //解析完整配置项后的回调
-    BlockEndCallback block_begin_cb_;   //解析完整配置块后的回调
-    BlockEndCallback block_end_cb_;     //解析完整配置块后的回调
+    BlockBeginCallback block_begin_cb_; //开始完整配置块前的回调
+    BlockEndCallback block_end_cb_;     //完成解析配置块后的回调
 
 private:
     //解析过程中的状态(期待的下一个字符类型)

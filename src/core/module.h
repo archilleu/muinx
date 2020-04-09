@@ -15,7 +15,7 @@ namespace core
 {
 
 //---------------------------------------------------------------------------
-//解析配置文件配置项结构，提供给Command使用
+//解析配置文件配置项结构体，module_conf模块解析配置命令后提供回调给各个模块使用
 struct CommandConfig 
 {
     std::vector<std::string> args;  //配置项参数

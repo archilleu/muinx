@@ -1,4 +1,6 @@
 //---------------------------------------------------------------------------
+#include <iostream>
+
 #include "core.h"
 #include "core_module_core.h"
 #include "core_module_event.h"
@@ -10,7 +12,6 @@
 #include "http_module_filter_not_modified.h"
 #include "http_module_filter_header.h"
 #include "http_module_filter_write.h"
-#include <iostream>
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -131,9 +132,10 @@ bool Core::ParseConfigFile()
 {
     std::string path = "../conf";
     std::string name = "nginx.conf";
-    if(false == g_core_module_conf.Parse(path, name))
+    std::string code = g_core_module_conf.Parse(path, name);
+    if(code != "OK")
     {
-        assert(((void)"config file parse failed", 0));
+        std::cout << "parse error:" << code << std::endl;
         return false;
     }
 
