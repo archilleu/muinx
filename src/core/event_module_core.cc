@@ -52,16 +52,15 @@ void EventModuleCore::Start()
     const auto core_conf = g_core_module_core.core_config();
 
     //初始化网络事件处理模块
-    //TODO:日志路径
+    //TODO:日志配置
     net::EventLoop::SetLogger("/tmp/muinx", base::Logger::Level::TRACE, base::Logger::Level::DEBUG);
     loop_ = std::make_shared<net::EventLoop>();
     loop_->set_sig_quit_cb(std::bind(&EventModuleCore::EventLoopQuit, this));
     loop_->SetHandleSingnal();
 
-    //由于一个端口下面可能配置多个server，所以需要使用带参数的构造传递该端口下面的server结构体
+    //一个端口下面可能配置多个server
     server_ = std::make_shared<net::TCPServer>(loop_.get(), g_core_module_http.addresses());
 
-    //TODO:设置线程数目等参数
     if(0 != core_conf->worker_processes)
     {
         server_->set_event_loop_nums(core_conf->worker_processes);
@@ -74,6 +73,8 @@ void EventModuleCore::Start()
 
     server_->Start();
     loop_->Loop();
+
+    return;
 }
 //---------------------------------------------------------------------------
 void EventModuleCore::Stop()
@@ -81,11 +82,14 @@ void EventModuleCore::Stop()
     server_->Stop();
     server_.reset();
     loop_.reset();
+
     return;
 }
 //---------------------------------------------------------------------------
 void EventModuleCore::OnConnection(const net::TCPConnectionPtr& conn_ptr)
 {
+    //TODO:结合worker_connections 控制连接数
+
     //设置该connection上下文，解析http协议
     base::any context = HttpContext(conn_ptr);
     conn_ptr->set_context(context);

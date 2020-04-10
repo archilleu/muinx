@@ -83,6 +83,7 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandMod
     *ctx = new void*[CoreModuleEvent::s_max_event_module];
     *reinterpret_cast<void**>(module_conf) = ctx;
 
+    //记录当前配置文件解析上下文为ctx
     g_core_module_conf.PushCtx(ctx);
 
     for(auto module : g_core.modules_)
@@ -90,11 +91,11 @@ bool CoreModuleEvent::ConfigSetEventBlock(const CommandConfig&, const CommandMod
         if(module->type() != Module::Type::EVENT)
             continue;
 
-        auto event = static_cast<CoreModule*>(module);
-        auto core_module_ctx = event->ctx();
-        if(core_module_ctx->create_config)
+        auto event = static_cast<EventModule*>(module);
+        auto event_module_ctx = event->ctx();
+        if(event_module_ctx->create_config)
         {
-            (*ctx)[module->module_index()] = core_module_ctx->create_config();
+            (*ctx)[module->module_index()] = event_module_ctx->create_config();
         }
     }
 

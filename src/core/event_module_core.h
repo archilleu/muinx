@@ -2,12 +2,18 @@
 #ifndef EVENT_MODULE_CORE_H_
 #define EVENT_MODULE_CORE_H_
 //---------------------------------------------------------------------------
+/**
+ * event模块核心类，负责启动管理tcp连接，读写tcp数据
+ */
+//---------------------------------------------------------------------------
 #include <vector>
 #include <memory>
+
 #include "net/include/callback.h"
 #include "net/include/inet_address.h"
 #include "net/include/event_loop.h"
 #include "net/include/tcp_server.h"
+
 #include "event_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -19,10 +25,11 @@ public:
     EventModuleCore();
     virtual ~EventModuleCore();
 
+    //event模块配置项
     struct EventCoreConfig
     {
-        int worker_connections;
-        std::string use;
+        int worker_connections; //连接数
+        std::string use;        //使用事件类型,只能用epoll
     };
 
 public:

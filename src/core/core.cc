@@ -208,6 +208,7 @@ bool Core::ConfigFileBlockEndCallback(const CommandConfig& command_config)
 bool Core::ConfigCallback(const CommandConfig& command_config)
 {
     /*
+     * 由配置项驱动各个模块初始化
      * 对于解析到的每一行配置项，都需要遍历所有的模块找出对该配置项感兴趣的模块
      * 第一个循环,循环所有的模块,并对照当前配置项所处的块位置是不是对应模块类型
      * 第二个循环，循环所有的配置项,对比配置项的名字是否相同
@@ -256,10 +257,12 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
             //块配置项目，引导该块的所有配置，该块无实际的配置项, 像events、http
             else if(command.type&MAIN_CONF)
             {
-                //在event{}、http{}里面new另外的指针数组，所以需要传递指针的地址(传递引用也行)
+                //在event{}、http{}里面new另外的指针数组，传递相应模块指针地址
                 ctx = &(g_core_module_conf.block_config_ctxs_[module->index()]);
             }
-            //http{}里面的HttpConfCtx结构体，每一个http{}、server{}、location{}都独立一个
+            //event{}
+            //http{},每个模块包含http{}、server{}、location{} HttpConfCtx结构体,
+            //command.conf指出该配置项是属于那一个层级的
             else if(g_core_module_conf.CurrentCtx())
             {
                 void** confp = *reinterpret_cast<void***>
