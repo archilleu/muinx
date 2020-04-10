@@ -155,14 +155,14 @@ int HttpModuleFilterHeader::FilterHandler(HttpRequest& http_request)
         status_line_idx = status - HttpRequest::StatusCode::OK;
     }
     //3xx
-    else if(HttpRequest::StatusCode::SPECIAL_RESPONSE<=status && MUINX_HTTP_LAST_3XX>status)
+    else if(HttpRequest::StatusCode::MOVED_PERMANENTLY<=status && MUINX_HTTP_LAST_3XX>status)
     {
         if(HttpRequest::StatusCode::NOT_MODIFIED == status)
         {
             http_request.set_header_only(true);
         }
 
-        status_line_idx = status - HttpRequest::StatusCode::SPECIAL_RESPONSE + MUINX_HTTP_OFF_3XX;
+        status_line_idx = status - HttpRequest::StatusCode::MOVED_PERMANENTLY + MUINX_HTTP_OFF_3XX;
     }
     //4xx
     else if(HttpRequest::StatusCode::BAD_REQUEST<=status && MUINX_HTTP_LAST_4XX>status)
@@ -295,7 +295,7 @@ int HttpModuleFilterHeader::FilterHandler(HttpRequest& http_request)
 //---------------------------------------------------------------------------
 bool HttpModuleFilterHeader::Initialize()
 {
-    g_http_module_core.core_main_conf()->header_filters.push_back(
+    g_http_module_core.core_main_conf()->header_filters.push_front(
             std::bind(FilterHandler, _1));
 
     return true;

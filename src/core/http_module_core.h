@@ -2,7 +2,7 @@
 #ifndef HTTP_MODULE_CORE_H_
 #define HTTP_MODULE_CORE_H_
 //---------------------------------------------------------------------------
-#include <vector>
+#include <list>
 #include <unordered_map>
 #include "http_module.h"
 #include "http_request.h"
@@ -191,8 +191,8 @@ public:
         PhaseTemp phases[HTTP_LOG_PHASE + 1];
 
         //过滤器链表
-        std::vector<HttpOutputHeaderFilterHandler> header_filters;
-        std::vector<HttpOutputBodyFilterHandler> body_filters;
+        std::list<HttpOutputHeaderFilterHandler> header_filters;
+        std::list<HttpOutputBodyFilterHandler> body_filters;
     };
 
 public:

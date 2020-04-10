@@ -3,7 +3,11 @@
 #define CORE_CORE_H_
 //---------------------------------------------------------------------------
 /**
+<<<<<<< HEAD
  * 核心模块，负责引导启动server
+=======
+ * 主程序类，引导各个模块初始化，启动程序
+>>>>>>> e2c37f4a30a4407216dfddc5dab782eb4b0f4ac6
  */
 //---------------------------------------------------------------------------
 #include <string>
@@ -48,7 +52,7 @@ private:
     bool CheckArgumentFormat(const CommandModule& module, const CommandConfig& command_config);
 
     bool IsTypesItem(const CommandConfig& command_config);
-    void AddTypesItem(const CommandConfig& command_config);
+    void AddMimeTypesItem(const CommandConfig& command_config);
 };
 //---------------------------------------------------------------------------
 extern core::Core g_core;

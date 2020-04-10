@@ -2,6 +2,10 @@
 #ifndef CORE_MODULE_EVENT_H_
 #define CORE_MODULE_EVENT_H_
 //---------------------------------------------------------------------------
+/**
+ * 核心event类，解析event配置项
+ */
+//---------------------------------------------------------------------------
 #include "core_module.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -28,7 +32,7 @@ public:
     static int s_max_event_module;
 
 private:
-    bool ConfigSetEventBlock(const CommandConfig& config, const CommandModule& module, void* module_command);
+    bool ConfigSetEventBlock(const CommandConfig& config, const CommandModule& module, void* module_conf);
 };
 //---------------------------------------------------------------------------
 extern CoreModuleEvent g_core_module_event;

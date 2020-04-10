@@ -110,13 +110,13 @@ const char* CoreModuleConf::kRESERVED_TYPES     = "types";
 const char* CoreModuleConf::kRESERVED_INCLUDE   = "include";
 //---------------------------------------------------------------------------
 CoreModuleConf::CoreModuleConf()
-:   module_type_(Module::ModuleType::CORE),
+:   module_type_(Module::Type::CORE),
     conf_type_(MAIN_CONF)
 {
-    this->type_ = Module::ModuleType::CONF;
+    this->type_ = Module::Type::CONF;
     this->set_module_index(0);
 
-    //分配配置文件内存
+    //分配配置项内存
     config_ctxs_ = reinterpret_cast<void****>(new void*[g_core.modules_.size()]);
     main_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
     block_config_ctxs_ = reinterpret_cast<void**>(config_ctxs_);
@@ -231,8 +231,17 @@ bool CoreModuleConf::CaseStatusEnd()
         return false;
 
     //配置文件解析结束，cur_line_params_应当为空,stack_应当处于kCONF_MAIN状态
-    if(0 != cur_line_params_.size())    return false;
-    if(kCONF_MAIN != stack_.top())      return false;
+    if(0 != cur_line_params_.size())
+    {
+        assert(((void)"cur_line_params not empty", 0));
+        return false;
+    }
+
+    if(kCONF_MAIN != stack_.top())
+    {
+        assert(((void)"stack not empty", 0));
+        return false;
+    }
 
     return true;
 }
@@ -250,7 +259,7 @@ bool CoreModuleConf::CaseStatusBlockBegin()
     if(!HasStatus(kEXP_STATUS_BLOCK_BEGIN))
         return false;
 
-    //检擦当前解析行是否包含保留字,保留字在每行的第一个单词
+    //检擦当前解析行是否包含保留字,保留字是每行的第一个单词
     if(0 == cur_line_params_.size())
         return false;
 
@@ -267,13 +276,13 @@ bool CoreModuleConf::CaseStatusBlockBegin()
             return false;
     }
 
-    //第一次进入该函数前，module_type_=Module::ModuleType::CORE;
+    //第一次进入该函数前，module_type_=Module::Type::CORE;
     if(kRESERVED_EVENTS == reserve) 
     {
         if(kCONF_MAIN != stack_.top())
             return false;
 
-        module_type_ = Module::ModuleType::EVENT;
+        module_type_ = Module::Type::EVENT;
         conf_type_ = EVENT_CONF;
         stack_.push(static_cast<int>(kCONF_EVENT));
     }
@@ -282,7 +291,7 @@ bool CoreModuleConf::CaseStatusBlockBegin()
         if(kCONF_MAIN != stack_.top())
             return false;
 
-        module_type_ = Module::ModuleType::HTTP;
+        module_type_ = Module::Type::HTTP;
         conf_type_ = HTTP_MAIN_CONF;
         stack_.push(static_cast<int>(kCONF_HTTP));
     }
@@ -291,7 +300,7 @@ bool CoreModuleConf::CaseStatusBlockBegin()
         if(kCONF_HTTP != stack_.top())
             return false;
 
-        module_type_ = Module::ModuleType::HTTP;
+        module_type_ = Module::Type::HTTP;
         conf_type_ = HTTP_TYPES_CONF;
         stack_.push(static_cast<int>(kCONF_TYPES));
     }
@@ -300,7 +309,7 @@ bool CoreModuleConf::CaseStatusBlockBegin()
         if(kCONF_HTTP != stack_.top())
             return false;
 
-        module_type_ = Module::ModuleType::HTTP;
+        module_type_ = Module::Type::HTTP;
         conf_type_ = HTTP_SRV_CONF;
         stack_.push(static_cast<int>(kCONF_SERVICE));
     }
@@ -309,14 +318,14 @@ bool CoreModuleConf::CaseStatusBlockBegin()
         if((kCONF_SERVICE!=stack_.top()) && (kCONF_LOCATION!=stack_.top()))
             return false;
 
-        module_type_ = Module::ModuleType::HTTP;
+        module_type_ = Module::Type::HTTP;
         conf_type_ = HTTP_LOC_CONF;
         stack_.push(static_cast<int>(kCONF_LOCATION));
     }
     else
     {
         //没有找到保留字，因为目前不支持自定义的保留字，返回失败
-        module_type_ = Module::ModuleType::INVALID;
+        module_type_ = Module::Type::INVALID;
         conf_type_ = DIRECT_CONF;
         return false;
     }
@@ -355,22 +364,22 @@ bool CoreModuleConf::CaseStatusBlockEnd()
     {
         case kCONF_MAIN:
         case kCONF_EVENT:
-            module_type_ = Module::ModuleType::CORE;
+            module_type_ = Module::Type::CORE;
             conf_type_ = MAIN_CONF;
             break;
 
         case kCONF_HTTP:
-            module_type_ = Module::ModuleType::HTTP;
+            module_type_ = Module::Type::HTTP;
             conf_type_ = HTTP_MAIN_CONF;
             break;
 
         case kCONF_SERVICE:
-            module_type_ = Module::ModuleType::HTTP;
+            module_type_ = Module::Type::HTTP;
             conf_type_ = HTTP_SRV_CONF;
             break;
 
         case kCONF_LOCATION:
-            module_type_ = Module::ModuleType::HTTP;
+            module_type_ = Module::Type::HTTP;
             conf_type_ = HTTP_LOC_CONF;
             break;
 
@@ -396,7 +405,7 @@ bool CoreModuleConf::CaseStatusSepSemicolon()
         if(2 != cur_line_params_.size())
             return false;
 
-        if(false == IncludeFile(cur_line_params_[1]))
+        if(false == ReserveKeywordInclude(cur_line_params_[1]))
             return false;
 
         cur_line_params_.clear();
@@ -441,7 +450,7 @@ bool CoreModuleConf::CaseStatusString()
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleConf::IncludeFile(const std::string& name)
+bool CoreModuleConf::ReserveKeywordInclude(const std::string& name)
 {
     //如果文件不存在，忽略该include
     std::vector<char> data;

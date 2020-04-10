@@ -2,6 +2,11 @@
 #ifndef CORE_MODULE_HTTP_H_
 #define CORE_MODULE_HTTP_H_
 //---------------------------------------------------------------------------
+/**
+ * 核心模块（HTTP），引导HTTP模块解析并在完成HTTP配置项解析后，处理HTTP配置项，
+ * 如监听server、http各个模块的配置项、处理路由、构建流式HTTP handers
+*/
+//---------------------------------------------------------------------------
 #include <vector>
 #include "core_module.h"
 #include "http_module_core.h"
@@ -20,13 +25,15 @@ public:
     virtual ~CoreModuleHttp();
 
 public:
-    //http 模块的配置项,只是用于引导http模块启动，不需要配置项
+    //http 模块的配置项,该模块只是用于引导http模块启动，不需要配置项
     struct HttpConfig
     {
     };
 
     const std::vector<net::InetAddressConfig>& addresses() const { return addresses_; }
 
+    //http{}配置项解析结束后回调
+    //FIXME:由config类调用更合适？
     bool HttpBlockParseComplete();
 
 public:
@@ -34,7 +41,7 @@ public:
 
 private:
     bool ConfigSetHttpBlock(const CommandConfig& config, const CommandModule& module,
-            void* module_command);
+            void* module_conf);
 
     bool ValidateLocations(HttpModuleCore::HttpLocConf* loc_conf);
     bool BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf);

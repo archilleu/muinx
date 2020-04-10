@@ -66,17 +66,18 @@ bool CoreModuleHttp::HttpBlockParseComplete()
 }
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
-        const CommandModule&, void* module_command)
+        const CommandModule&, void* module_conf)
 {
+    //HTTP配置项的顶层配置
     HttpModuleCore::HttpConfigCtxs* ctx = new HttpModuleCore::HttpConfigCtxs();
-    *reinterpret_cast<HttpModuleCore::HttpConfigCtxs**>(module_command) = ctx;
+    *reinterpret_cast<HttpModuleCore::HttpConfigCtxs**>(module_conf) = ctx;
 
     g_core_module_conf.PushCtx(ctx);
 
     //设置每个事件模块的下标(同类模块)
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::HTTP)
+        if(module->type() != Module::Type::HTTP)
             continue;
 
         module->set_module_index(CoreModuleHttp::s_max_http_module++);
@@ -91,7 +92,7 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
 
     for(auto module : g_core.modules_)
     {
-        if(Module::ModuleType::HTTP != module->type())
+        if(Module::Type::HTTP != module->type())
             continue;
 
         HttpModule* http_module = static_cast<HttpModule*>(module);
@@ -114,7 +115,7 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
     //调用配置解析前的回调
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::HTTP)
+        if(module->type() != Module::Type::HTTP)
             continue;
 
         HttpModule* http_module = static_cast<HttpModule*>(module);
@@ -130,13 +131,13 @@ bool CoreModuleHttp::ConfigSetHttpBlock(const CommandConfig&,
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::ValidateLocations(HttpModuleCore::HttpLocConf* loc_conf)
 {
-    //排序，用以比较是否重复
+    //排序，用以比较location名字是否重复
     std::sort(loc_conf->locations.begin(), loc_conf->locations.end(),
             [](const HttpModuleCore::Location& left, const HttpModuleCore::Location& right)-> bool
             {
                 return left.name > right.name;
             });
-    
+
     //检擦是否有重复的
     if(2 <= loc_conf->locations.size())
     {
@@ -221,7 +222,7 @@ bool CoreModuleHttp::InitMainConfig()
 {
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::HTTP)
+        if(module->type() != Module::Type::HTTP)
             continue;
 
         HttpModule* http_module = static_cast<HttpModule*>(module);
@@ -240,7 +241,7 @@ bool CoreModuleHttp::MergeServersConfig()
 {
     for(auto module : g_core.modules_)
     {
-        if(module->type() != Module::ModuleType::HTTP)
+        if(module->type() != Module::Type::HTTP)
             continue;
 
         auto http_module = dynamic_cast<HttpModule*>(module);
@@ -334,7 +335,7 @@ bool CoreModuleHttp::InitPostConfiguration()
 {
     for(auto& module : g_core.modules_)
     {
-        if(HttpModule::ModuleType::HTTP != module->type())
+        if(Module::Type::HTTP != module->type())
             continue;
 
         auto http_module = dynamic_cast<HttpModule*>(module);
@@ -405,7 +406,7 @@ bool CoreModuleHttp::InitPhaseHandlers()
                 phase_handler.next = -1;
                 main_conf->phase_engine.handlers.push_back(phase_handler);
                 next++;
-                
+
                 //不允许其他模块参与HTTP流程
                 continue;
 
