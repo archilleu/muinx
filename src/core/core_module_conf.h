@@ -2,12 +2,16 @@
 #ifndef CORE_CONF_FILE_H_
 #define CORE_CONF_FILE_H_
 //---------------------------------------------------------------------------
+/**
+ * 核心配置项模块，负责解析配置文件
+ */
+//---------------------------------------------------------------------------
 #include <string>
 #include <vector>
 #include <stack>
 #include <cassert>
 #include <memory>
-#include "module.h"
+#include "core_module.h"
 #include "http_module_core.h"
 //---------------------------------------------------------------------------
 namespace core
@@ -109,7 +113,7 @@ private:
 };
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-class CoreModuleConf : public Module
+class CoreModuleConf : public CoreModule
 {
 public:
     using CommandCallback = std::function<bool (const CommandConfig& command_config)>;
@@ -124,8 +128,10 @@ public:
     void set_block_begin_callback(const BlockBeginCallback& cb) { block_begin_cb_ = cb; }
     void set_block_end_callback(const BlockEndCallback& cb) { block_end_cb_ = cb; }
 
+    //模块解析配置项block调用,记录目前配置项结构体当前位置
     void PushCtx(void* ctx) { stack_ctx_.push(ctx); }
     void* CurrentCtx() const { return stack_ctx_.top(); }
+    //block块解析完毕调用
     void PopCtx()
     {
         if(!stack_ctx_.empty())

@@ -23,14 +23,13 @@ core::Core g_core;
 //---------------------------------------------------------------------------
 Core::Core()
 {
-    InitGlobalModules();
 }
 //---------------------------------------------------------------------------
 Core::~Core()
 {
 }
 //---------------------------------------------------------------------------
-static int s_argument_number[] =
+const static int s_argument_number[] =
 {
     CONF_NOARGS,
     CONF_TAKE1,
@@ -44,6 +43,8 @@ static int s_argument_number[] =
 //---------------------------------------------------------------------------
 bool Core::Initialize()
 {
+    InitGlobalModules();
+
     InitModulesIndex();
 
     ActionCoreModulesConfigCreate();
@@ -178,8 +179,6 @@ bool Core::ConfigFileBlockBeginCallback(const CommandConfig& command_config)
 //---------------------------------------------------------------------------
 bool Core::ConfigFileBlockEndCallback(const CommandConfig& command_config)
 {
-    (void)command_config;
-
     //event模块配置解析完成后调用Event模块的初始化回调
     if((command_config.module_type==Module::ModuleType::EVENT)
             && (command_config.conf_type==EVENT_CONF))
@@ -218,7 +217,7 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
             continue;
         }
 
-        //检测是否是types块内配置项,如果是就特殊处理
+        //检测是否是types块内配置项,types表示类型所对应的文件后缀
         if(true == IsTypesItem(command_config))
         {
             AddTypesItem(command_config);
@@ -236,7 +235,7 @@ bool Core::ConfigCallback(const CommandConfig& command_config)
             if(!(command_config.conf_type&command.type))
                 continue;
 
-            //TODO 检擦参数个数
+            //检擦参数个数是否匹配
             if(false == CheckArgumentFormat(command, command_config))
                 return false;
 
@@ -328,23 +327,10 @@ void Core::AddTypesItem(const CommandConfig& command_config)
     if(2 > command_config.args.size())
         return;
 
-    if(2 == command_config.args.size())
+    for(size_t i=1; i<command_config.args.size(); i++)
     {
         g_http_module_core.core_main_conf()->types.insert(
-                std::make_pair(command_config.args[1], command_config.args[0]));
-
-        return;
-    }
-
-    if(2 <= command_config.args.size())
-    {
-        for(size_t i=1; i<command_config.args.size(); i++)
-        {
-            g_http_module_core.core_main_conf()->types.insert(
-                    std::make_pair(command_config.args[i], command_config.args[0]));
-        }
-
-        return;
+                std::make_pair(command_config.args[i], command_config.args[0]));
     }
 
     return;

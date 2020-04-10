@@ -64,12 +64,12 @@ public:
 
 protected:
     ModuleType type_;                       //模块类型
-    std::shared_ptr<void> ctx_;             //该模块具体对应哪一类模块的上下文结构
-    std::vector<CommandModule> commands_;   //该模块的配置项
+    std::shared_ptr<void> ctx_;             //模块的上下文结构,由具体模块生成
+    std::vector<CommandModule> commands_;   //模块的配置项,同ctx_配合使用
 
 private:
-    uint32_t index_;        //该模块的全局下标
-    uint32_t module_index_; //该模块在同一类模块中的下标，用于该类模块的优先级顺序
+    uint32_t index_;        //模块的全局下标
+    uint32_t module_index_; //模块在同一类模块中的下标，用于该类模块的优先级顺序
 };
 
 }//namespace core
