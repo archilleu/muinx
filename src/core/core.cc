@@ -1,5 +1,8 @@
 //---------------------------------------------------------------------------
 #include <iostream>
+#include <unistd.h>
+
+#include "base/include/function.h"
 
 #include "core.h"
 #include "core_module_core.h"
@@ -133,9 +136,12 @@ void Core::BindConfigFileCallback()
 //---------------------------------------------------------------------------
 bool Core::ParseConfigFile()
 {
+    //设置工作目录为程序所在的目录
+    chdir(base::RunPathFolder().c_str());
+
     //TODO:可以由命令行传递配置文件路径参数
     //目前默认在上一层的conf目录下的nginx.config文件
-    std::string path = "../conf";
+    std::string path = "conf";
     std::string name = "nginx.conf";
     std::string code = g_core_module_conf.Parse(path, name);
     if(code != "OK")
