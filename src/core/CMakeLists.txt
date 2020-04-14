@@ -21,8 +21,5 @@ set(LIBTOOLS tools)
 target_link_libraries(${EXENAME} ${LIBNET} ${LIBBASE} ${LIBTOOLS}  pthread rt)
 #---------------------------------------------------------------------------
 #install target 
-#install(TARGETS json_test DESTINATION ${EXECUTABLE_OUTPUT_PATH})
-#---------------------------------------------------------------------------
-#add test
-#add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTNAME})
+install(TARGETS ${EXENAME} DESTINATION ${MUINX_INSTALL_PATH})
 #---------------------------------------------------------------------------

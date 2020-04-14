@@ -3,7 +3,7 @@
 cmake_minimum_required (VERSION 2.8)
 #---------------------------------------------------------------------------
 #project info
-project(base)
+project(muinx)
 #---------------------------------------------------------------------------
 #enable test
 enable_testing()
@@ -43,13 +43,13 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
 #install path
 set(CMAKE_INSTALL_PREFIX .)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH_LIB ${PROJECT_BINARY_DIR}/lib)
-set(LIBRARY_OUTPUT_PATH_INC ${PROJECT_BINARY_DIR}/include)
+set(MUINX_INSTALL_PATH ${PROJECT_BINARY_DIR}/muinx)
+set(MUINX_CONF_INSTALL_PATH ${MUINX_INSTALL_PATH}/conf)
 #---------------------------------------------------------------------------
 #output message
 string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " CMAKE_BUILD_TYPE:" ${CMAKE_CXX_FLAGS_}${BUILD_TYPE})
-message(STATUS "INSTALL PATH = " ${EXECUTABLE_OUTPUT_PATH} " and " ${LIBRARY_OUTPUT_PATH_LIB} " and " ${LIBRARY_OUTPUT_PATH_INC})
+message(STATUS "INSTALL PATH = " ${EXECUTABLE_OUTPUT_PATH} " and " ${MUINX_INSTALL_PATH})
 #---------------------------------------------------------------------------
 #add subdirectory
 #add_subdirectory(<dir>)
@@ -57,12 +57,12 @@ add_subdirectory(src)
 add_subdirectory(test)
 #---------------------------------------------------------------------------
 #add test
-#set(TESTBASE test_base)
-#add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTBASE})
-
 #set(TESTTOOLS test_tools)
 #add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTTOOLS})
-
-set(TESTNET test_net)
-add_test(test_run ${EXECUTABLE_OUTPUT_PATH}/${TESTTOOLS})
+#---------------------------------------------------------------------------
+set(CONF
+    conf/mime.types
+    conf/nginx.conf
+    )
+install(FILES ${CONF} DESTINATION ${MUINX_CONF_INSTALL_PATH})
 #---------------------------------------------------------------------------

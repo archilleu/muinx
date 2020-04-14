@@ -14,11 +14,3 @@ include_directories(../../thirdpart)
 set(LIBTOOLS tools)
 add_library(${LIBTOOLS} ${DIR_SRCS})
 #---------------------------------------------------------------------------
-#install target 
-install(TARGETS ${LIBTOOLS} DESTINATION ${LIBRARY_OUTPUT_PATH_LIB})
-
-set(HEADERS
-    muinx_logger.h
-    )
-install(FILES ${HEADERS} DESTINATION ${LIBRARY_OUTPUT_PATH_INC})
-#---------------------------------------------------------------------------
