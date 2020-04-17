@@ -54,36 +54,32 @@ CoreModuleCore::~CoreModuleCore()
 {
 }
 //---------------------------------------------------------------------------
-bool CoreModuleCore::ConfigSetCallbackUser(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool CoreModuleCore::ConfigSetCallbackUser(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto core_config = reinterpret_cast<CoreConfig*>(config);
     core_config->user = command_config.args[1];
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleCore::ConfigSetCallbackWorkerProcesses(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool CoreModuleCore::ConfigSetCallbackWorkerProcesses(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto core_config = reinterpret_cast<CoreConfig*>(config);
     core_config->worker_processes = ::atoi(command_config.args[1].c_str());
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleCore::ConfigSetCallbackErrorLog(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool CoreModuleCore::ConfigSetCallbackErrorLog(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto core_config = reinterpret_cast<CoreConfig*>(config);
     core_config->error_log = command_config.args[1];
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool CoreModuleCore::ConfigSetCallbackPid(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool CoreModuleCore::ConfigSetCallbackPid(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto core_config = reinterpret_cast<CoreConfig*>(config);
     core_config->pid = command_config.args[1];
 

@@ -2,6 +2,11 @@
 #ifndef HTTP_MODULE_CORE_H_
 #define HTTP_MODULE_CORE_H_
 //---------------------------------------------------------------------------
+/**
+ * HTTP核心模块，负责解析http配置项（server{}location{}）里面的配置，定义
+ * 和HTTP相关的结构体等
+ */
+//---------------------------------------------------------------------------
 #include <list>
 #include <unordered_map>
 #include "http_module.h"
@@ -17,12 +22,13 @@ public:
     virtual ~HttpModuleCore();
 
     /*
-     * HTTP过滤器
+     * HTTP过滤器,需要处理HTTP头或者请求体的模块可以添加到对应的过滤器模块链表
      */
     using HttpOutputHeaderFilterHandler = std::function<int (HttpRequest&)>;
     using HttpOutputBodyFilterHandler = std::function<int (HttpRequest&)>;
 
 public:
+    //HTTP模块配置项结构体,参考配图https://blog.csdn.net/qiuhui00/article/details/79239640
     struct HttpConfigCtxs
     {
         void** main_conf;
@@ -31,60 +37,67 @@ public:
     };
 
 public:
+    //location域配置结构体,使用name索引
     struct HttpLocConf;
     struct Location
     {
-        HttpLocConf* exact;
-        HttpLocConf* inclusive;
-        std::string name;
+        HttpLocConf* exact;     //精确匹配,由name决定是否使用
+        HttpLocConf* inclusive; //模糊匹配,由name决定是否使用
+        std::string name;       //location路径名，如果是精确名字代表使用exact指针（TODO:正则表达式名字)
     };
 
+    //location域配置支持的配置项
     struct HttpLocConf
     {
-        std::string name;   //location{} 路径名
+        std::string name;           //location{} 路径名
 
-        std::string root;   //相对于文件系统的路径
+        std::string root;           //相对于文件系统的路径
 
-        int keepalive_timeout; //超时(单位s)
+        int keepalive_timeout;      //超时(单位s)
 
-        bool keepalive; //维持长连接
+        bool keepalive;             //维持长连接
 
-        int tcp_nopush; //TCP_NOPUSH/TCP_CORK选项
+        int tcp_nopush;             //TCP_NOPUSH/TCP_CORK选项
 
-        int limit_rate; //连接速率限制
+        int limit_rate;             //连接速率限制
 
-        bool sendfile; //发送文件
+        bool sendfile;              //发送文件
 
         std::string default_type;   //默认的content-type
 
-        bool server_token;
+        bool server_token;          //是否在请亲头标注服务器信息
 
+        //TODO:嵌套location实现
         //同一个server块内的location,可能location有嵌套，所以放在该结构体内部
         std::vector<Location> locations;
 
         /*
-         * 指向所属location块内ngx_http_conf_ctx_t结构中的loc_conf指针数组，它保存
+         * 指向location{}块内HttpConfigCtxs结构中的loc_conf指针数组，它保存
          * 着当前location块内所有HTTP模块create_loc_conf方法产生的结构体指针
-         * 通过其他http模块的模块下标可以对应的loc{}配置结构体,srv{}的可以通过srv{}->ctx->loc{}
+         * 通过其他http模块的模块下标可以对应的loc{}配置结构体,server{}可以通过server{}->ctx->loc
          */
         void** loc_conf;
 
-        /*
-         * 快速查找路径对应的结构体(name:HttpLocConf)
-         */
+        // 快速查找路径对应的结构体(name:HttpLocConf)
         std::unordered_map<std::string, Location> map_locations;
-        //最长的loc{} 名字，用来加速匹配map_locations
+
+        //在所属的server{}内最长loc{}name名字，当map_locations有多个loc{}name前缀相同时，用来匹配最长的name
         int location_name_max_length;
 
         bool exact_match;//是模糊(正则表达式)匹配还是精确匹配
 
+        //自定义HTTP_CONTENT_PHASE阶段模块处理函数，如果没有设置就调用默认处理函数
         HttpRequest::HttpRequestHandler handler;
     };
 
 public:
+    //server域配置项
     struct HttpSrvConf
     {
-        std::string server_name;    //域名localhost
+        //域名localhost等
+        std::string server_name;
+
+        std::string chartset;
 
         //指向解析server块时新生成的HttpConfigCtxs结构体
         HttpConfigCtxs* ctx;
@@ -152,7 +165,7 @@ public:
 
     struct PhaseHandler;
     //checker方法定义
-    using HttpChecker = std::function<int (HttpRequest&, PhaseHandler&)>;
+    using HttpChecker = std::function<int (HttpRequest&, struct PhaseHandler&)>;
     //参与HTTP处理流程的结构体
     struct PhaseHandler
     {
@@ -168,22 +181,26 @@ public:
         int location_rewrite_phase;
     };
 
-    //HTTP模块初始化时候通过 HttpModule的postconfiguration添加进来的handler
+    //HTTP模块初始化时候通过HttpModule的postconfiguration添加进来的handler,
+    //临时结构体，方便进一步解析
     struct PhaseTemp
     {
         std::vector<HttpRequest::HttpRequestHandler> handlers;
     };
 
-    using MineTypeMap = std::unordered_map<std::string, std::string>;
-    using MineTypeMapIten = MineTypeMap::iterator;
+    //MIME类型表
+    using MimeTypeMap = std::unordered_map<std::string, std::string>;
+    using MimeTypeMapIten = MimeTypeMap::iterator;
+
+    //http{}配置项结构体
     struct HttpMainConf
     {
         std::string www;    //根路径
 
-        MineTypeMap types; //后缀和MIME类型对应表
+        MimeTypeMap types; //后缀和MIME类型对应表
 
         std::vector<HttpSrvConf*> servers;  //所有的server{}配置
-        std::vector<ConfPort> ports;    //所有的监听端口
+        std::vector<ConfPort> ports;        //所有的监听端口
 
         //流式处理HTTP请求结构
         PhaseEngine phase_engine;
@@ -218,21 +235,23 @@ public:
 
 //config item callback
 private:
-    bool ConfigSetCallbackWww(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackRoot(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackKeepaliveTimeout(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackKeepalive(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackServerToken(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackWww(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackRoot(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackKeepaliveTimeout(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackKeepalive(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackServerToken(const CommandConfig& command_config, const CommandModule&, void* config);
 
     bool ConfigSetCallbackServerBlock(const CommandConfig&, const CommandModule&, void*);
-    bool ConfigSetCallbackTypesBlock(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackTypesBlock(const CommandConfig& command_config, const CommandModule&, void*);
     bool ConfigSetCallbackLocationBlock(const CommandConfig&, const CommandModule&, void*);
+    //test merge
+    bool ConfigSetCallbackChartset(const CommandConfig& command_config, const CommandModule&, void* config);
 
     bool AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default);
     bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);

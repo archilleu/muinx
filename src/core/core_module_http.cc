@@ -245,23 +245,24 @@ bool CoreModuleHttp::MergeServersConfig()
             continue;
 
         auto http_module = dynamic_cast<HttpModule*>(module);
-        //获取当前模块的上下文
+        const auto http_module_ctx = http_module->ctx();
+
+        //获取当前模块的上下文,其实也就是主HttpConfigCtxs配置ctx[0]->main_conf[0]的值也是下面main_conf的值
         auto ctx = reinterpret_cast<HttpModuleCore::HttpConfigCtxs*>(g_core_module_conf.CurrentCtx());
         HttpModuleCore::HttpConfigCtxs saved = *ctx;
 
-        //server结构体在main_conf中记录
+        //遍历http{}下面所有的server{}
         HttpModuleCore::HttpMainConf* main_conf = g_http_module_core.core_main_conf();
         for(HttpModuleCore::HttpSrvConf* srv_conf : main_conf->servers)
         {
-            const HttpModule::HttpModuleCtx* http_module_ctx = http_module->ctx();
-            //合并server{}s srv_conf
+            //合并http{}的srv_conf和server{}的srv_conf内容
             if(http_module_ctx->merge_srv_config)
             {
                 http_module_ctx->merge_srv_config(saved.srv_conf[module->module_index()],
                         srv_conf->ctx->srv_conf[module->module_index()]);
             }
 
-            //合并locations{}s loc_conf
+            //合并http{}的loc_conf到server{}的loc_conf,server{}的loc_conf到location{}的loc_conf
             if(http_module_ctx->merge_loc_config)
             {
                 //首先http{}的location和server{}的location合并
@@ -270,11 +271,11 @@ bool CoreModuleHttp::MergeServersConfig()
 
                 /*其次，用server{}合并后的location和location{}合并
                  *获取server{}下面的location数组,每一个server{}内的location{}的第一个
-                 *结构体记录了该server{}下面所有的location{}s
+                 *结构体记录了该server{}下面所有的location{}
                  */
                 auto srv_loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>
                         (srv_conf->ctx->loc_conf[g_http_module_core.module_index()]);
-                MergeLocationsConfig(srv_loc_conf->locations, srv_conf->ctx->loc_conf, http_module);
+                MergeLocationsConfig(srv_loc_conf->locations, srv_conf->ctx->loc_conf[module->module_index()], http_module);
             }
         }
     }
@@ -283,13 +284,13 @@ bool CoreModuleHttp::MergeServersConfig()
 }
 //---------------------------------------------------------------------------
 bool CoreModuleHttp::MergeLocationsConfig(const std::vector<HttpModuleCore::Location>& locations,
-        void** srv_loc_conf, const HttpModule* module)
+        void* srv_loc_conf, const HttpModule* module)
 {
     //合并server{}的loc和该server{}里面所有的loc{}
     for(const auto& location : locations)
     {
         HttpModuleCore::HttpLocConf* loc_conf = location.exact ? location.exact : location.inclusive;
-        module->ctx()->merge_loc_config(srv_loc_conf[module->module_index()],
+        module->ctx()->merge_loc_config(srv_loc_conf,
                 loc_conf->loc_conf[module->module_index()]);
 
         //TODO

@@ -118,6 +118,12 @@ HttpModuleCore::HttpModuleCore()
             std::bind(&HttpModuleCore::ConfigSetCallbackServerToken, this, _1, _2, _3),
             HTTP_LOC_CONF_OFFSET
         },
+        {
+            "charset",
+            HTTP_MAIN_CONF|HTTP_SRV_CONF|HTTP_LOC_CONF|CONF_1MORE,
+            std::bind(&HttpModuleCore::ConfigSetCallbackChartset, this, _1, _2, _3),
+            HTTP_SRV_CONF_OFFSET
+        },
     };
 }
 //---------------------------------------------------------------------------
@@ -273,7 +279,8 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
     //查找准确的loc_conf
     const std::string& url = http_request.url();
     std::unordered_map<std::string, Location>::const_iterator iter;
-    auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*>  //该loc_conf目前为srv{}块内的值
+
+    auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*> 
         (http_request.loc_conf()[g_http_module_core.module_index()]);
     if(1 == url.length())
     {
@@ -285,7 +292,7 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
         std::string prefix_url;
         auto path_items = base::split(url, '/');
 
-        //根据配置文件构造最长的匹配url
+        //根据配置文件构造可能最长的匹配url
         for(int i=0; static_cast<int>(path_items.size())>i; i++)
         {
             prefix_url += "/" + path_items[i];
@@ -297,9 +304,8 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
         while(true)
         {
             iter = loc_conf->map_locations.find(prefix_url);
-            if(iter == loc_conf->map_locations.end())
+            if(iter == loc_conf->map_locations.end())   //没找到
             {
-                //没找到
                 if(prefix_url.back() == '/')
                 {
                     prefix_url.pop_back();
@@ -327,7 +333,7 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
         return MUINX_ERROR;
     }
 
-    //重新设置精确匹配当前loc{}块配置项
+    //重新设置精确匹配当前请求的loc_conf;
     auto& location = iter->second;
     auto static_loc_conf = location.exact ? location.exact : location.inclusive;
     http_request.set_loc_conf(static_loc_conf->loc_conf);
@@ -361,7 +367,7 @@ void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
     }
 
     //当改loc{}配置项handler回调被设置的时候，代表该模块特有的HTTP_CONTENT_PHASE过程，覆盖全局
-    //阶段handler，一般是在解析配置文件的时候顺便设置
+    //阶段handler，在解析配置文件的时候设置
     if(loc_conf->handler)
     {
         http_request.set_content_handler(loc_conf->handler);
@@ -373,72 +379,64 @@ void HttpModuleCore::UpdateRequestLocationConfig(HttpRequest& http_request)
     return;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackWww(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackWww(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_main_conf = reinterpret_cast<HttpMainConf*>(config);
     http_main_conf->www = command_config.args[1];
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackRoot(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackRoot(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->root = command_config.args[1];
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackKeepaliveTimeout(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackKeepaliveTimeout(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->keepalive_timeout = ::atoi(command_config.args[1].c_str());
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackKeepalive(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackKeepalive(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->keepalive = (command_config.args[1] == "on");
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackTcpNopush(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->tcp_nopush = ::atoi(command_config.args[1].c_str());
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackLimitRate(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->limit_rate = ::atoi(command_config.args[1].c_str());
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackSendfile(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->sendfile = (command_config.args[1] == "on");
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackDefaultType(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->default_type = command_config.args[1];
 
@@ -447,7 +445,7 @@ bool HttpModuleCore::ConfigSetCallbackDefaultType(const CommandConfig& command_c
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const CommandModule&, void*)
 {
-    //遇到了server配置项，就新建立一个HttpConfigCtxs，并使main_conf指向http层的main_conf
+    //遇到server配置项，就新建立一个HttpConfigCtxs，并使main_conf指向http层的main_conf
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
     ctx->main_conf = reinterpret_cast<HttpConfigCtxs*>(g_core_module_conf.CurrentCtx())->main_conf;
     g_core_module_conf.PushCtx(ctx);
@@ -475,7 +473,7 @@ bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const Co
     }
 
     //HttpSrvConf->ctx成员指向解析server块时新生成的HttpConfigCtxs结构体
-    //目的是让HttpSrvConf可以找到该HttpConfigCtxs结构体
+    //记录该值的目的是让HttpSrvConf可以找到该HttpConfigCtxs结构体
     HttpSrvConf* srv_conf = reinterpret_cast<HttpSrvConf*>
         (ctx->srv_conf[this->module_index()]);
     srv_conf->ctx = ctx;
@@ -490,14 +488,14 @@ bool HttpModuleCore::ConfigSetCallbackServerBlock(const CommandConfig&, const Co
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetCallbackTypesBlock(const CommandConfig&, const CommandModule&, void*)
 {
-    //占位
+    //解析mime类型,没有配置项
     g_core_module_conf.PushCtx(nullptr);
     return true;
 }
 //---------------------------------------------------------------------------
 bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command_config, const CommandModule&, void*)
 {
-    //遇到了location配置项，就新建立一个HttpConfigCtxs，获取当前server层HttpConfigCtxs结构体
+    //遇到location配置项，就新建立一个HttpConfigCtxs，并使main_conf指向http层的main_conf
     HttpConfigCtxs* ctx = new HttpConfigCtxs();
     HttpConfigCtxs* srv_ctx = reinterpret_cast<HttpConfigCtxs*>(g_core_module_conf.CurrentCtx());
     ctx->main_conf = srv_ctx->main_conf;
@@ -599,20 +597,26 @@ bool HttpModuleCore::ConfigSetCallbackListen(const CommandConfig& command_config
     return AddConfPort(ip, port, static_cast<HttpSrvConf*>(config), is_default);
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackServerName(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_srv_conf = reinterpret_cast<HttpSrvConf*>(config);
     http_srv_conf->server_name = command_config.args[1];
 
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::ConfigSetCallbackServerToken(const CommandConfig& command_config, const CommandModule& module, void* config)
+bool HttpModuleCore::ConfigSetCallbackServerToken(const CommandConfig& command_config, const CommandModule&, void* config)
 {
-    (void)module;
     auto http_loc_conf = reinterpret_cast<HttpLocConf*>(config);
     http_loc_conf->server_token = (command_config.args[1]=="on") ? true : false;
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool HttpModuleCore::ConfigSetCallbackChartset(const CommandConfig& command_config, const CommandModule&, void* config)
+{
+    auto http_srv_conf = reinterpret_cast<HttpSrvConf*>(config);
+    http_srv_conf->chartset = command_config.args[1];
 
     return true;
 }
@@ -658,8 +662,8 @@ bool HttpModuleCore::AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bo
         conf_addr.default_server = conf;
 
     //构建快速查找hash
-    //可能存在相同的ip:port/server_name，是错误的配置,需要检测,此刻server_name可能还没有值
-    //放在http块结束后在构建
+    //可能存在相同的ip:port/server_name，是错误的配置,需要检测,因为server_name配置项可能还没有解析到
+    //也不一定能够构建hash，所以只能放在http块结束后在构建
     /*
     auto result = conf_addr.hash.insert(std::make_pair(cur_srv->server_name, cur_srv));
     if(!result.second)
@@ -718,8 +722,9 @@ bool HttpModuleCore::MergeSrvConfig(void* parent, void* child)
     //当前层的配置
     auto conf = reinterpret_cast<HttpSrvConf*>(child);
 
-    (void)prev;
-    (void)conf;
+    //merge test
+    conf->chartset = prev->chartset;
+
     return true;
 }
 //---------------------------------------------------------------------------
@@ -750,8 +755,7 @@ bool HttpModuleCore::MergeLocConfig(void* parent, void* child)
     auto conf = reinterpret_cast<HttpLocConf*>(child);
     (void)conf;
 
-    //conf->keepalive_timeout = prev->keepalive_timeout;
-    //conf->sendfile = prev->sendfile;
+    conf->default_type = prev->default_type;
 
     return true;
 }

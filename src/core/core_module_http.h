@@ -40,8 +40,7 @@ public:
     static int s_max_http_module;
 
 private:
-    bool ConfigSetHttpBlock(const CommandConfig& config, const CommandModule& module,
-            void* module_conf);
+    bool ConfigSetHttpBlock(const CommandConfig&, const CommandModule&, void* module_conf);
 
     bool ValidateLocations(HttpModuleCore::HttpLocConf* loc_conf);
     bool BuildMapLocations(HttpModuleCore::HttpLocConf* loc_conf);
@@ -53,7 +52,7 @@ private:
 
     bool MergeServersConfig();
     bool MergeLocationsConfig(const std::vector<HttpModuleCore::Location>& locations,
-            void** srv_loc_conf, const HttpModule* module);
+            void* srv_loc_conf, const HttpModule* module);
 
     bool InitMapLocations();
 

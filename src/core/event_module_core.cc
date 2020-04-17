@@ -153,7 +153,6 @@ void EventModuleCore::EventLoopQuit()
 bool EventModuleCore::ConfigSetCallbackWorkerConnections(const CommandConfig& command_config,
         const CommandModule& module, void* config)
 {
-    (void)module;
     auto event_core_config = reinterpret_cast<EventCoreConfig*>(config);
     event_core_config->worker_connections = ::atoi(command_config.args[1].c_str());
 
@@ -161,9 +160,8 @@ bool EventModuleCore::ConfigSetCallbackWorkerConnections(const CommandConfig& co
 }
 //---------------------------------------------------------------------------
 bool EventModuleCore::ConfigSetCallbackUse(const CommandConfig& command_config,
-        const CommandModule& module, void* config)
+        const CommandModule&, void* config)
 {
-    (void)module;
     auto event_core_config = reinterpret_cast<EventCoreConfig*>(config);
     event_core_config->use = command_config.args[1].c_str();
 

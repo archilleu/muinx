@@ -58,6 +58,7 @@ bool CoreModuleEvent::EventBlockParseComplete()
             ctx->init_config(event_conf);
         }
     }
+
     return true;
 }
 //---------------------------------------------------------------------------

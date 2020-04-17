@@ -49,8 +49,8 @@ private:
 
 //config item callback
 private:
-    bool ConfigSetCallbackWorkerConnections(const CommandConfig& command_config, const CommandModule& module, void* config);
-    bool ConfigSetCallbackUse(const CommandConfig& command_config, const CommandModule& module, void* config);
+    bool ConfigSetCallbackWorkerConnections(const CommandConfig& command_config, const CommandModule&, void* config);
+    bool ConfigSetCallbackUse(const CommandConfig& command_config, const CommandModule&, void* config);
 
 private:
     void* CreateConfig();
