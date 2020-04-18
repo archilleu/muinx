@@ -46,7 +46,7 @@ bool CoreModuleHttp::HttpBlockParseComplete()
     if(false == MergeServersConfig())
         return false;
 
-    //创建快速搜索location{}树
+    //创建快速搜索location{}表
     if(false == InitMapLocations())
         return false;
 

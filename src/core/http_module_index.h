@@ -21,7 +21,7 @@ public:
         std::vector<std::string> indexs;
     };
 
-public:
+private:
     static int IndexHandler(HttpRequest& http_request);
 
 //config item callback

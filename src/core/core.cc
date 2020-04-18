@@ -143,6 +143,7 @@ bool Core::ParseConfigFile()
     //目前默认在上一层的conf目录下的nginx.config文件
     std::string path = "conf";
     std::string name = "nginx.conf";
+    //TODO:返回值改成string类型方便定位错误
     std::string code = g_core_module_conf.Parse(path, name);
     if(code != "OK")
     {

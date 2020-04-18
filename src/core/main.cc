@@ -91,6 +91,7 @@ void HttpCoreConfig()
     for(auto server : main_conf->servers)
     {
         std::cout << "\tserver name: " << server->server_name << std::endl;
+        std::cout << "\tserver chartset: " << server->chartset<< std::endl;
         std::cout << "\tmain equal:" << (server->ctx->main_conf[0]==reinterpret_cast<void*>(main_conf)) << std::endl;
         auto srv_conf = reinterpret_cast<HttpModuleCore::HttpSrvConf*>(
                 server->ctx->srv_conf[g_http_module_core.module_index()]);
@@ -156,7 +157,7 @@ void HttpIndexConfig()
 //---------------------------------------------------------------------------
 void PrintLocationStatic(HttpModuleStatic::HttpStaticConfig* static_config)
 {
-    std::cout << "static:" << static_config->cache << std::endl;
+    std::cout << "static cache:" << static_config->cache << std::endl;
     return;
 }
 //---------------------------------------------------------------------------

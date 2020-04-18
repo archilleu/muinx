@@ -18,7 +18,7 @@ public:
     {
     };
 
-public:
+private:
     static int FilterHandler(HttpRequest& http_request);
 
 private:

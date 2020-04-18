@@ -20,7 +20,7 @@ public:
         bool cache;
     };
 
-public:
+private:
     static int StaticHandler(HttpRequest& http_request);
 
 //config item callback
