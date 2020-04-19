@@ -35,6 +35,7 @@ static void TrimBlank(char*& begin, char*& end)
 }
 //---------------------------------------------------------------------------
 const char HttpContext::kCRLF[] = "\r\n";
+const int HttpContext::kCRLF_SIZE = sizeof(kCRLF);
 //---------------------------------------------------------------------------
 HttpContext::HttpContext(const net::TCPConnectionPtr& conn_ptr)
 :   parse_state_(ExpectRequestLine),
@@ -240,6 +241,7 @@ char* HttpContext::ParseRequestLineURL(char* begin, char* end)
     }
 
     //TODO:锚
+
     char* url_idx = space==param_mark ? space : param_mark;
     request_->set_url(std::string(begin, url_idx));
     return space;

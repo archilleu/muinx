@@ -2,8 +2,13 @@
 #ifndef CORE_HTTP_REQUEST_H_
 #define CORE_HTTP_REQUEST_H_
 //---------------------------------------------------------------------------
+/**
+ * HTTP请求，包含请求头，请求体和响应体等
+ */
+//---------------------------------------------------------------------------
 #include <vector>
 #include <map>
+
 #include "defines.h"
 #include "net/include/callback.h"
 #include "base/include/timestamp.h"
@@ -106,6 +111,7 @@ public:
     };
 
 public:
+    //配置参数
     void set_main_conf(void** conf) { main_conf_ = conf; }
     void** main_conf() { return main_conf_; }
 
@@ -115,66 +121,82 @@ public:
     void set_loc_conf(void** conf) { loc_conf_ = conf; }
     void** loc_conf() { return loc_conf_; }
 
+    //请求对应的tcp链接
     net::TCPConnectionWeakPtr connection() const { return connection_; }
 
+    //请求方法
     void set_method(Method method) { method_ = method; }
     Method method() const { return method_; }
 
     void set_method_str(const std::string& method) { method_str_ = method; }
     const std::string& method_str() const { return method_str_; }
 
+    //HTTP版本
     void set_version(Version version) { version_ = version; }
     Version version() const { return version_; }
 
+    //HTTP路径
     void set_url(const std::string& url) { url_ = url; }
     const std::string& url() const { return url_; }
 
     const std::string& path() const { return path_; }
 
+    //请求路径
     void set_exten(const std::string& exten) { exten_ = exten; }
     const std::string& exten() const { return exten_; }
 
     void set_archor(const std::string& archor) { archor_ = archor; }
     const std::string& archor() const { return archor_; }
 
+    //请求URL参数
     using Parameters = std::map<std::string, std::string>;
     using ParametersIter = Parameters::iterator;
     void set_parameters(const Parameters& params) { parameters_ = params; }
     const Parameters& parameters() const { return parameters_; }
 
+    //接收请求头
     HttpHeaders& headers_in() { return headers_in_; }
 
+    //状态码
     void set_status_code(StatusCode  status_code) { status_code_ = status_code; }
     StatusCode status_code() const { return status_code_; }
 
+    //接收请求体
     void set_request_body(std::vector<char>&& request_body) { request_body_ = std::move(request_body); }
     const std::vector<char>& request_body() const { return request_body_; }
     std::vector<char>& request_body() { return request_body_; }
 
+    //是否只回复请求头
     void set_header_only(bool header_only) { header_only_ = header_only; }
     bool header_only() { return header_only_; }
 
+    //发送请求头
     HttpHeaders& headers_out() { return headers_out_; }
 
+    //发送请求体
     void set_response_body(std::vector<char>&& response_body) { response_body_ = std::move(response_body); }
     const std::vector<char>& response_body() const { return response_body_; }
     std::vector<char>& response_body() { return response_body_; }
 
+    //HTTP请求解析处于的阶段
     void set_phase_handler(int phase_handler) { phase_handler_ = phase_handler; }
     int phase_handler() const { return phase_handler_; }
 
     void set_internal(bool internal) { internal_ = internal; }
     bool internal() const { return internal_; }
 
+    //接收时间
     void set_recv_time(base::Timestamp recv_time) { recv_time_ = recv_time; }
     base::Timestamp recv_time() const { return recv_time_; }
 
+    //设置处理请求体阶段的回调，没有则是默认的处理
     void set_content_handler(const HttpRequestHandler& handler) { content_handler_ = handler; }
     HttpRequestHandler& content_handler() { return content_handler_; }
 
     //转换uri到文件系统的path
     void UriToPath();
 
+    //请求体调试输出
     std::string ToString();
 
 public:
@@ -203,25 +225,25 @@ private:
     //指向存放所有HTTP模块的上下文结构体指针
     std::vector<base::any> ctx_;
 
-    Method method_;         //HTTP方法
+    Method method_;                     //HTTP方法
     std::string method_str_;
-    Version version_;       //HTTP版本
-    std::string url_;       //资源路径
-    std::string path_;      //文件系统路径
-    std::string exten_;     //扩展名
-    std::string archor_;    //锚
-    Parameters parameters_; //url参数
-    HttpHeaders headers_in_;   //请求头
-    StatusCode status_code_;   //HTTP状态码
+    Version version_;                   //HTTP版本
+    std::string url_;                   //资源路径
+    std::string path_;                  //文件系统路径
+    std::string exten_;                 //扩展名
+    std::string archor_;                //锚
+    Parameters parameters_;             //url参数
+    HttpHeaders headers_in_;            //请求头
+    StatusCode status_code_;            //HTTP状态码
     std::vector<char> request_body_;
 
-    bool header_only_;  //仅仅发送头部(HEAD方法)
-    HttpHeaders headers_out_;   //响应请求头
+    bool header_only_;                  //仅仅发送头部(HEAD方法)
+    HttpHeaders headers_out_;           //响应请求头
     std::vector<char> response_body_;
 
-    int phase_handler_;  //处于哪一个HTTP阶段
+    int phase_handler_;                 //处于哪一个HTTP阶段
 
-    bool internal_; //
+    bool internal_;                     //是否需要内部跳转
 
     base::Timestamp recv_time_;
 

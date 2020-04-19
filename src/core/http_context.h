@@ -2,6 +2,10 @@
 #ifndef CORE_HTTP_CONTEXT_H_
 #define CORE_HTTP_CONTEXT_H_
 //---------------------------------------------------------------------------
+/**
+ * HTTP请求上下文，解析HTTP请求
+ */
+//---------------------------------------------------------------------------
 #include "base/include/timestamp.h"
 #include "net/include/buffer.h"
 #include "net/include/callback.h"
@@ -59,7 +63,7 @@ private:
     net::TCPConnectionWeakPtr connection_;
 
     static const char kCRLF[];
-    static const int kCRLF_SIZE = 2;
+    static const int kCRLF_SIZE;
 };
 
 }//namespace core

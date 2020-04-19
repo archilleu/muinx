@@ -2,6 +2,10 @@
 #ifndef CORE_HTTP_HEADERS_H_
 #define CORE_HTTP_HEADERS_H_
 //---------------------------------------------------------------------------
+/**
+ * HTTP请求报文头
+*/
+//---------------------------------------------------------------------------
 #include <string>
 #include <functional>
 #include <map>
@@ -76,7 +80,7 @@ public:
     using HeaderTypeMap = std::map<std::string, HeaderAction>;
     using HeaderTypeMapConstIter = HeaderTypeMap::const_iterator;
 
-    //HTTP头查找表，用于查找HTTP头
+    //HTTP请求报文头查找表，用于查找HTTP请求报文头,并设置值
     static const HeaderTypeMap kHeaderTypeMap;
 
     static const char* kHost;
@@ -98,8 +102,9 @@ private:
     std::string content_type_;
     bool chunked_;
 
-    //压缩
+    //TODO:压缩
 
+    //时间
     time_t if_modified_since_;
     time_t if_unmodified_since_;
     time_t if_match_;
@@ -111,10 +116,10 @@ private:
     std::string location_;
     std::string charset_;
 
-    //非标准或者常用的头
+    //非标准或者常用的头表
     HeaderMap headers_;
 
-    //格式化respond 头为字符串
+    //格式化respond头为字符串
     std::string response_header_;
 };
 
