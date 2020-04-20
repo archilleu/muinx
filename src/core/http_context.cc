@@ -34,7 +34,7 @@ static void TrimBlank(char*& begin, char*& end)
     return;
 }
 //---------------------------------------------------------------------------
-const char HttpContext::kCRLF[] = "\r\n";
+const char HttpContext::kCRLF[] = {'\r', '\n'};
 const int HttpContext::kCRLF_SIZE = sizeof(kCRLF);
 //---------------------------------------------------------------------------
 HttpContext::HttpContext(const net::TCPConnectionPtr& conn_ptr)
