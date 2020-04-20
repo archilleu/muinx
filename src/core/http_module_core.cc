@@ -560,19 +560,19 @@ bool HttpModuleCore::ConfigSetCallbackLocationBlock(const CommandConfig& command
 bool HttpModuleCore::ConfigSetCallbackListen(const CommandConfig& command_config, const CommandModule&, void* config)
 {
     //第一个参数为ip和端口(ip:port) or (port)
-    int port;
+    short port;
     std::string ip;
     const std::string& ip_port = command_config.args[1];
     auto found = ip_port.find(':');
     if(std::string::npos == found)
     {
         ip = IPADDR_ALL;
-        port = std::atoi(ip_port.c_str());
+        port = static_cast<short>(std::atoi(ip_port.c_str()));
     }
     else
     {
         ip = ip_port.substr(0, found);
-        port = std::atoi(ip_port.substr(found+1).c_str());
+        port = static_cast<short>(std::atoi(ip_port.substr(found+1).c_str()));
     }
 
     //是否是默认的server{}
@@ -621,7 +621,7 @@ bool HttpModuleCore::ConfigSetCallbackChartset(const CommandConfig& command_conf
     return true;
 }
 //---------------------------------------------------------------------------
-bool HttpModuleCore::AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default)
+bool HttpModuleCore::AddConfPort(const std::string& ip, short port, HttpSrvConf* conf, bool is_default)
 {
     ConfPort conf_port;
     conf_port.port = port;

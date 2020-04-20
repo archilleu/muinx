@@ -117,7 +117,7 @@ public:
 
     struct ConfPort
     {
-        int port;                       //监听的端口
+        short port;                     //监听的端口
         std::vector<ConfAddress> addrs; //监听端口对应的IP，一个主机可能有多个IP
     };
 
@@ -253,7 +253,7 @@ private:
     //test merge
     bool ConfigSetCallbackChartset(const CommandConfig& command_config, const CommandModule&, void* config);
 
-    bool AddConfPort(const std::string& ip, int port, HttpSrvConf* conf, bool is_default);
+    bool AddConfPort(const std::string& ip, short port, HttpSrvConf* conf, bool is_default);
     bool AddConfAddresses(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
     bool AddConfAddress(ConfPort& conf_port, const std::string& ip, HttpSrvConf* conf, bool is_default);
     bool AddConfServer(ConfAddress& conf_addr, HttpSrvConf* conf, bool is_default);

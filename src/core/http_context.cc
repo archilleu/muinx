@@ -352,49 +352,64 @@ bool HttpContext::ParseRequestBody(net::Buffer& buffer)
 //---------------------------------------------------------------------------
 bool HttpContext::FindVirtualServer()
 {
-    //寻找对应的server{}
     HttpModuleCore::HttpSrvConf* srv_conf = nullptr;
     const std::string& host = request_->headers_in().host();
+
+    //检查是否断开连接
     net::TCPConnectionPtr conn_ptr = connection_.lock();
     if(!conn_ptr)
     {
         Logger_error("connection has been destroy");
         return false;
     }
-    auto conf_address = base::any_cast<HttpModuleCore::ConfAddress>(conn_ptr->data());
-    if(conf_address.servers.size() == 1)
+    short srv_port = conn_ptr->local_addr().port();             //该tcp对应的server端口
+    auto ports = g_http_module_core.core_main_conf()->ports;    //所有监听的端口
+    for(auto port : ports)
     {
-        //一个server就不需要查找hash表了
-        if(conf_address.servers[0]->server_name == host)
+        //判断监听的端口和配置端口是否相等
+        if(port.port != srv_port)
+            continue;
+
+        //遍历端口对应的服务器地址
+        for(auto addr : port.addrs)
         {
-            srv_conf = conf_address.servers[0];
+            //单个server不需要查找hash表
+            if(addr.servers.size() == 1)
+            {
+                if(addr.servers[0]->server_name == host)
+                    srv_conf = addr.servers[0];
+            }
+            else
+            {
+                auto iter_srv = addr.hash.find(host);
+                if(addr.hash.end() != iter_srv)
+                    srv_conf = iter_srv->second;
+            }
+
+            //没找到对应的server，看是否有默认的server
+            if(nullptr == srv_conf)
+            {
+                if(nullptr == addr.default_server)
+                {
+                    request_->set_status_code(HttpRequest::NOT_FOUND);
+                    return false;
+                }
+
+                srv_conf = addr.default_server;
+            }
+
+            //此时获取的是server{}的ctx，其中的loc_conf还要再下一步的checker中重新赋值
+            request_->set_main_conf(srv_conf->ctx->main_conf);
+            request_->set_srv_conf(srv_conf->ctx->srv_conf);
+            request_->set_loc_conf(srv_conf->ctx->loc_conf);
+
+            return true;
         }
     }
-    else
-    {
-        auto iter_srv = conf_address.hash.find(host);
-        if(conf_address.hash.end() != iter_srv)
-        {
-            srv_conf = iter_srv->second;
-        }
-    }
-    if(nullptr == srv_conf)
-    {
-        if(nullptr == conf_address.default_server)
-        {
-            request_->set_status_code(HttpRequest::NOT_FOUND);
-            return false;
-        }
 
-        srv_conf = conf_address.default_server;
-    }
-
-    //此时获取的是server{}的ctx，其中的loc_conf还要再下一步的checker中重新赋值
-    request_->set_main_conf(srv_conf->ctx->main_conf);
-    request_->set_srv_conf(srv_conf->ctx->srv_conf);
-    request_->set_loc_conf(srv_conf->ctx->loc_conf);
-
-    return true;
+    //没找到对应的server，也没有默认的server返回404
+    request_->set_status_code(HttpRequest::NOT_FOUND);
+    return false;
 }
 //---------------------------------------------------------------------------
 bool HttpContext::HandleHeader()

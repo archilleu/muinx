@@ -30,7 +30,7 @@ public:
     {
     };
 
-    const std::vector<net::InetAddressConfig>& addresses() const { return addresses_; }
+    const std::vector<net::InetAddress>& addresses() const { return addresses_; }
 
     //http{}配置项解析结束后回调
     //FIXME:由config类调用更合适？
@@ -63,7 +63,7 @@ private:
     bool InitPhaseHandlers();
 
 private:
-    std::vector<net::InetAddressConfig> addresses_;
+    std::vector<net::InetAddress> addresses_;
 };
 //---------------------------------------------------------------------------
 extern CoreModuleHttp g_core_module_http;

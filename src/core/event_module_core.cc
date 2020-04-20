@@ -92,7 +92,7 @@ void EventModuleCore::OnConnection(const net::TCPConnectionPtr& conn_ptr)
 
     //设置该connection上下文，解析http协议
     base::any context = HttpContext(conn_ptr);
-    conn_ptr->set_context(context);
+    conn_ptr->set_data(context);
     return;
 }
 //---------------------------------------------------------------------------
@@ -105,7 +105,7 @@ void EventModuleCore::OnDisconnection(const net::TCPConnectionPtr& conn_ptr)
 void EventModuleCore::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer)
 {
     //该connection的上下文
-    HttpContext* context = base::any_cast<HttpContext>(conn_ptr->getContext());
+    HttpContext* context = base::any_cast<HttpContext*>(conn_ptr->data());
     if(false == context->ParseRequest(buffer, base::Timestamp::Now()))
     {
         //TODO 处理错误

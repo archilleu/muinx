@@ -201,17 +201,11 @@ bool CoreModuleHttp::AddListening(const HttpModuleCore::ConfPort& conf_port)
         {
             //TODO:ipv4还是ipv6, 是否loopback
 
-            net::InetAddressConfig address_conf = net::InetAddressConfig();
-            address_conf.address = net::InetAddress(static_cast<short>(conf_port.port), true);
-            address_conf.data = address;
-            addresses_.push_back(address_conf);
+            addresses_.push_back(net::InetAddress(static_cast<short>(conf_port.port), true));
         }
         else
         {
-            net::InetAddressConfig address_conf = net::InetAddressConfig();
-            address_conf.address = net::InetAddress(address.ip, static_cast<short>(conf_port.port));
-            address_conf.data = address;
-            addresses_.push_back(address_conf);
+            addresses_.push_back(net::InetAddress(address.ip, static_cast<short>(conf_port.port)));
         }
     }
 
