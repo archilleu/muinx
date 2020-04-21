@@ -8,8 +8,6 @@
 #include "defines.h"
 #include "core_module_http.h"
 #include "http_context.h"
-#include <typeinfo>
-#include <iostream>
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -110,9 +108,8 @@ void EventModuleCore::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buff
     if(false == context->ParseRequest(buffer, base::Timestamp::Now()))
     {
         //TODO 处理错误
-        std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
+        std::string error = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
         conn_ptr->Send(error.c_str(), error.length());
-        conn_ptr->ForceClose();
     }
 
     //如果HTTP头部尚未处理完毕，返回等待接受下一次检查
@@ -123,9 +120,6 @@ void EventModuleCore::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buff
     if(MUINX_OK != context->ProcessRequest())
     {
         //TODO 处理错误
-        std::string error = "HTTP/1.1 400 Bad Request\r\n\r\n";
-        conn_ptr->Send(error.c_str(), error.length());
-        conn_ptr->ForceClose();
     }
 
     //重置Context

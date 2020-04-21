@@ -2,6 +2,10 @@
 #ifndef HTTP_MODULE_INDEX_H_
 #define HTTP_MODULE_INDEX_H_
 //---------------------------------------------------------------------------
+/**
+ * 根目录HTTP处理器
+ */
+//---------------------------------------------------------------------------
 #include <string>
 #include <vector>
 #include "http_module.h"

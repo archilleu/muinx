@@ -434,7 +434,9 @@ int HttpContext::HttpHandler()
 {
     int rc = RunPhases();
     if(MUINX_OK != rc)
-        return rc;
+    {
+        //return rc;
+    }
 
     rc = RunResponse();
     if(MUINX_OK != rc)

@@ -280,9 +280,11 @@ int HttpModuleCore::FindRequestLocation(HttpRequest& http_request)
     const std::string& url = http_request.url();
     std::unordered_map<std::string, Location>::const_iterator iter;
 
+    //获取server的loc_conf，在server的loc_conf->map_locations保存改
+    //server下面所有的location配置
     auto loc_conf = reinterpret_cast<HttpModuleCore::HttpLocConf*> 
         (http_request.loc_conf()[g_http_module_core.module_index()]);
-    if(1 == url.length())
+    if(1 == url.length())   //根就直接定位了，不需要最长匹配
     {
         iter = loc_conf->map_locations.find("/");
     }

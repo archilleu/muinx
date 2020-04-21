@@ -2,6 +2,10 @@
 #ifndef HTTP_MODULE_STATIC_H_
 #define HTTP_MODULE_STATIC_H_
 //---------------------------------------------------------------------------
+/**
+ * HTTP普通静态文件模块
+*/
+//---------------------------------------------------------------------------
 #include <string>
 #include "http_module.h"
 #include "http_request.h"
