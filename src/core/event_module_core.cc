@@ -8,6 +8,8 @@
 #include "defines.h"
 #include "core_module_http.h"
 #include "http_context.h"
+#include <typeinfo>
+#include <iostream>
 //---------------------------------------------------------------------------
 namespace core
 {
@@ -91,8 +93,7 @@ void EventModuleCore::OnConnection(const net::TCPConnectionPtr& conn_ptr)
     //TODO:结合worker_connections 控制连接数
 
     //设置该connection上下文，解析http协议
-    base::any context = HttpContext(conn_ptr);
-    conn_ptr->set_data(context);
+    conn_ptr->set_data(HttpContext(conn_ptr));
     return;
 }
 //---------------------------------------------------------------------------
@@ -105,7 +106,7 @@ void EventModuleCore::OnDisconnection(const net::TCPConnectionPtr& conn_ptr)
 void EventModuleCore::OnMessage(const net::TCPConnectionPtr& conn_ptr, net::Buffer& buffer)
 {
     //该connection的上下文
-    HttpContext* context = base::any_cast<HttpContext*>(conn_ptr->data());
+    HttpContext* context = base::any_cast<HttpContext>(&const_cast<base::any&>(conn_ptr->data()));
     if(false == context->ParseRequest(buffer, base::Timestamp::Now()))
     {
         //TODO 处理错误
